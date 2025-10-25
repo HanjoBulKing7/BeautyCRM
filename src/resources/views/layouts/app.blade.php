@@ -19,77 +19,88 @@
 
         <!-- Links -->
         <div class="p-4">
-            <ul class="space-y-3">
-                <!-- Inicio -->
-                <li>
-                    <a href="{{ route('dashboard') }}"
-                       class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
-                              {{ request()->routeIs('dashboard') ? 'bg-orange-100 text-orange-600 font-semibold' : 'text-gray-700 hover:bg-orange-50' }}">
-                        <i class="fas fa-home mr-4 text-orange-500 text-xl"></i>
-                        <span>Inicio</span>
-                    </a>
-                </li>
+           <ul class="space-y-3">
+    <!-- Inicio -->
+    <li>
+        <a href="{{ route('dashboard') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
+                  {{ request()->routeIs('dashboard') ? 'bg-orange-100 text-orange-600 font-semibold' : 'text-gray-700 hover:bg-orange-50' }}">
+            <i class="fas fa-home mr-4 text-orange-500 text-xl"></i>
+            <span>Inicio</span>
+        </a>
+    </li>
 
-                <!-- Productos -->
-                <li>
-                    <a href="{{ route('productos.index') }}"
-                       class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
-                              {{ request()->routeIs('productos.*') ? 'bg-yellow-100 text-yellow-600 font-semibold' : 'text-gray-700 hover:bg-yellow-50' }}">
-                        <i class="fas fa-cookie-bite mr-4 text-yellow-500 text-xl"></i>
-                        <span>Productos</span>
-                    </a>
-                </li>
+    <!-- Productos -->
+    <li>
+        <a href="{{ route('productos.index') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
+                  {{ request()->routeIs('productos.*') ? 'bg-yellow-100 text-yellow-600 font-semibold' : 'text-gray-700 hover:bg-yellow-50' }}">
+            <i class="fas fa-cookie-bite mr-4 text-yellow-500 text-xl"></i>
+            <span>Productos</span>
+        </a>
+    </li>
 
-                <!-- Inventario -->
-                <li>
-                    <a href="{{ route('inventario.index') }}"
-                       class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
-                              {{ request()->routeIs('inventario.*') ? 'bg-blue-100 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-blue-50' }}">
-                        <i class="fas fa-boxes-stacked mr-4 text-blue-500 text-xl"></i>
-                        <span>Inventario</span>
-                    </a>
-                </li>
+    <!-- Inventario -->
+    <li>
+        <a href="{{ route('inventario.index') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
+                  {{ request()->routeIs('inventario.*') ? 'bg-blue-100 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-blue-50' }}">
+            <i class="fas fa-boxes-stacked mr-4 text-blue-500 text-xl"></i>
+            <span>Inventario</span>
+        </a>
+    </li>
 
-                <!-- Empleados -->
-                <li>
-                    <a href="{{ route('empleados.index') }}"
-                       class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
-                              {{ request()->routeIs('empleados.*') ? 'bg-purple-100 text-purple-600 font-semibold' : 'text-gray-700 hover:bg-purple-50' }}">
-                        <i class="fas fa-users mr-4 text-purple-500 text-xl"></i>
-                        <span>Empleados</span>
-                    </a>
-                </li>
+    <!-- Empleados -->
+    <li>
+        <a href="{{ route('empleados.index') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
+                  {{ request()->routeIs('empleados.*') ? 'bg-purple-100 text-purple-600 font-semibold' : 'text-gray-700 hover:bg-purple-50' }}">
+            <i class="fas fa-users mr-4 text-purple-500 text-xl"></i>
+            <span>Empleados</span>
+        </a>
+    </li>
 
-                <!-- Ventas -->
-                <li>
-                    <a href="{{ route('ventas.index') }}"
-                       class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
-                              {{ request()->routeIs('ventas.*') ? 'bg-red-100 text-red-600 font-semibold' : 'text-gray-700 hover:bg-red-50' }}">
-                        <i class="fas fa-cash-register mr-4 text-red-500 text-xl"></i>
-                        <span>Ventas</span>
-                    </a>
-                </li>
+    <!-- ✅ NUEVO: Rutas -->
+    <li>
+        <a href="{{ route('rutas.index') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
+                  {{ request()->routeIs('rutas.*') ? 'bg-orange-100 text-orange-600 font-semibold' : 'text-gray-700 hover:bg-orange-50' }}">
+            <i class="fas fa-truck mr-4 text-orange-500 text-xl"></i>
+            <span>Rutas</span>
+        </a>
+    </li>
 
-                <!-- Gastos -->
-                <li>
-                    <a href="{{ route('gastos.index') }}"
-                       class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
-                              {{ request()->routeIs('gastos.*') ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-green-50' }}">
-                        <i class="fas fa-money-bill-wave mr-4 text-green-500 text-xl"></i>
-                        <span>Gastos</span>
-                    </a>
-                </li>
+    <!-- Ventas -->
+    <li>
+        <a href="{{ route('ventas.index') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
+                  {{ request()->routeIs('ventas.*') ? 'bg-red-100 text-red-600 font-semibold' : 'text-gray-700 hover:bg-red-50' }}">
+            <i class="fas fa-cash-register mr-4 text-red-500 text-xl"></i>
+            <span>Ventas</span>
+        </a>
+    </li>
 
-                <!-- Reportes -->
-                <li>
-                    <a href="{{ route('reportes.index') }}"
-                       class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
-                              {{ request()->routeIs('reportes.*') ? 'bg-pink-100 text-pink-600 font-semibold' : 'text-gray-700 hover:bg-pink-50' }}">
-                        <i class="fas fa-chart-line mr-4 text-pink-500 text-xl"></i>
-                        <span>Reportes</span>
-                    </a>
-                </li>
-            </ul>
+    <!-- Gastos -->
+    <li>
+        <a href="{{ route('gastos.index') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
+                  {{ request()->routeIs('gastos.*') ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-green-50' }}">
+            <i class="fas fa-money-bill-wave mr-4 text-green-500 text-xl"></i>
+            <span>Gastos</span>
+        </a>
+    </li>
+
+    <!-- Reportes -->
+    <li>
+        <a href="{{ route('reportes.index') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
+                  {{ request()->routeIs('reportes.*') ? 'bg-pink-100 text-pink-600 font-semibold' : 'text-gray-700 hover:bg-pink-50' }}">
+            <i class="fas fa-chart-line mr-4 text-pink-500 text-xl"></i>
+            <span>Reportes</span>
+        </a>
+    </li>
+</ul>
+
         </div>
     </div>
 

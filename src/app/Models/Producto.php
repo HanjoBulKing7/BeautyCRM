@@ -14,11 +14,13 @@ class Producto extends Model
         'nombre',
         'descripcion',
         'precio',
+        'precio_proveedor', // ✅ Nuevo campo agregado
         'activo',
     ];
 
     protected $casts = [
         'precio' => 'decimal:2',
+        'precio_proveedor' => 'decimal:2', // ✅ También lo casteamos como decimal
         'activo' => 'boolean',
     ];
 

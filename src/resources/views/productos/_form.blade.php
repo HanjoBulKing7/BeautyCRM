@@ -26,10 +26,10 @@
             required placeholder="Nombre del producto">
     </div>
 
-    <!-- Fila 2: Solo Precio (quitamos proveedor) -->
-    <div class="md:col-span-2 bg-gray-50 p-4 rounded-xl">
+    <!-- Fila 2: Precio Venta -->
+    <div class="bg-gray-50 p-4 rounded-xl">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-money-bill-wave text-yellow-500 mr-2"></i>Precio *
+            <i class="fas fa-money-bill-wave text-yellow-500 mr-2"></i>Precio Venta *
         </label>
         <div class="relative">
             <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">$</span>
@@ -39,7 +39,21 @@
         </div>
     </div>
 
-    <!-- Fila 3: Descripción (ancho completo) -->
+    <!-- Fila 2b: Precio Proveedor -->
+    <div class="bg-gray-50 p-4 rounded-xl">
+        <label class="block text-sm font-medium mb-2 text-gray-700">
+            <i class="fas fa-hand-holding-usd text-teal-500 mr-2"></i>Precio Proveedor
+        </label>
+        <div class="relative">
+            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium">$</span>
+            <input type="number" step="0.01" name="precio_proveedor" value="{{ old('precio_proveedor', $producto->precio_proveedor) }}" 
+                   class="w-full border border-gray-300 rounded-lg p-3 pl-8 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition" 
+                   min="0" placeholder="0.00">
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Costo de compra o precio del proveedor.</p>
+    </div>
+
+    <!-- Fila 3: Descripción -->
     <div class="md:col-span-2 bg-gray-50 p-4 rounded-xl">
         <label class="block text-sm font-medium mb-2 text-gray-700">
             <i class="fas fa-file-alt text-red-500 mr-2"></i>Descripción
@@ -50,18 +64,9 @@
     </div>
 </div>
 
-<!-- Estilos para mejorar la apariencia -->
+<!-- Estilos -->
 <style>
-    .focus\:ring-2:focus {
-        ring-width: 2px;
-    }
-    .transition {
-        transition: all 0.2s ease-in-out;
-    }
-    .bg-gray-50 {
-        background-color: #f9fafb;
-    }
-    .border-gray-300 {
-        border-color: #d1d5db;
-    }
+    .transition { transition: all 0.2s ease-in-out; }
+    .bg-gray-50 { background-color: #f9fafb; }
+    .border-gray-300 { border-color: #d1d5db; }
 </style>

@@ -1,6 +1,6 @@
-
 @csrf
 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
     <!-- Fila 1: Nombre y Email -->
     <div class="bg-gray-50 p-4 rounded-xl">
         <label class="block text-sm font-medium mb-2 text-gray-700">
@@ -42,14 +42,14 @@
             placeholder="Repetir contraseña">
     </div>
 
-    <!-- Fila 3: Rol y Estado -->
+    <!-- Fila 3: Rol y Sucursal -->
     <div class="bg-gray-50 p-4 rounded-xl">
         <label class="block text-sm font-medium mb-2 text-gray-700">
             <i class="fas fa-user-tag text-purple-500 mr-2"></i>Rol *
         </label>
         <select name="rol" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" required>
             <option value="">Seleccione un rol</option>
-            <option value="empleado" {{ old('rol', $empleado->rol) == 'empleado' ? 'selected' : '' }}>Empleado</option>
+            <option value="admin" {{ old('rol', $empleado->rol) == 'admin' ? 'selected' : '' }}>Administrador</option>
             <option value="vendedor" {{ old('rol', $empleado->rol) == 'vendedor' ? 'selected' : '' }}>Vendedor</option>
             <option value="gerente" {{ old('rol', $empleado->rol) == 'gerente' ? 'selected' : '' }}>Gerente</option>
         </select>
@@ -57,19 +57,35 @@
 
     <div class="bg-gray-50 p-4 rounded-xl">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-toggle-on text-indigo-500 mr-2"></i>Estado
+            <i class="fas fa-store text-orange-500 mr-2"></i>Sucursal *
         </label>
-        <div class="flex items-center h-full">
+        <select name="sucursal_id" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" required>
+            <option value="">Seleccione una sucursal</option>
+            @foreach($sucursales as $sucursal)
+                <option value="{{ $sucursal->id }}" {{ old('sucursal_id', $empleado->sucursal_id) == $sucursal->id ? 'selected' : '' }}>
+                    {{ $sucursal->nombre }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <!-- Fila 4: Estado -->
+    <div class="md:col-span-2 bg-gray-50 p-4 rounded-xl flex items-center justify-between">
+        <label class="block text-sm font-medium text-gray-700 mb-0">
+            <i class="fas fa-toggle-on text-indigo-500 mr-2"></i>Estado del empleado
+        </label>
+        <div class="flex items-center">
             <input type="hidden" name="activo" value="0">
             <input type="checkbox" name="activo" value="1" 
                    {{ old('activo', $empleado->activo ?? 1) ? 'checked' : '' }}
                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-            <span class="ml-2 text-sm text-gray-600">Empleado activo</span>
+            <span class="ml-2 text-sm text-gray-600">Activo</span>
         </div>
     </div>
+
 </div>
 
-<!-- Estilos para mejorar la apariencia -->
+<!-- Estilos -->
 <style>
     .focus\:ring-2:focus {
         ring-width: 2px;

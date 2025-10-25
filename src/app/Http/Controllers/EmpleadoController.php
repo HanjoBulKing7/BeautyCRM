@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Sucursal;
 use Illuminate\Http\Request;
-use App\Models\Empleado;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class EmpleadoController extends Controller
 {
+    /**
+     * 📋 Listado de empleados
+     */
     public function index(Request $request)
     {
         $search = $request->query('search');
-        
-        $query = Empleado::query();
+
+        $query = User::with('sucursal')->whereIn('rol', ['vendedor', 'gerente', 'admin']);
 
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -24,94 +29,120 @@ class EmpleadoController extends Controller
         }
 
         $empleados = $query->orderBy('nombre')->paginate(10);
+
         return view('empleados.index', compact('empleados'));
     }
 
+    /**
+     * 🆕 Mostrar formulario de creación
+     */
     public function create()
     {
-        $empleado = new Empleado();
-        return view('empleados.create', compact('empleado'));
+        $empleado = new User();
+        $sucursales = Sucursal::all();
+
+        return view('empleados.create', compact('empleado', 'sucursales'));
     }
 
+    /**
+     * 💾 Registrar nuevo empleado (desde panel interno)
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:empleados,email',
-            'password' => 'required|string|min:8|confirmed',
-            'rol' => 'required|in:empleado,vendedor,gerente',
-            'activo' => 'sometimes|boolean'
+            'nombre'       => 'required|string|max:255|unique:users,nombre',
+            'email'        => 'required|email|max:255|unique:users,email',
+            'password'     => 'required|string|min:8|confirmed',
+            'rol'          => 'required|in:admin,vendedor,gerente',
+            'sucursal_id'  => 'required|exists:sucursales,id',
+            'activo'       => 'nullable|boolean',
         ]);
 
-        // Usar transacción para asegurar la consistencia
         DB::beginTransaction();
-        
+
         try {
-            // Hashear la contraseña antes de guardar
             $data['password'] = Hash::make($data['password']);
             $data['activo'] = $request->has('activo') ? 1 : 0;
-            
-            $empleado = Empleado::create($data);
-            
+
+            // ✅ Crear el nuevo empleado sin loguearlo
+            $empleado = User::create($data);
+
             DB::commit();
-            
-            return redirect()->route('empleados.index')
-                ->with('success', 'Empleado creado exitosamente.');
-                
+
+            return redirect()
+                ->route('empleados.index')
+                ->with('success', 'Empleado registrado correctamente. Ahora puede iniciar sesión.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Error al crear el empleado: ' . $e->getMessage())
+
+            return redirect()
+                ->back()
+                ->with('error', 'Error al registrar el empleado: ' . $e->getMessage())
                 ->withInput();
         }
     }
 
-    public function show(Empleado $empleado)
+    /**
+     * 👁️ Mostrar detalle de un empleado
+     */
+    public function show(User $empleado)
     {
         return view('empleados.show', compact('empleado'));
     }
 
-    public function edit(Empleado $empleado)
+    /**
+     * ✏️ Editar empleado
+     */
+    public function edit(User $empleado)
     {
-        return view('empleados.edit', compact('empleado'));
+        $sucursales = Sucursal::all();
+
+        return view('empleados.edit', compact('empleado', 'sucursales'));
     }
 
-    public function update(Request $request, Empleado $empleado)
+    /**
+     * 🔄 Actualizar datos del empleado
+     */
+    public function update(Request $request, User $empleado)
     {
         $data = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:empleados,email,' . $empleado->id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'rol' => 'required|in:empleado,vendedor,gerente',
-            'activo' => 'sometimes|boolean'
+            'nombre'       => 'required|string|max:255|unique:users,nombre,' . $empleado->id,
+            'email'        => 'required|email|unique:users,email,' . $empleado->id,
+            'password'     => 'nullable|string|min:8|confirmed',
+            'rol'          => 'required|in:admin,vendedor,gerente',
+            'sucursal_id'  => 'required|exists:sucursales,id',
+            'activo'       => 'nullable|boolean',
         ]);
 
-        // Si no se proporciona nueva contraseña, mantener la actual
-        if (empty($data['password'])) {
-            unset($data['password']);
-        } else {
+        if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
         }
 
         $data['activo'] = $request->has('activo') ? 1 : 0;
-        
+
         $empleado->update($data);
-        
-        return redirect()->route('empleados.index')
-            ->with('success', 'Empleado actualizado exitosamente.');
+
+        return redirect()
+            ->route('empleados.index')
+            ->with('success', 'Empleado actualizado correctamente.');
     }
 
-    public function destroy(Empleado $empleado)
+    /**
+     * 🗑️ Eliminar empleado
+     */
+    public function destroy(User $empleado)
     {
-        // No permitir eliminar al propio usuario si está autenticado
-        if (auth()->check() && auth()->user()->id === $empleado->id) {
-            return redirect()->route('empleados.index')
-                ->with('error', 'No puedes eliminar tu propio usuario.');
+        // Evitar eliminarse a sí mismo
+        if (Auth::check() && Auth::id() === $empleado->id) {
+            return back()->with('error', 'No puedes eliminar tu propio usuario.');
         }
-        
+
         $empleado->delete();
-        
-        return redirect()->route('empleados.index')
-            ->with('success', 'Empleado eliminado exitosamente.');
+
+        return redirect()
+            ->route('empleados.index')
+            ->with('success', 'Empleado eliminado correctamente.');
     }
 }

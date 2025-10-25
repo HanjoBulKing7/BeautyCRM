@@ -42,6 +42,7 @@ class ProductoController extends Controller
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio' => 'required|numeric|min:0',
+            'precio_proveedor' => 'nullable|numeric|min:0', // ✅ Nuevo campo
             'activo' => 'sometimes|boolean'
         ]);
 
@@ -74,7 +75,7 @@ class ProductoController extends Controller
             $sucursalId = $user->sucursal_id;
             
             // Crear existencia automáticamente
-            $existencia = Existencia::create([
+            Existencia::create([
                 'producto_id' => $producto->id,
                 'sucursal_id' => $sucursalId,
                 'stock_actual' => 0,
@@ -105,34 +106,22 @@ class ProductoController extends Controller
         }
     }
 
-    // Función para generar SKU provisional (sin ID)
+    // ===============================
+    // 🧾 Funciones auxiliares
+    // ===============================
+
     private function generarSKUProvisional($nombre)
     {
-        // Obtener las primeras 3 letras del nombre en mayúsculas
         $inicialesNombre = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $nombre), 0, 3));
-        
-        // Obtener timestamp para hacerlo único provisionalmente
         $timestamp = time();
-        
-        // Combinar todo
-        $sku = $inicialesNombre . substr($timestamp, -3);
-        
-        return $sku;
+        return $inicialesNombre . substr($timestamp, -3);
     }
 
-    // Función para generar SKU definitivo con ID
     private function generarSKUDefinitivo($nombre, $id)
     {
-        // Obtener las primeras 3 letras del nombre en mayúsculas
         $inicialesNombre = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $nombre), 0, 3));
-        
-        // Formatear el ID a 3 dígitos
         $idFormateado = str_pad($id, 3, '0', STR_PAD_LEFT);
-        
-        // Combinar todo
-        $sku = $inicialesNombre . $idFormateado;
-        
-        return $sku;
+        return $inicialesNombre . $idFormateado;
     }
 
     public function show(Producto $producto)
@@ -152,6 +141,7 @@ class ProductoController extends Controller
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio' => 'required|numeric|min:0',
+            'precio_proveedor' => 'nullable|numeric|min:0', // ✅ Nuevo campo
             'activo' => 'sometimes|boolean'
         ]);
 
@@ -164,13 +154,8 @@ class ProductoController extends Controller
 
     public function destroy(Producto $producto)
     {
-        // Primero eliminar las existencias relacionadas
         Existencia::where('producto_id', $producto->id)->delete();
-        
-        // También eliminar movimientos de inventario relacionados
         InventarioMovimiento::where('producto_id', $producto->id)->delete();
-        
-        // Ahora sí eliminar el producto
         $producto->delete();
         
         return redirect()->route('productos.index')

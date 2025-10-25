@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'Productos - CRM')
@@ -10,21 +9,18 @@
     <!-- Encabezado con botones -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
         <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-2 md:mb-0">
-                   <i class="fas fa-cookie-bite mr-4 text-yellow-600"></i>
+            <i class="fas fa-cookie-bite mr-4 text-yellow-600"></i>
             Productos
         </h3>
-<div>
-    <a href="{{ route('productos.create') }}" 
-       class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg flex items-center text-sm md:text-base 
-              transform transition duration-200 hover:scale-105">
-
-        <img src="{{ asset('_Iconos/_Default/Icon_Add.svg') }}" 
-             alt="Agregar Producto" 
-             class="w-6 h-6 mr-2">
-        Nuevo Producto
-    </a>
-</div>
-
+        <div>
+            <a href="{{ route('productos.create') }}" 
+               class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg flex items-center text-sm md:text-base transform transition duration-200 hover:scale-105">
+                <img src="{{ asset('_Iconos/_Default/Icon_Add.svg') }}" 
+                     alt="Agregar Producto" 
+                     class="w-6 h-6 mr-2">
+                Nuevo Producto
+            </a>
+        </div>
     </div>
 
     <!-- Filtros -->
@@ -35,16 +31,6 @@
                 <input type="text" name="search" value="{{ request('search') }}" 
                        class="w-full p-2 border rounded-md text-sm" placeholder="SKU, nombre o descripción">
             </div>
-
-            <!-- ELIMINAMOS EL FILTRO POR ESTADO -->
-            <!-- <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                <select name="activo" class="w-full p-2 border rounded-md text-sm">
-                    <option value="">Todos</option>
-                    <option value="1" {{ request('activo') == '1' ? 'selected' : '' }}>Activos</option>
-                    <option value="0" {{ request('activo') == '0' ? 'selected' : '' }}>Inactivos</option>
-                </select>
-            </div> -->
 
             <div class="flex gap-2 pt-2 md:pt-0">
                 <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center text-sm flex-1 justify-center">
@@ -57,9 +43,10 @@
         </form>
     </div>
 
-    <!-- Tabla de productos optimizada para móviles -->
+    <!-- Tabla / Cards -->
     <div class="overflow-x-auto">
-        <!-- Vista para móviles (tarjetas) -->
+
+        <!-- Vista móvil -->
         <div class="md:hidden space-y-3">
             @forelse($productos as $producto)
                 <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
@@ -72,6 +59,13 @@
                             <span class="font-medium text-green-600">${{ number_format($producto->precio, 2) }}</span>
                         </div>
                     </div>
+
+                    @if($producto->precio_proveedor)
+                        <div class="text-sm text-teal-600 mb-1">
+                            <i class="fas fa-hand-holding-usd mr-1"></i>Proveedor: 
+                            ${{ number_format($producto->precio_proveedor, 2) }}
+                        </div>
+                    @endif
 
                     <div class="text-sm text-gray-600 mb-2">{{ Str::limit($producto->descripcion, 80) }}</div>
 
@@ -97,20 +91,19 @@
                     </div>
                 </div>
             @empty
-                <div class="text-center py-6 text-gray-500">
-                    No se encontraron productos.
-                </div>
+                <div class="text-center py-6 text-gray-500">No se encontraron productos.</div>
             @endforelse
         </div>
 
-        <!-- Vista para desktop (tabla) -->
+        <!-- Vista escritorio -->
         <table class="min-w-full bg-white border border-gray-200 hidden md:table">
             <thead>
                 <tr class="bg-gray-50">
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                    <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                    <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Venta</th>
+                    <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Proveedor</th>
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
@@ -122,6 +115,13 @@
                         <td class="px-4 py-3 border font-medium">{{ $producto->nombre }}</td>
                         <td class="px-4 py-3 border text-sm">{{ Str::limit($producto->descripcion, 50) }}</td>
                         <td class="px-4 py-3 border font-medium text-green-600">${{ number_format($producto->precio, 2) }}</td>
+                        <td class="px-4 py-3 border text-teal-600">
+                            @if($producto->precio_proveedor)
+                                ${{ number_format($producto->precio_proveedor, 2) }}
+                            @else
+                                <span class="text-gray-400 text-sm">—</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 border">
                             <span class="px-2 py-1 text-xs font-medium rounded-full {{ $producto->activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ $producto->activo ? 'Activo' : 'Inactivo' }}
@@ -144,7 +144,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-4 border text-center text-gray-500">
+                        <td colspan="7" class="px-4 py-4 border text-center text-gray-500">
                             No se encontraron productos.
                         </td>
                     </tr>
@@ -153,7 +153,7 @@
         </table>
     </div>
 
-    <!-- Paginación responsive -->
+    <!-- Paginación -->
     <div class="mt-4 md:mt-6">
         {{ $productos->links() }}
     </div>

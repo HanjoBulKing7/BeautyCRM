@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Empleado extends Authenticatable
+class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
-
-    protected $table = 'empleados';
+    use HasApiTokens, Notifiable;
 
     protected $fillable = [
         'nombre',
         'email',
         'password',
         'rol',
-        'activo'
+        'sucursal_id',
+        'activo',
     ];
 
     protected $hidden = [
@@ -29,27 +28,23 @@ class Empleado extends Authenticatable
         'activo' => 'boolean',
     ];
 
+    // ================================
+    // 🔗 RELACIONES
+    // ================================
+
     /**
-     * Verificar si el empleado es gerente
+     * Cada usuario pertenece a una sucursal
      */
-    public function isGerente()
+    public function sucursal()
     {
-        return $this->rol === 'gerente';
+        return $this->belongsTo(Sucursal::class, 'sucursal_id');
     }
 
     /**
-     * Verificar si el empleado es vendedor
+     * Alias para usar “empleados” en las vistas
      */
-    public function isVendedor()
+    public function scopeEmpleados($query)
     {
-        return $this->rol === 'vendedor';
-    }
-
-    /**
-     * Verificar si el empleado es empleado básico
-     */
-    public function isEmpleado()
-    {
-        return $this->rol === 'empleado';
+        return $query->whereIn('rol', ['vendedor', 'gerente']);
     }
 }

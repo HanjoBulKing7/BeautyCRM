@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->string('nombre');
             $table->text('descripcion')->nullable();
             $table->decimal('precio', 10, 2);
+            $table->decimal('precio_proveedor', 10, 2)->nullable(); 
             $table->boolean('activo')->default(true);
             $table->timestamps();
         });
