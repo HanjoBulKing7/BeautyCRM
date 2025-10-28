@@ -52,7 +52,6 @@ services:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: root
 
-  # ✅ Servicio Redis completamente eliminado
 
 volumes:
   elprogreso_mysql_data:
