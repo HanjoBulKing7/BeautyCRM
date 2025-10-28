@@ -15,8 +15,9 @@ services:
       - composer-cache-elprogreso:/tmp/composer-cache
     depends_on:
       - mysql
+      # ✅ Redis eliminado de depends_on
     working_dir: /var/www/html
-    command: php artisan serve --host=0.0.0.0 --port=8000   # ✅ sin composer install
+    command: php artisan serve --host=0.0.0.0 --port=8000
 
   node:
     image: node:20
@@ -51,7 +52,10 @@ services:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: root
 
+  # ✅ Servicio Redis completamente eliminado
+
 volumes:
   elprogreso_mysql_data:
   composer-cache-elprogreso:
   node_modules_elprogreso:
+  # ✅ Volumen redis_data eliminado
