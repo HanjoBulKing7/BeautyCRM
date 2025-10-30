@@ -88,15 +88,18 @@ Route::middleware(['auth'])->group(function () {
     });
 
 
-    // ==================== 📦 PRODUCTOS ====================
-    Route::prefix('productos')->group(function () {
-        Route::get('/', [ProductoController::class, 'index'])->name('productos.index');
-        Route::get('/crear', [ProductoController::class, 'create'])->name('productos.create');
-        Route::post('/', [ProductoController::class, 'store'])->name('productos.store');
-        Route::get('/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
-        Route::put('/{producto}', [ProductoController::class, 'update'])->name('productos.update');
-        Route::delete('/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
-    });
+// ==================== 📦 PRODUCTOS ====================
+Route::prefix('productos')->group(function () {
+    Route::get('/', [ProductoController::class, 'index'])->name('productos.index');
+    Route::get('/inactivos', [ProductoController::class, 'inactive'])->name('productos.inactive');
+    Route::get('/crear', [ProductoController::class, 'create'])->name('productos.create');
+    Route::post('/', [ProductoController::class, 'store'])->name('productos.store');
+    Route::get('/{producto}', [ProductoController::class, 'show'])->name('productos.show');
+    Route::get('/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
+    Route::put('/{producto}', [ProductoController::class, 'update'])->name('productos.update');
+    Route::patch('/{producto}/activar', [ProductoController::class, 'activate'])->name('productos.activate');
+    Route::delete('/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
+});
 
 
     // ==================== 🧭 INVENTARIO ====================

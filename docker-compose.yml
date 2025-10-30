@@ -8,14 +8,11 @@ services:
     container_name: elprogreso_app
     ports:
       - "8020:8000"   # Laravel (artisan serve)
-      - "5174:5173"   # Vite
     volumes:
       - ./src:/var/www/html
-      - ./vendor:/var/www/html/vendor
       - composer-cache-elprogreso:/tmp/composer-cache
     depends_on:
       - mysql
-      # ✅ Redis eliminado de depends_on
     working_dir: /var/www/html
     command: php artisan serve --host=0.0.0.0 --port=8000
 
@@ -26,6 +23,8 @@ services:
     volumes:
       - ./src:/var/www/html
       - node_modules_elprogreso:/var/www/html/node_modules
+    ports:
+      - "5174:5173"   # Vite
     command: sh -c "npm install && npm run dev"
 
   mysql:
@@ -52,9 +51,7 @@ services:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: root
 
-
 volumes:
   elprogreso_mysql_data:
   composer-cache-elprogreso:
   node_modules_elprogreso:
-  # ✅ Volumen redis_data eliminado

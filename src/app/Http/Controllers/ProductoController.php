@@ -1,5 +1,4 @@
 <?php
-// [file name]: ProductoController.php
 
 namespace App\Http\Controllers;
 
@@ -16,7 +15,7 @@ class ProductoController extends Controller
     {
         $search = $request->query('search');
         
-        $query = Producto::query();
+        $query = Producto::where('activo', true); // ✅ Solo productos activos
 
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -42,7 +41,7 @@ class ProductoController extends Controller
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio' => 'required|numeric|min:0',
-            'precio_proveedor' => 'nullable|numeric|min:0', // ✅ Nuevo campo
+            'precio_proveedor' => 'nullable|numeric|min:0',
             'activo' => 'sometimes|boolean'
         ]);
 
@@ -50,7 +49,7 @@ class ProductoController extends Controller
         $skuProvisional = $this->generarSKUProvisional($data['nombre']);
         
         $data['sku'] = $skuProvisional;
-        $data['activo'] = 1;
+        $data['activo'] = 1; // ✅ Siempre activo al crear
         
         // Usar transacción para asegurar la consistencia
         DB::beginTransaction();
@@ -88,7 +87,7 @@ class ProductoController extends Controller
                 'sucursal_id' => $sucursalId,
                 'usuario_id' => $user->id,
                 'tipo' => 'entrada',
-                'cantidad' => 50,
+                'cantidad' => 0,
                 'motivo' => 'Creación de producto - Stock inicial',
                 'referencia_tipo' => 'producto',
                 'referencia_id' => $producto->id
@@ -126,26 +125,41 @@ class ProductoController extends Controller
 
     public function show(Producto $producto)
     {
+        // ✅ Verificar que el producto esté activo
+        if (!$producto->activo) {
+            abort(404, 'Producto no encontrado');
+        }
+        
         return view('productos.show', compact('producto'));
     }
 
     public function edit(Producto $producto)
     {
+        // ✅ Verificar que el producto esté activo
+        if (!$producto->activo) {
+            abort(404, 'Producto no encontrado');
+        }
+        
         return view('productos.edit', compact('producto'));
     }
 
     public function update(Request $request, Producto $producto)
     {
+        // ✅ Verificar que el producto esté activo
+        if (!$producto->activo) {
+            abort(404, 'Producto no encontrado');
+        }
+
         $data = $request->validate([
             'sku' => 'required|string|max:100|unique:productos,sku,' . $producto->id,
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio' => 'required|numeric|min:0',
-            'precio_proveedor' => 'nullable|numeric|min:0', // ✅ Nuevo campo
+            'precio_proveedor' => 'nullable|numeric|min:0',
             'activo' => 'sometimes|boolean'
         ]);
 
-        $data['activo'] = $producto->activo;
+        $data['activo'] = $producto->activo; // ✅ Mantener el estado activo
         $producto->update($data);
         
         return redirect()->route('productos.index')
@@ -154,11 +168,38 @@ class ProductoController extends Controller
 
     public function destroy(Producto $producto)
     {
-        Existencia::where('producto_id', $producto->id)->delete();
-        InventarioMovimiento::where('producto_id', $producto->id)->delete();
-        $producto->delete();
+        // ✅ En vez de borrar, cambiar estado a inactivo
+        $producto->update(['activo' => false]);
         
         return redirect()->route('productos.index')
-            ->with('success', 'Producto eliminado exitosamente.');
+            ->with('success', 'Producto desactivado exitosamente.');
+    }
+
+    // ✅ Opcional: Método para reactivar productos si lo necesitas
+    public function activate(Producto $producto)
+    {
+        $producto->update(['activo' => true]);
+        
+        return redirect()->route('productos.index')
+            ->with('success', 'Producto reactivado exitosamente.');
+    }
+
+    // ✅ Opcional: Método para ver productos inactivos
+    public function inactive(Request $request)
+    {
+        $search = $request->query('search');
+        
+        $query = Producto::where('activo', false);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('sku', 'like', "%{$search}%")
+                  ->orWhere('nombre', 'like', "%{$search}%")
+                  ->orWhere('descripcion', 'like', "%{$search}%");
+            });
+        }
+
+        $productos = $query->orderBy('nombre')->paginate(10);
+        return view('productos.inactive', compact('productos'));
     }
 }
