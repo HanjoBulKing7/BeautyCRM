@@ -131,36 +131,58 @@ class ReporteController extends Controller
             $gastosTotal = 0;
         }
         
-        // Consulta para ventas por proveedor con filtro de sucursal
-        $ventasPorProveedorQuery = DB::table('venta_detalles')
-            ->join('ventas', 'venta_detalles.venta_id', '=', 'ventas.id')
-            ->join('productos', 'venta_detalles.producto_id', '=', 'productos.id');
+        // CONSULTA MODIFICADA: Ventas por Ruta en lugar de Proveedor
+        $ventasPorRutaQuery = DB::table('ventas')
+            ->leftJoin('rutas', 'ventas.ruta_id', '=', 'rutas.id')
+            ->leftJoin('venta_detalles', 'ventas.id', '=', 'venta_detalles.venta_id');
             
         if ($sucursal_id) {
-            $ventasPorProveedorQuery->where('ventas.sucursal_id', $sucursal_id);
+            $ventasPorRutaQuery->where('ventas.sucursal_id', $sucursal_id);
         }
         
-        $ventasPorProveedor = $ventasPorProveedorQuery
+        $ventasPorRuta = $ventasPorRutaQuery
             ->select(
-                'productos.proveedor',
-                DB::raw('SUM(venta_detalles.cantidad) as total_productos'),
-                DB::raw('SUM(venta_detalles.precio_unitario * venta_detalles.cantidad) as monto_total')
+                'rutas.nombre as ruta_nombre',
+                DB::raw('COALESCE(SUM(venta_detalles.cantidad), 0) as total_productos'),
+                DB::raw('COALESCE(SUM(venta_detalles.precio_unitario * venta_detalles.cantidad), 0) as monto_total')
             )
             ->whereDate('ventas.fecha', $fecha)
-            ->groupBy('productos.proveedor')
+            ->groupBy('rutas.nombre')
             ->get();
         
-        // Organizar los datos por proveedor
-        $proveedores = [
-            'Ethan' => ['productos' => 0, 'monto' => 0],
-            'Karen' => ['productos' => 0, 'monto' => 0]
-        ];
-        
-        foreach ($ventasPorProveedor as $venta) {
-            if (isset($proveedores[$venta->proveedor])) {
-                $proveedores[$venta->proveedor]['productos'] = $venta->total_productos;
-                $proveedores[$venta->proveedor]['monto'] = $venta->monto_total;
+        // Organizar los datos por ruta
+        $rutas = [];
+        foreach ($ventasPorRuta as $venta) {
+            if ($venta->ruta_nombre) {
+                $rutas[$venta->ruta_nombre] = [
+                    'productos' => $venta->total_productos,
+                    'monto' => $venta->monto_total
+                ];
             }
+        }
+        
+        // También obtener ventas sin ruta asignada
+        $ventasSinRutaQuery = DB::table('ventas')
+            ->leftJoin('venta_detalles', 'ventas.id', '=', 'venta_detalles.venta_id')
+            ->whereNull('ventas.ruta_id');
+            
+        if ($sucursal_id) {
+            $ventasSinRutaQuery->where('ventas.sucursal_id', $sucursal_id);
+        }
+        
+        $ventasSinRuta = $ventasSinRutaQuery
+            ->select(
+                DB::raw('COALESCE(SUM(venta_detalles.cantidad), 0) as total_productos'),
+                DB::raw('COALESCE(SUM(venta_detalles.precio_unitario * venta_detalles.cantidad), 0) as monto_total')
+            )
+            ->whereDate('ventas.fecha', $fecha)
+            ->first();
+        
+        if ($ventasSinRuta->total_productos > 0) {
+            $rutas['Sin Ruta'] = [
+                'productos' => $ventasSinRuta->total_productos,
+                'monto' => $ventasSinRuta->monto_total
+            ];
         }
         
         return [
@@ -169,7 +191,7 @@ class ReporteController extends Controller
             'metodosPago' => $metodosPago,
             'transferencias' => $transferencias,
             'gastos' => $gastosTotal,
-            'proveedores' => $proveedores
+            'rutas' => $rutas  // Cambiado de 'proveedores' a 'rutas'
         ];
     }
     
@@ -217,41 +239,63 @@ class ReporteController extends Controller
                 });
         }
 
-        // Consulta para ventas por proveedor con filtro de sucursal
-        $ventasPorProveedorQuery = DB::table('venta_detalles')
-            ->join('ventas', 'venta_detalles.venta_id', '=', 'ventas.id')
-            ->join('productos', 'venta_detalles.producto_id', '=', 'productos.id');
+        // CONSULTA MODIFICADA: Ventas por Ruta en lugar de Proveedor
+        $ventasPorRutaQuery = DB::table('ventas')
+            ->leftJoin('rutas', 'ventas.ruta_id', '=', 'rutas.id')
+            ->leftJoin('venta_detalles', 'ventas.id', '=', 'venta_detalles.venta_id');
             
         if ($sucursal_id) {
-            $ventasPorProveedorQuery->where('ventas.sucursal_id', $sucursal_id);
+            $ventasPorRutaQuery->where('ventas.sucursal_id', $sucursal_id);
         }
         
-        $ventasPorProveedor = $ventasPorProveedorQuery
+        $ventasPorRuta = $ventasPorRutaQuery
             ->select(
-                'productos.proveedor',
-                DB::raw('SUM(venta_detalles.cantidad) as total_productos'),
-                DB::raw('SUM(venta_detalles.precio_unitario * venta_detalles.cantidad) as monto_total')
+                'rutas.nombre as ruta_nombre',
+                DB::raw('COALESCE(SUM(venta_detalles.cantidad), 0) as total_productos'),
+                DB::raw('COALESCE(SUM(venta_detalles.precio_unitario * venta_detalles.cantidad), 0) as monto_total')
             )
             ->whereBetween('ventas.fecha', [$fechaInicio, $fechaFin])
-            ->groupBy('productos.proveedor')
+            ->groupBy('rutas.nombre')
             ->get();
         
-        // Organizar los datos por proveedor
-        $proveedores = [
-            'Ethan' => ['productos' => 0, 'monto' => 0],
-            'Karen' => ['productos' => 0, 'monto' => 0]
-        ];
-        
-        foreach ($ventasPorProveedor as $venta) {
-            if (isset($proveedores[$venta->proveedor])) {
-                $proveedores[$venta->proveedor]['productos'] = $venta->total_productos;
-                $proveedores[$venta->proveedor]['monto'] = $venta->monto_total;
+        // Organizar los datos por ruta
+        $rutas = [];
+        foreach ($ventasPorRuta as $venta) {
+            if ($venta->ruta_nombre) {
+                $rutas[$venta->ruta_nombre] = [
+                    'productos' => $venta->total_productos,
+                    'monto' => $venta->monto_total
+                ];
             }
+        }
+        
+        // Ventas sin ruta para la semana
+        $ventasSinRutaQuery = DB::table('ventas')
+            ->leftJoin('venta_detalles', 'ventas.id', '=', 'venta_detalles.venta_id')
+            ->whereNull('ventas.ruta_id');
+            
+        if ($sucursal_id) {
+            $ventasSinRutaQuery->where('ventas.sucursal_id', $sucursal_id);
+        }
+        
+        $ventasSinRuta = $ventasSinRutaQuery
+            ->select(
+                DB::raw('COALESCE(SUM(venta_detalles.cantidad), 0) as total_productos'),
+                DB::raw('COALESCE(SUM(venta_detalles.precio_unitario * venta_detalles.cantidad), 0) as monto_total')
+            )
+            ->whereBetween('ventas.fecha', [$fechaInicio, $fechaFin])
+            ->first();
+        
+        if ($ventasSinRuta->total_productos > 0) {
+            $rutas['Sin Ruta'] = [
+                'productos' => $ventasSinRuta->total_productos,
+                'monto' => $ventasSinRuta->monto_total
+            ];
         }
 
         return [
             'ventas_por_dia' => $ventasPorDia,
-            'proveedores' => $proveedores
+            'rutas' => $rutas  // Cambiado de 'proveedores' a 'rutas'
         ];
     }
 }

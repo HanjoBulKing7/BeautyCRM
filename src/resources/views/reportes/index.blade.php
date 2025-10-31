@@ -102,50 +102,40 @@
 
             <!-- Tablas de resumen -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Ventas por Proveedor -->
-            <div class="bg-white p-4 rounded-lg border mb-6">
-                <h5 class="font-semibold text-gray-700 mb-3 flex items-center">
-                    <i class="fas fa-truck-loading text-indigo-500 mr-2"></i>
-                    Ventas por Proveedor
-                </h5>
-                <div class="grid grid-cols-1 md:grid-rows-2 gap-4">
-                    <!-- Proveedor Ethan -->
-                    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                        <h6 class="font-semibold text-indigo-700 mb-2 flex items-center">
-                            <i class="fas fa-user-tie mr-2"></i>
-                            Ethan
-                        </h6>
-                        <div class="space-x-2">
-                            <div class="flex justify-between">
-                                <span>Productos Vendidos:</span>
-                                <span class="font-semibold">{{ $datos['proveedores']['Ethan']['productos'] ?? 0 }}</span>
+                <!-- Ventas por Ruta -->
+                <div class="bg-white p-4 rounded-lg border mb-6">
+                    <h5 class="font-semibold text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-route text-indigo-500 mr-2"></i>
+                        Ventas por Ruta
+                    </h5>
+                    <div class="grid grid-cols-1 md:grid-rows-2 gap-4">
+                        @forelse($datos['rutas'] as $nombreRuta => $datosRuta)
+                            <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                                <h6 class="font-semibold text-indigo-700 mb-2 flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    {{ $nombreRuta }}
+                                </h6>
+                                <div class="space-x-2">
+                                    <div class="flex justify-between">
+                                        <span>Productos Vendidos:</span>
+                                        <span class="font-semibold">{{ $datosRuta['productos'] ?? 0 }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Monto Total:</span>
+                                        <span class="font-semibold">${{ number_format($datosRuta['monto'] ?? 0, 2) }}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex justify-between">
-                                <span>Monto Total:</span>
-                                <span class="font-semibold">${{ number_format($datos['proveedores']['Ethan']['monto'] ?? 0, 2) }}</span>
+                        @empty
+                            <div class="col-span-2 text-center py-4 text-gray-500">
+                                <i class="fas fa-route text-3xl mb-2"></i>
+                                <p>No hay ventas por ruta para esta fecha</p>
                             </div>
-                        </div>
-                    </div>
-                    <!-- Proveedor Karen -->
-                    <div class="bg-pink-50 p-4 rounded-lg border border-pink-200">
-                        <h6 class="font-semibold text-pink-700 mb-2 flex items-center">
-                            <i class="fas fa-user-tie mr-2"></i>
-                            Karen
-                        </h6>
-                        <div class="space-x-2">
-                            <div class="flex justify-between">
-                                <span>Productos Vendidos:</span>
-                                <span class="font-semibold">{{ $datos['proveedores']['Karen']['productos'] ?? 0 }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Monto Total:</span>
-                                <span class="font-semibold">${{ number_format($datos['proveedores']['Karen']['monto'] ?? 0, 2) }}</span>
-                            </div>
-                        </div>
+                        @endforelse
                     </div>
                 </div>
-            </div>
-            <!-- FIN "Ventas por proveedor" -->
+                <!-- FIN "Ventas por Ruta" -->
+                
                 <!-- Resumen de ventas -->
                 <div class="bg-white p-4 rounded-lg border">
                     <h5 class="font-semibold text-gray-700 mb-3 flex items-center">
@@ -182,6 +172,7 @@
                     </div>
                 </div>
             </div>
+            
             <!-- Detalles de transferencias -->
             @if($transferencia > 0)
             <div class="bg-white p-4 rounded-lg border mb-6">
@@ -257,52 +248,41 @@
                 </table>
             </div>
 
-            <!-- SECCIÓN NUEVA: Ventas por Proveedor (Semanal) -->
+            <!-- Ventas por Ruta - Resumen Semanal -->
             <div class="bg-white p-4 rounded-lg border mb-6">
                 <h5 class="font-semibold text-gray-700 mb-3 flex items-center">
-                    <i class="fas fa-truck-loading text-indigo-500 mr-2"></i>
-                    Ventas por Proveedor - Resumen Semanal
+                    <i class="fas fa-route text-indigo-500 mr-2"></i>
+                    Ventas por Ruta - Resumen Semanal
                 </h5>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Proveedor Ethan -->
-                    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                        <h6 class="font-semibold text-indigo-700 mb-2 flex items-center">
-                            <i class="fas fa-user-tie mr-2"></i>
-                            Ethan
-                        </h6>
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span>Productos Vendidos:</span>
-                                <span class="font-semibold">{{ $datos['proveedores']['Ethan']['productos'] ?? 0 }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Monto Total:</span>
-                                <span class="font-semibold">${{ number_format($datos['proveedores']['Ethan']['monto'] ?? 0, 2) }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Proveedor Karen -->
-                    <div class="bg-pink-50 p-4 rounded-lg border border-pink-200">
-                        <h6 class="font-semibold text-pink-700 mb-2 flex items-center">
-                            <i class="fas fa-user-tie mr-2"></i>
-                            Karen
-                        </h6>
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span>Productos Vendidos:</span>
-                                <span class="font-semibold">{{ $datos['proveedores']['Karen']['productos'] ?? 0 }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Monto Total:</span>
-                                <span class="font-semibold">${{ number_format($datos['proveedores']['Karen']['monto'] ?? 0, 2) }}</span>
+                    @forelse($datos['rutas'] as $nombreRuta => $datosRuta)
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                            <h6 class="font-semibold text-indigo-700 mb-2 flex items-center">
+                                <i class="fas fa-map-marker-alt mr-2"></i>
+                                {{ $nombreRuta }}
+                            </h6>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Productos Vendidos:</span>
+                                    <span class="font-semibold">{{ $datosRuta['productos'] ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Monto Total:</span>
+                                    <span class="font-semibold">${{ number_format($datosRuta['monto'] ?? 0, 2) }}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @empty
+                        <div class="col-span-2 text-center py-4 text-gray-500">
+                            <i class="fas fa-route text-3xl mb-2"></i>
+                            <p>No hay ventas por ruta para esta semana</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
-            <!-- FIN SECCIÓN NUEVA -->
-            <!-- Después de la sección de Ventas por Proveedor (Semanal) -->
+            <!-- FIN Ventas por Ruta -->
+            
+            <!-- Total de la semana -->
             @php
                 $totalVentasSemana = $datos['ventas_por_dia']->sum('total_ventas');
                 $montoTotalSemana = $datos['ventas_por_dia']->sum('monto_total');
@@ -313,7 +293,7 @@
                     <i class="fas fa-chart-pie text-blue-500 mr-2"></i>
                     Total de la Semana
                 </h5>
-                <div class="flex  ml-2 space-y-2">
+                <div class="flex ml-2 space-y-2">
                     <span class="font-bold">Monto Total: ${{ number_format($montoTotalSemana, 2) }}</span>
                 </div>
             </div>
