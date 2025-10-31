@@ -7,18 +7,15 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql zip gd exif intl bcmath mbstring dom
 
+# Instalar Composer globalmente
+RUN curl -sS https://getcomposer.org/installer | php -- \
+    && mv composer.phar /usr/local/bin/composer
 
-# Establecer directorio de trabajo
+# Establecer el directorio de trabajo
 WORKDIR /var/www/html
 
-# ✅ Ya no copiamos composer.json ni ejecutamos composer install
+# Exponer el puerto del servidor PHP
+EXPOSE 8000
 
-# Copiar el resto de la aplicación
-COPY ./src .
-
-# Generar autoload optimizado (opcional, por si lo quieres refrescar)
-RUN composer dump-autoload --optimize || true
-
-# Permisos correctos para Laravel
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+# Comando por defecto (Composer instala dependencias si hacen falta)
+CMD sh -c "composer install --no-interaction --prefer-dist --optimize-autoloader && php artisan serve --host=0.0.0.0 --port=8000"
