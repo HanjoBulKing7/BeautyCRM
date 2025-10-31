@@ -1,196 +1,297 @@
 @csrf
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <style>
-        .asterisco{
-            color: red;
-            font-weight: 700;
-            font-size: 1.4em;
-        }
 
-           /* Estilo para inputs con icono de moneda */
-        .currency-input & precio-input {
-            padding-left: 3rem !important;
-        }
-        </style>
-    <!-- Cliente -->
-    <div >
-        <label for="seleccionar_cliente" class="block text-sm font-medium mb-1">¿Seleccionar Cliente? </label>
-        <input type="checkbox" id="seleccionar_cliente" class="h-6 w-6 mt-3 mb-0 border rounded-lg p-2">
-    </div>
-    <div id="cliente_container" class="hidden" >
-        <label class="block text-sm font-medium mb-1">Cliente <span class="asterisco">*</span></label>
-        <select name="cliente_id" id="cliente_select" class="w-full border rounded-lg p-2" required>
-            <option value="">Seleccione un cliente</option>  
-            <option value="0">Cliente anónimo</option>
-            @foreach($clientes as $cliente)
-                <option value="{{ $cliente->id }}" {{ old('cliente_id', isset($venta) ? $venta->cliente_id : '') == $cliente->id ? 'selected' : '' }}>
-                    {{ $cliente->nombre }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-    
-    <!-- Fecha -->
-    <div>
-        <label class="block text-sm font-medium mb-1">Fecha *</label>
-        <input type="date" name="fecha" value="{{ old('fecha', isset($venta) && $venta->fecha ? $venta->fecha->format('Y-m-d') : date('Y-m-d')) }}" class="w-full border rounded-lg p-2" required>
-    </div>
+<style>
+    .asterisco{ color:red; font-weight:700; font-size:1.1em; }
+    .currency-input, .precio-input { padding-left:2.5rem !important; }
+    .form-section{ background:#f9fafb; border-radius:.5rem; padding:1rem; margin-bottom:1rem; border-left:4px solid #3b82f6; }
+    .form-section-title{ font-weight:600; color:#374151; margin-bottom:.75rem; display:flex; align-items:center; gap:.5rem; }
+    .btn-primary{ background:#3b82f6; color:#fff; padding:.5rem 1rem; border-radius:.375rem; font-weight:500; transition:all .2s; }
+    .btn-primary:hover{ background:#2563eb; transform:translateY(-1px); box-shadow:0 4px 6px -1px rgba(0,0,0,.1); }
+    .btn-danger{ background:#ef4444; color:#fff; padding:.5rem; border-radius:.375rem; transition:all .2s; }
+    .btn-danger:hover{ background:#dc2626; transform:translateY(-1px); }
+    .input-field{ border:1px solid #d1d5db; border-radius:.375rem; padding:.5rem .75rem; width:100%; transition:border-color .2s, box-shadow .2s; }
+    .input-field:focus{ outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+    .select-field{ border:1px solid #d1d5db; border-radius:.375rem; padding:.5rem .75rem; width:100%; transition:border-color .2s, box-shadow .2s; }
+    .select-field:focus{ outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+    .pago-row,.producto-row{ background:#fff; border-radius:.5rem; padding:1rem; margin-bottom:.75rem; border:1px solid #e5e7eb; transition:all .2s; }
+    .pago-row:hover,.producto-row:hover{ box-shadow:0 2px 4px rgba(0,0,0,.05); border-color:#d1d5db; }
+    .relative .absolute{ color:#6b7280; }
+    .stock-warning{ color:#ef4444; font-size:.75rem; margin-top:.25rem; }
 
-    <!-- ✅ SECCIÓN MODIFICADA: PAGOS MÚLTIPLES (siempre visible) -->
-    <div class="md:col-span-2">
-        <label class="block text-sm font-medium mb-1">Métodos de Pago  <span class="asterisco">*</span></label>
+.fixed-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 255px; /* 👈 ancho de tu sidebar */
+    width: calc(100% - 255px); /* 👈 resta ese ancho al total */
+    background-color: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 50;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+    .fixed-bottom-bar {
+        left: 0;
+        width: 100%;
+    }
+}
+.asterisco{ color:red; font-weight:700; font-size:1.1em; }
+    .currency-input, .precio-input { padding-left:2.5rem !important; }
+    .form-section{ background:#f9fafb; border-radius:.5rem; padding:1rem; margin-bottom:1rem; border-left:4px solid #3b82f6; }
+    .dark-mode .form-section{ background:#374151 !important; border-left-color:#60a5fa !important; }
+    .form-section-title{ font-weight:600; color:#374151; margin-bottom:.75rem; display:flex; align-items:center; gap:.5rem; }
+    .dark-mode .form-section-title{ color:#e5e7eb !important; }
+    .btn-primary{ background:#3b82f6; color:#fff; padding:.5rem 1rem; border-radius:.375rem; font-weight:500; transition:all .2s; }
+    .btn-primary:hover{ background:#2563eb; transform:translateY(-1px); box-shadow:0 4px 6px -1px rgba(0,0,0,.1); }
+    .dark-mode .btn-primary{ background:#2563eb !important; }
+    .dark-mode .btn-primary:hover{ background:#1d4ed8 !important; }
+    .btn-danger{ background:#ef4444; color:#fff; padding:.5rem; border-radius:.375rem; transition:all .2s; }
+    .btn-danger:hover{ background:#dc2626; transform:translateY(-1px); }
+    .dark-mode .btn-danger{ background:#dc2626 !important; }
+    .dark-mode .btn-danger:hover{ background:#b91c1c !important; }
+    .input-field{ border:1px solid #d1d5db; border-radius:.375rem; padding:.5rem .75rem; width:100%; transition:border-color .2s, box-shadow .2s; }
+    .input-field:focus{ outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+    .dark-mode .input-field{ background:#374151 !important; border-color:#6b7280 !important; color:#ffffff !important; }
+    .dark-mode .input-field:focus{ border-color:#60a5fa !important; box-shadow:0 0 0 3px rgba(96,165,250,.1) !important; }
+    .select-field{ border:1px solid #d1d5db; border-radius:.375rem; padding:.5rem .75rem; width:100%; transition:border-color .2s, box-shadow .2s; }
+    .select-field:focus{ outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+    .dark-mode .select-field{ background:#374151 !important; border-color:#6b7280 !important; color:#ffffff !important; }
+    .dark-mode .select-field:focus{ border-color:#60a5fa !important; box-shadow:0 0 0 3px rgba(96,165,250,.1) !important; }
+    .pago-row,.producto-row{ background:#fff; border-radius:.5rem; padding:1rem; margin-bottom:.75rem; border:1px solid #e5e7eb; transition:all .2s; }
+    .pago-row:hover,.producto-row:hover{ box-shadow:0 2px 4px rgba(0,0,0,.05); border-color:#d1d5db; }
+    .dark-mode .pago-row, .dark-mode .producto-row{ background:#1f2937 !important; border-color:#4b5563 !important; }
+    .dark-mode .pago-row:hover, .dark-mode .producto-row:hover{ border-color:#6b7280 !important; }
+    .relative .absolute{ color:#6b7280; }
+    .dark-mode .relative .absolute{ color:#9ca3af !important; }
+    .stock-warning{ color:#ef4444; font-size:.75rem; margin-top:.25rem; }
+    .dark-mode .stock-warning{ color:#f87171 !important; }
+
+.fixed-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 255px; /* 👈 ancho de tu sidebar */
+    width: calc(100% - 255px); /* 👈 resta ese ancho al total */
+    background-color: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 50;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+.dark-mode .fixed-bottom-bar {
+    background-color: #1f2937 !important;
+    border-top-color: #374151 !important;
+}
+
+@media (max-width: 1024px) {
+    .fixed-bottom-bar {
+        left: 0;
+        width: 100%;
+    }
+}
+
+/* Agregar estas clases para los textos */
+.dark-mode .text-gray-600 { color: #d1d5db !important; }
+.dark-mode .text-green-600 { color: #4ade80 !important; }
+.dark-mode .text-red-600 { color: #f87171 !important; }
+.dark-mode .bg-gray-100 { background-color: #374151 !important; }
+
+</style>
+
+<!-- Contenedor principal con padding-bottom para no tapar contenido -->
+<div class="pb-28">
+    <!-- GRID 2/3 (izq) + 1/3 (der) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- IZQUIERDA: 2/3 -->
+        <div class="lg:col-span-2 space-y-4">
+            <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
+            <div class="form-section">
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Fecha -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Fecha <span class="asterisco">*</span></label>
+                        <input type="date" name="fecha"
+                               value="{{ old('fecha', isset($venta) && $venta->fecha ? $venta->fecha->format('Y-m-d') : date('Y-m-d')) }}"
+                               class="input-field" required>
+                    </div>
+                </div>
+
+                <!-- Cliente (oculto, para futuro) -->
+                <div style="display:none;">
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" id="seleccionar_cliente" class="w-5 h-5 rounded border" />
+                        <label for="seleccionar_cliente" class="text-sm font-medium">Seleccionar Cliente</label>
+                    </div>
+                    <div id="cliente_container" class="hidden">
+                        <label class="block text-sm font-medium mb-1">Cliente <span class="asterisco">*</span></label>
+                        <select name="cliente_id" id="cliente_select" class="select-field" required>
+                            <option value="">Seleccione un cliente</option>
+                            <option value="0">Cliente anónimo</option>
+                            @foreach($clientes as $cliente)
+                                <option value="{{ $cliente->id }}"
+                                    {{ old('cliente_id', isset($venta) ? $venta->cliente_id : '') == $cliente->id ? 'selected' : '' }}>
+                                    {{ $cliente->nombre }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: PRODUCTOS -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <i class="fas fa-boxes text-green-500"></i> Productos
+                </h3>
+
+                <div id="productos-container" class="space-y-3 mb-3">
+                    <!-- filas dinámicas por JS -->
+                </div>
+
+                <button type="button" id="agregar-producto" class="btn-primary">
+                    <i class="fas fa-plus mr-1"></i> Agregar Producto
+                </button>
+            </div>
+        </div>
+<!-- DERECHA: 1/3 -->
+<div class="space-y-4">
+    <!-- SECCIÓN 3: MÉTODOS DE PAGO -->
+    <div class="form-section">
+        <h3 class="form-section-title">
+            <i class="fas fa-credit-card text-purple-500"></i> Métodos de Pago
+        </h3>
+
         <div id="pagos-container" class="space-y-3 mb-3">
-            <!-- Pago en efectivo por defecto (siempre visible) -->
-            <div class="pago-row grid grid-cols-1 md:grid-cols-12 gap-2 items-end border p-3 rounded-lg bg-gray-50">
-                <div class="md:col-span-3">
-                    <label class="block text-sm font-medium mb-1">Método  <span class="asterisco">*</span></label>
-                    <select name="pagos[0][metodo]" class="pago-metodo w-full border rounded-lg p-2" required>
+            <!-- Pago por defecto -->
+            <div class="pago-row grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                <!-- Método (más ancho) -->
+                <div class="md:col-span-5">
+                    <label class="block text-sm font-medium mb-1">
+                        Método <span class="asterisco">*</span>
+                    </label>
+                    <select name="pagos[0][metodo]" class="pago-metodo select-field" required>
                         <option value="efectivo" selected>Efectivo</option>
                         <option value="tarjeta">Tarjeta</option>
                         <option value="transferencia">Transferencia</option>
                     </select>
                 </div>
-                
-                <div class="md:col-span-3">
-                    <label class="block text-sm font-medium mb-1">Monto <span class="asterisco">*</span></label>
+
+                <!-- Monto -->
+                <div class="md:col-span-5">
+                    <label class="block text-sm font-medium mb-1">
+                        Monto <span class="asterisco">*</span>
+                    </label>
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                        <input type="number" step="0.01" name="pagos[0][monto]" 
-                            class="pago-monto w-full border rounded-lg p-2 pl-8" min="0.01" placeholder="0.00">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+                        <input type="number" step="0.01" name="pagos[0][monto]"
+                            class="pago-monto input-field currency-input" min="0.01" placeholder="0.00">
                     </div>
                 </div>
-                <!--
-                <div class="md:col-span-3">
-                    <label class="block text-sm font-medium mb-1">Referencia</label>
-                    <input type="text" name="pagos[0][referencia]" class="pago-referencia w-full border rounded-lg p-2">
+
+                <!-- Botón eliminar (más ancho y alineado) -->
+                <div class="md:col-span-2 flex items-end">
+                    <button type="button"
+                        class="quitar-pago btn-danger w-full h-11 flex justify-center items-center"
+                        disabled>
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
                 </div>
-                -->
-                <div class="md:col-span-2 pago-destinatario-container hidden">
-                    <label class="block text-sm font-medium mb-1">Destinatario  <span class="asterisco">*</span></label>
-                    <select name="pagos[0][destinatario]" class="pago-destinatario w-full border rounded-lg p-2">
+
+                <!-- Destinatario -->
+                <div class="md:col-span-12 pago-destinatario-container hidden mt-2">
+                    <label class="block text-sm font-medium mb-1">
+                        Destinatario <span class="asterisco">*</span>
+                    </label>
+                    <select name="pagos[0][destinatario]" class="pago-destinatario select-field">
                         <option value="">Seleccione</option>
                         <option value="Karen">Karen</option>
                         <option value="Ethan">Ethan</option>
                     </select>
                 </div>
-                
-                <div class="md:col-span-1">
-                    <button type="button" class="quitar-pago bg-red-500 text-white p-2 rounded-lg w-full" disabled>
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
             </div>
         </div>
-        
-        <div class="flex items-center gap-2 mb-3">
-            <span class="text-sm font-medium">Total pagado: </span>
-            <span id="total_pagado" class="font-bold">$0.00</span>
-            <span id="restante_pago" class="ml-4 text-sm"></span>
-        </div>
-        
-        <button type="button" id="agregar-pago" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
-            + Agregar Método de Pago
-        </button>
-        
-        <!-- Campo oculto para el método de pago principal que se enviará al servidor -->
-        <input type="hidden" name="metodo_pago" id="metodo_pago_input" value="efectivo">
-    </div>
-    
-    <!-- Productos -->
-    <div class="md:col-span-2">
-        <label class="block text-sm font-medium mb-1">Productos  <span class="asterisco">*</span></label>
-        <div id="productos-container" class="space-y-3">
-            <!-- Los productos se agregarán dinámicamente aquí -->
-        </div>
-        <button type="button" id="agregar-producto" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
-            + Agregar Producto
-        </button>
-    </div>
-    
-    <!-- Campos de totales 
-    <div>
-        <label class="block text-sm font-medium mb-1">Subtotal</label>   -->
-        <input type="hidden" step="0.01" name="subtotal" id="subtotal" value="0" class="w-full border rounded-lg p-2 bg-gray-100" readonly>
-        <!-- El que está debajo se debe de usar cuando se usen descuentos, impuestos y toda la implementación de momento seguría comentado
-        <input type="number" step="0.01" name="subtotal" id="subtotal" value="{{ old('subtotal', isset($venta) ? $venta->subtotal : 0) }}" class="w-full border rounded-lg p-2 bg-gray-100" readonly>
-    </div>
-    -->
-    <!-- Campos ocultos para descuento e impuestos con valor 0 -->
-    <input type="hidden" name="descuento" value="0">
-    <input type="hidden" name="impuestos" value="0">
 
-    <div>
-        <label class="block text-sm font-medium mb-1">Total</label>
-        <input type="number" step="0.01" name="total" id="total" value="{{ old('total', isset($venta) ? $venta->total : 0) }}" class="w-full border rounded-lg p-2 bg-gray-100" readonly>
-    </div>
-    
-    <!-- Notas -->
-    <div class="md:col-span-2">
-        <label class="block text-sm font-medium mb-1">Notas</label>
-        <textarea name="notas" rows="3" class="w-full border rounded-lg p-2">{{ old('notas', isset($venta) ? $venta->notas : '') }}</textarea>
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-sm font-medium">Total pagado: </span>
+                    <span id="total_pagado" class="font-bold text-green-600">$0.00</span>
+                    <span id="restante_pago" class="ml-4 text-sm"></span>
+                </div>
+
+                <button type="button" id="agregar-pago" class="btn-primary w-full">
+                    <i class="fas fa-plus mr-1"></i> Agregar Multi Pago
+                </button>
+
+                <!-- Campo oculto para método principal -->
+                <input type="hidden" name="metodo_pago" id="metodo_pago_input" value="efectivo">
+            </div>
+
+            <!-- SECCIÓN 4: NOTAS -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <i class="fas fa-sticky-note text-yellow-500"></i> Notas
+                </h3>
+                <textarea name="notas" rows="3" class="input-field" placeholder="Agrega una nota o comentario">
+{{ old('notas', isset($venta) ? $venta->notas : '') }}</textarea>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Template para fila de pago -->
-<template id="pago-template">
-    <div class="pago-row grid grid-cols-1 md:grid-cols-12 gap-2 items-end border p-3 rounded-lg bg-gray-50">
-        <div class="md:col-span-3">
-            <label class="block text-sm font-medium mb-1">Método  <span class="asterisco">*</span></label>
-            <select name="pagos[INDEX][metodo]" class="pago-metodo w-full border rounded-lg p-2" required>
-                <option value="">Seleccione método</option>
-                <option value="efectivo">Efectivo</option>
-                <option value="tarjeta">Tarjeta</option>
-                <option value="transferencia">Transferencia</option>
-            </select>
+<!-- Barra fija inferior (Total + acciones) -->
+<div class="fixed-bottom-bar">
+    <div class="flex flex-wrap items-center gap-4">
+        <!-- Campos ocultos que usa tu JS/servidor -->
+        <input type="hidden" step="0.01" name="subtotal" id="subtotal" value="{{ old('subtotal', isset($venta) ? $venta->subtotal : 0) }}">
+        <input type="hidden" name="descuento" id="descuento" value="{{ old('descuento', isset($venta) ? $venta->descuento : 0) }}">
+        <input type="hidden" name="impuestos" id="impuestos" value="{{ old('impuestos', isset($venta) ? $venta->impuestos : 0) }}">
+
+        <!-- Total (mismo #total que ya usa tu JS) -->
+        <div class="flex items-center gap-2">
+            <label for="total" class="font-medium">Total:</label>
+            <input
+                type="number" step="0.01" name="total" id="total"
+                value="{{ old('total', isset($venta) ? $venta->total : 0) }}"
+                class="input-field bg-gray-100 w-32 text-right font-semibold" readonly>
         </div>
-        
-        <div class="md:col-span-3">
-            <label class="block text-sm font-medium mb-1">Monto <span class="asterisco">*</span></label>
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                        <input type="number" step="0.01" name="pagos[INDEX][monto]" 
-                        class="pago-monto w-full border rounded-lg p-2 pl-8" min="0.01" placeholder="0.00">
-                </div>
-        </div>
-        <!--
-        <div class="md:col-span-3">
-            <label class="block text-sm font-medium mb-1">Referencia</label>
-            <input type="text" name="pagos[INDEX][referencia]" class="pago-referencia w-full border rounded-lg p-2">
-        </div>
-         -->
-        <div class="md:col-span-2 pago-destinatario-container hidden">
-            <label class="block text-sm font-medium mb-1">Destinatario  <span class="asterisco">*</span></label>
-            <select name="pagos[INDEX][destinatario]" class="pago-destinatario w-full border rounded-lg p-2">
-                <option value="">Seleccione</option>
-                <option value="Karen">Karen</option>
-                <option value="Ethan">Ethan</option>
-            </select>
-        </div>
-        
-        <div class="md:col-span-1">
-            <button type="button" class="quitar-pago bg-red-500 text-white p-2 rounded-lg w-full">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
+
     </div>
-</template>
-<!-- Template para fila de producto (usado por JavaScript) -->
+
+    <div class="flex gap-2">
+        <!-- Usa los mismos IDs/clases que en create/edit -->
+            <button id="btn-guardar" type="submit"
+            class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition">
+            Guardar
+        </button>
+        <a href="{{ route('ventas.index') }}" class="px-4 py-2 rounded-lg border">Cancelar</a>
+    </div>
+</div>
+
+
+<!-- Template: Producto -->
 <template id="producto-template">
-    <div class="producto-row grid grid-cols-1 md:grid-cols-12 gap-2 items-end border p-3 rounded-lg">
+    <div class="producto-row grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
         <div class="md:col-span-5">
             <label class="block text-sm font-medium mb-1">Producto</label>
-            <select name="productos[INDEX][producto_id]" class="producto-select w-full border rounded-lg p-2" required>
+            <select name="productos[INDEX][producto_id]" class="producto-select select-field" required>
                 <option value="">Seleccione producto</option>
                 @foreach($productos as $producto)
                     @php
                         $existencia = $producto->existencias->where('sucursal_id', Auth::user()->sucursal_id)->first();
                         $stock = $existencia ? $existencia->stock_actual : 0;
                     @endphp
-                    <option value="{{ $producto->id }}" 
+                    <option value="{{ $producto->id }}"
                             data-precio="{{ $producto->precio }}"
                             data-stock="{{ $stock }}"
                             {{ $stock == 0 ? 'disabled' : '' }}>
-                        {{ $producto->nombre }} - ${{ number_format($producto->precio, 2) }} 
+                        {{ $producto->nombre }} - ${{ number_format($producto->precio, 2) }}
                         (Stock: {{ $stock }})
                     </option>
                 @endforeach
@@ -198,54 +299,55 @@
         </div>
         <div class="md:col-span-2">
             <label class="block text-sm font-medium mb-1">Cantidad</label>
-            <input type="number" name="productos[INDEX][cantidad]" class="cantidad-input w-full border rounded-lg p-2" min="1" value="1" required>
-            <div class="stock-message text-xs text-red-600 mt-1 hidden"></div>
+            <input type="number" name="productos[INDEX][cantidad]" class="cantidad-input input-field" min="1" value="1" required>
+            <div class="stock-message stock-warning hidden"></div>
         </div>
         <div class="md:col-span-2">
-
             <label class="block text-sm font-medium mb-1">Precio Unitario</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                    <input type="number" step="0.01" name="productos[INDEX][precio_unitario]" class="precio-input w-full border rounded-lg p-2 pl-6" min="0" required>
-                </div>  
+            <div class="relative">
+                <span class="absolute left-3 top-1/2 transform -translate-y-1/2">$</span>
+                <input type="number" step="0.01" name="productos[INDEX][precio_unitario]"
+                       class="precio-input input-field precio-input" min="0" required>
+            </div>
         </div>
         <div class="md:col-span-2">
             <label class="block text-sm font-medium mb-1">Total Línea</label>
-            <input type="number" step="0.01" name="productos[INDEX][total_linea]" class="total-linea-input w-full border rounded-lg p-2 bg-gray-100" readonly>
+            <input type="number" step="0.01" name="productos[INDEX][total_linea]"
+                   class="total-linea-input input-field bg-gray-100" readonly>
         </div>
         <div class="md:col-span-1">
-            <button type="button" class="quitar-producto bg-red-500 text-white p-2 rounded-lg w-full">
+            <button type="button" class="quitar-producto btn-danger w-full">
                 <i class="fas fa-times"></i>
             </button>
         </div>
     </div>
 </template>
 
+<!-- Datos iniciales para tu JS -->
+<div id="venta-data"
+     data-productos-iniciales="{{ isset($venta) && $venta->detalles->count() > 0 ? 
+        e(json_encode($venta->detalles->map(function($detalle){
+            $existencia = $detalle->producto->existencias->where('sucursal_id', Auth::user()->sucursal_id)->first();
+            $stock = $existencia ? $existencia->stock_actual : 0;
+            return [
+                'producto_id' => $detalle->producto_id,
+                'cantidad' => $detalle->cantidad,
+                'precio' => $detalle->precio_unitario,
+                'total_linea' => $detalle->total_linea,
+                'stock' => $stock
+            ];
+        }))) : '[]' }}"
+     data-pagos-iniciales="{{ isset($venta) && $venta->pagos->count() > 0 ?
+        e(json_encode($venta->pagos->map(function($pago){
+            return [
+                'metodo' => $pago->metodo_pago,
+                'monto' => $pago->monto,
+                'referencia' => $pago->referencia_pago,
+                'destinatario' => $pago->destinatario_transferencia
+            ];
+        }))) : '[]' }}"
+     style="display:none;"></div>
 
-
-<!-- Contenedor oculto para pasar datos de PHP a JavaScript -->
-<div id="venta-data" 
-     data-productos-iniciales="{{ isset($venta) && $venta->detalles->count() > 0 ? json_encode($venta->detalles->map(function($detalle) {
-         $existencia = $detalle->producto->existencias->where('sucursal_id', Auth::user()->sucursal_id)->first();
-         $stock = $existencia ? $existencia->stock_actual : 0;
-         return [
-             'producto_id' => $detalle->producto_id,
-             'cantidad' => $detalle->cantidad,
-             'precio' => $detalle->precio_unitario,
-             'total_linea' => $detalle->total_linea,
-             'stock' => $stock
-         ];
-     })) : '[]' }}"
-     data-pagos-iniciales="{{ isset($venta) && $venta->pagos->count() > 0 ? json_encode($venta->pagos->map(function($pago) {
-         return [
-             'metodo' => $pago->metodo_pago,
-             'monto' => $pago->monto,
-             'referencia' => $pago->referencia_pago,
-             'destinatario' => $pago->destinatario_transferencia
-         ];
-     })) : '[]' }}"
-     style="display: none;">
-</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const productosContainer = document.getElementById('productos-container');

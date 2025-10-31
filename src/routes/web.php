@@ -120,6 +120,13 @@ Route::prefix('productos')->group(function () {
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
 });
 
+    // Ruta temporal para Reporte Completo (después la implementarás)
+    Route::get('/reporte/completo', function () {
+        return view('reporte-completo'); // Crea este archivo cuando lo necesites
+    })->name('reporte.completo');
+    
+
+
 /*
 |--------------------------------------------------------------------------
 | ⚠️ REDIRECCIÓN PARA RUTAS NO EXISTENTES

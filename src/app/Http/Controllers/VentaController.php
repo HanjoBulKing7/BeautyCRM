@@ -88,29 +88,32 @@ class VentaController extends Controller
         
         // ✅ MOSTRAR PDF EN EL NAVEGADOR
         return $pdf->stream('ticket-venta-' . $venta->id . '.pdf');
-    }
-    
-    public function index(Request $request)
-    {
-        // Filtros opcionales
-        $id = $request->query('id');
-        $cliente_id = $request->query('cliente_id');
-        $fecha_desde = $request->query('fecha_desde');
-        $fecha_hasta = $request->query('fecha_hasta');
+    }       
 
-        $ventas = Venta::with(['cliente', 'usuario', 'sucursal', 'pagos']) // Agregar 'pagos' aquí
-            ->when($id, fn($q) => $q->where('id', $id))
-            ->when($cliente_id, fn($q) => $q->where('cliente_id', $cliente_id))
-            ->when($fecha_desde, fn($q) => $q->whereDate('fecha', '>=', $fecha_desde))
-            ->when($fecha_hasta, fn($q) => $q->whereDate('fecha', '<=', $fecha_hasta))
-            ->latest('fecha')
-            ->paginate(10)
-            ->withQueryString();
+        public function index(Request $request)
+        {
+            $user = auth()->user();
 
-        $clientes = Cliente::orderBy('nombre')->get();
+            // Filtro por fecha específica (del input)
+            $fecha = $request->query('fecha');
 
-        return view('ventas.index', compact('ventas', 'id', 'cliente_id', 'fecha_desde', 'fecha_hasta', 'clientes'));
-    }
+            $ventas = \App\Models\Venta::with(['cliente', 'usuario', 'sucursal', 'pagos'])
+                // Solo las ventas de la sucursal del usuario logueado
+                ->where('sucursal_id', $user->sucursal_id)
+                // Filtrar por fecha si se selecciona una
+                ->when($fecha, fn($q) => $q->whereDate('fecha', $fecha))
+                // 🔽 Orden descendente por ID (más recientes primero)
+                ->orderBy('id', 'desc')
+                ->paginate(10)
+                ->withQueryString();
+
+            // Lista de clientes (opcional)
+            $clientes = \App\Models\Cliente::orderBy('nombre')->get();
+
+            return view('ventas.index', compact('ventas', 'fecha', 'clientes'));
+        }
+
+
 
     public function create()
     {
@@ -298,6 +301,15 @@ class VentaController extends Controller
             }
 
             DB::commit();
+
+            // Si la solicitud es AJAX/JSON, regresamos la URL del ticket
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'redirect_url' => route('ventas.ticket', $venta->id),
+                ]);
+            }
+
 
         return redirect()
             ->route('ventas.ticket', $venta)  // Redirige al ticket PDF
@@ -559,6 +571,7 @@ class VentaController extends Controller
                 ->delete();
 
             DB::commit();
+            
 
             return redirect()
                 ->route('ventas.index')

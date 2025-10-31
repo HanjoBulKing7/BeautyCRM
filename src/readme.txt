@@ -20,6 +20,11 @@ elprogreso/
 
 ⚙️ Configuración inicial
 ------------------------
+docker compose build --no-cache app
+docker compose up
+
+
+
 1. Clonar el repositorio
    git clone <url-del-repo>
    cd elprogreso

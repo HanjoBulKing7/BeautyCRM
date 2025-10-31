@@ -178,7 +178,7 @@ private function getLogoPath(Sucursal $sucursal)
     $sucursalNombre = strtolower($sucursal->nombre);
     
     $logos = [
-        'mariano' => 'logos/logo_freshboys.png',
+        'matriz' => 'logos/elprogreso.png',
         'mariano1' => 'logos/logo_freshboys.png',
         'mariano2' => 'logos/logo_freshboys.png',
         'mariano3' => 'logos/logo_freshboys.png',
