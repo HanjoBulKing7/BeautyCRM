@@ -34,6 +34,10 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
+    // Ruta del dashboard de ventas (antiguo dashboard)
+    Route::get('/ventas/dashboard', [App\Http\Controllers\DashboardController::class, 'ventasDashboard'])
+        ->name('ventas.dashboard');
+
 
     // ==================== 🚚 RUTAS (DISTRIBUCIÓN) ====================
     Route::get('/rutas', [RutaController::class, 'index'])->name('rutas.index');

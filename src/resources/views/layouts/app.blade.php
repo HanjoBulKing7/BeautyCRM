@@ -182,9 +182,9 @@ body {
            <ul class="space-y-3">
     <!-- Inicio -->
     <li>
-        <a href="{{ route('dashboard') }}"
+        <a href="{{ route('ventas.dashboard') }}"
            class="flex items-center p-3 rounded-lg text-lg transition duration-200 hover:scale-105
-                  {{ request()->routeIs('dashboard') ? 'bg-orange-100 text-orange-600 font-semibold' : 'text-gray-700 hover:bg-orange-50' }}">
+                  {{ request()->routeIs('ventas.dashboard') ? 'bg-orange-100 text-orange-600 font-semibold' : 'text-gray-700 hover:bg-orange-50' }}">
             <i class="fas fa-home mr-4 text-orange-500 text-xl"></i>
             <span>Inicio</span>
         </a>
