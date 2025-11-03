@@ -4,9 +4,36 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-800">
-  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[70%_30%] gap-6">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- ================== SECCIÓN SUPERIOR HORIZONTAL - REPORTES Y TOTALES ================== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <!-- Ventas -->
+      <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center dark:bg-green-900 dark:border-green-700">
+        <p class="text-sm font-medium text-green-800 dark:text-green-300">💵 Ventas del Día</p>
+        <h4 class="text-3xl font-bold text-green-700 dark:text-green-400 mt-1">{{ number_format($ventasDia, 0) }}</h4>
+      </div>
 
-    <!-- ================== COLUMNA IZQUIERDA ================== -->
+      <!-- Merma -->
+      <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center dark:bg-red-900 dark:border-red-700">
+        <p class="text-sm font-medium text-red-800 dark:text-red-300">📉 Merma del Día</p>
+        <h4 class="text-3xl font-bold text-red-700 dark:text-red-400 mt-1">{{ number_format($mermaDia, 0) }}</h4>
+      </div>
+
+      <!-- Stock agregado -->
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center dark:bg-blue-900 dark:border-blue-700">
+        <p class="text-sm font-medium text-blue-800 dark:text-blue-300">📦 Stock Agregado</p>
+        <h4 class="text-3xl font-bold text-blue-700 dark:text-blue-400 mt-1">{{ number_format($stockAgregado, 0) }}</h4>
+      </div>
+
+      <!-- Acumulado semanal -->
+      <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center dark:bg-orange-900 dark:border-orange-700">
+        <p class="text-sm font-medium text-orange-800 dark:text-orange-300">📅 Acumulado Semana</p>
+        <h4 class="text-3xl font-bold text-orange-700 dark:text-orange-400 mt-1">{{ number_format($acumuladoSemana, 0) }}</h4>
+      </div>
+    </div>
+
+    <!-- ================== TABLA DE INVENTARIO ================== -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 dark:bg-gray-700 dark:border-gray-600">
       <!-- Encabezado -->
       <div class="flex items-center justify-between mb-5">
@@ -15,7 +42,7 @@
         </h2>
         <div class="flex gap-2">
           <a href="{{ route('productos.create') }}" 
-             class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm shadow transition">
+             class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg text-sm shadow transition">
             + Producto nuevo
           </a>
         </div>
@@ -54,7 +81,6 @@
                 <th class="px-4 py-3 text-center text-green-600 dark:text-green-400">Entradas</th>
                 <th class="px-4 py-3 text-center text-red-600 dark:text-red-400">Salidas</th>
                 <th class="px-4 py-3 text-center text-blue-600 dark:text-blue-400">Stock Actual</th>
-                <th class="px-4 py-3 text-center">Stock Mínimo</th>
                 <th class="px-4 py-3 text-center">Estado</th>
                 <th class="px-4 py-3 text-center">Acciones</th>
               </tr>
@@ -107,11 +133,6 @@
                     </span>
                   </td>
 
-                  <!-- Stock Mínimo -->
-                  <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                    {{ $existencia->stock_minimo }}
-                  </td>
-
                   <!-- Estado -->
                   <td class="px-4 py-3">
                       @if($estado == 'Alto')
@@ -130,16 +151,18 @@
                   </td>
 
                   <!-- Botones - Solo Ver -->
-                  <td class="px-4 py-3 flex justify-center gap-2">
-                    <a href="{{ route('inventario.movimientos', $existencia->producto_id) }}"
-                       class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded-md text-xs font-medium shadow transition flex items-center gap-1">
-                      🕓 <span>Ver</span>
-                    </a>
+                  <td class="px-4 py-3">
+                    <div class="flex justify-center">
+                      <a href="{{ route('inventario.movimientos', $existencia->producto_id) }}"
+                         class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded-md text-xs font-medium shadow transition flex items-center gap-1">
+                        🕓 <span>Ver</span>
+                      </a>
+                    </div>
                   </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="8" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                  <td colspan="7" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
                     No hay productos activos registrados.
                   </td>
                 </tr>
@@ -172,7 +195,7 @@
               <!-- Botón Guardar -->
               <div>
                 <button type="submit"
-                        class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg text-sm shadow transition flex items-center gap-2">
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg text-sm shadow transition flex items-center gap-2">
                    <span> Guardar </span>
                 </button>
               </div>
@@ -184,38 +207,6 @@
       <!-- Paginación -->
       <div class="mt-4">
         {{ $existencias->links() }}
-      </div>
-    </div>
-
-    <!-- ================== COLUMNA DERECHA (SOLO REPORTES) ================== -->
-    <div class="space-y-6">
-      <!-- Reportes y Totales -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 dark:bg-gray-700 dark:border-gray-600">
-        <h3 class="font-semibold text-gray-800 flex items-center gap-2 mb-4 dark:text-white">📊 Reportes y Totales</h3>
-
-        <!-- Ventas -->
-        <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-3 text-center dark:bg-green-900 dark:border-green-700">
-          <p class="text-sm font-medium text-green-800 dark:text-green-300">💵 Ventas del Día</p>
-          <h4 class="text-3xl font-bold text-green-700 dark:text-green-400 mt-1">{{ number_format($ventasDia, 0) }}</h4>
-        </div>
-
-        <!-- Merma -->
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-3 text-center dark:bg-red-900 dark:border-red-700">
-          <p class="text-sm font-medium text-red-800 dark:text-red-300">📉 Merma del Día</p>
-          <h4 class="text-3xl font-bold text-red-700 dark:text-red-400 mt-1">{{ number_format($mermaDia, 0) }}</h4>
-        </div>
-
-        <!-- Stock agregado -->
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-3 text-center dark:bg-blue-900 dark:border-blue-700">
-          <p class="text-sm font-medium text-blue-800 dark:text-blue-300">📦 Stock Agregado</p>
-          <h4 class="text-3xl font-bold text-blue-700 dark:text-blue-400 mt-1">{{ number_format($stockAgregado, 0) }}</h4>
-        </div>
-
-        <!-- Acumulado semanal -->
-        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center dark:bg-orange-900 dark:border-orange-700">
-          <p class="text-sm font-medium text-orange-800 dark:text-orange-300">📅 Acumulado Semana</p>
-          <h4 class="text-3xl font-bold text-orange-700 dark:text-orange-400 mt-1">{{ number_format($acumuladoSemana, 0) }}</h4>
-        </div>
       </div>
     </div>
   </div>
