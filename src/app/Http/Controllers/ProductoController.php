@@ -28,6 +28,49 @@ class ProductoController extends Controller
         $productos = $query->orderBy('nombre')->paginate(10);
         return view('productos.index', compact('productos'));
     }
+    
+    /**
+     * Mostrar productos inactivos
+     */
+    public function inactivos(Request $request)
+    {
+        $search = $request->query('search');
+        
+        $query = Producto::where('activo', false);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('sku', 'like', "%{$search}%")
+                  ->orWhere('nombre', 'like', "%{$search}%")
+                  ->orWhere('descripcion', 'like', "%{$search}%");
+            });
+        }
+
+        $productos = $query->orderBy('nombre')->paginate(10);
+        return view('productos.inactivos', compact('productos'));
+    }
+
+    /**
+     * Activar/Desactivar producto
+     */
+    public function toggle(Producto $producto)
+    {
+        $producto->update([
+            'activo' => !$producto->activo
+        ]);
+
+        $status = $producto->activo ? 'activado' : 'desactivado';
+        
+        // Redirigir a la vista correspondiente
+        if ($producto->activo) {
+            return redirect()->route('productos.index')
+                ->with('success', "Producto {$status} exitosamente.");
+        } else {
+            return redirect()->route('productos.inactivos')
+                ->with('success', "Producto {$status} exitosamente.");
+        }
+    }
+
 
     public function create()
     {

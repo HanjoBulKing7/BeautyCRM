@@ -1,25 +1,25 @@
 @extends('layouts.app')
 
-@section('title', 'Productos - CRM')
+@section('title', 'Productos Inactivos - CRM')
 
-@section('page-title', 'Gestión de Productos')
+@section('page-title', 'Productos Inactivos')
 
 @section('content')
 <div class="bg-white p-3 md:p-6 rounded-lg shadow">
     <!-- Encabezado con botones -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
         <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-2 md:mb-0">
-            <i class="fas fa-cookie-bite mr-4 text-yellow-600"></i>
-            Productos
+            <i class="fas fa-archive mr-4 text-red-600"></i>
+            Productos Inactivos
         </h3>
         <div class="flex gap-2">
-            <a href="{{ route('productos.inactivos') }}" 
-            class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg flex items-center text-sm md:text-base">
-                <i class="fas fa-archive mr-2"></i>
-                Ver Inactivos
+            <a href="{{ route('productos.index') }}" 
+               class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg flex items-center text-sm md:text-base">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver a Activos
             </a>
             <a href="{{ route('productos.create') }}" 
-            class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg flex items-center text-sm md:text-base">
+               class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg flex items-center text-sm md:text-base">
                 <i class="fas fa-plus mr-2"></i>
                 Nuevo Producto
             </a>
@@ -28,7 +28,7 @@
 
     <!-- Filtros -->
     <div class="bg-gray-50 p-3 md:p-4 rounded-lg mb-4 md:mb-6">
-        <form method="GET" action="{{ route('productos.index') }}" class="space-y-2 md:space-y-0 md:flex md:gap-4 md:items-end">
+        <form method="GET" action="{{ route('productos.inactivos') }}" class="space-y-2 md:space-y-0 md:flex md:gap-4 md:items-end">
             <div class="flex-1">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
                 <input type="text" name="search" value="{{ request('search') }}" 
@@ -39,7 +39,7 @@
                 <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center text-sm flex-1 justify-center">
                     <i class="fas fa-filter mr-1"></i> Filtrar
                 </button>
-                <a href="{{ route('productos.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center text-sm flex-1 justify-center">
+                <a href="{{ route('productos.inactivos') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center text-sm flex-1 justify-center">
                     <i class="fas fa-times mr-1"></i> Limpiar
                 </a>
             </div>
@@ -73,28 +73,28 @@
                     <div class="text-sm text-gray-600 mb-2">{{ Str::limit($producto->descripcion, 80) }}</div>
 
                     <div class="flex items-center mb-2">
-                        <span class="ml-2 px-2 py-1 text-xs font-medium rounded-full {{ $producto->activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                            {{ $producto->activo ? 'Activo' : 'Inactivo' }}
+                        <span class="ml-2 px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                            Inactivo
                         </span>
                     </div>
 
                     <div class="flex justify-between items-center pt-2 border-t border-gray-100">
                         <div class="flex space-x-2">
-                            <a href="{{ route('productos.edit', $producto) }}" class="text-blue-500 hover:text-blue-700 p-1" title="Editar">
-                                <i class="fas fa-edit text-sm"></i>
-                            </a>
-                            <form action="{{ route('productos.destroy', $producto) }}" method="POST" class="inline">
+                            <form action="{{ route('productos.toggle', $producto) }}" method="POST" class="inline">
                                 @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-500 hover:text-red-700 p-1" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este producto?')">
-                                    <i class="fas fa-trash text-sm"></i>
+                                @method('PUT')
+                                <button type="submit" class="text-green-500 hover:text-green-700 p-1" title="Activar">
+                                    <i class="fas fa-check text-sm"></i> Activar
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
             @empty
-                <div class="text-center py-6 text-gray-500">No se encontraron productos.</div>
+                <div class="text-center py-6 text-gray-500">
+                    <i class="fas fa-archive text-4xl text-gray-300 mb-2"></i>
+                    <p>No hay productos inactivos.</p>
+                </div>
             @endforelse
         </div>
 
@@ -126,20 +126,17 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 border">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full {{ $producto->activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ $producto->activo ? 'Activo' : 'Inactivo' }}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                                Inactivo
                             </span>
                         </td>
                         <td class="px-4 py-3 border">
                             <div class="flex space-x-2">
-                                <a href="{{ route('productos.edit', $producto) }}" class="text-blue-500 hover:text-blue-700 p-1" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('productos.destroy', $producto) }}" method="POST" class="inline">
+                                <form action="{{ route('productos.toggle', $producto) }}" method="POST" class="inline">
                                     @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-500 hover:text-red-700 p-1" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este producto?')">
-                                        <i class="fas fa-trash"></i>
+                                    @method('PUT')
+                                    <button type="submit" class="text-green-500 hover:text-green-700 p-1" title="Activar">
+                                        <i class="fas fa-check"></i> Activar
                                     </button>
                                 </form>
                             </div>
@@ -148,7 +145,8 @@
                 @empty
                     <tr>
                         <td colspan="7" class="px-4 py-4 border text-center text-gray-500">
-                            No se encontraron productos.
+                            <i class="fas fa-archive text-2xl text-gray-300 mb-2 block"></i>
+                            No hay productos inactivos.
                         </td>
                     </tr>
                 @endforelse

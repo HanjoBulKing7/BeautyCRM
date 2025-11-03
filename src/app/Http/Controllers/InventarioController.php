@@ -7,6 +7,7 @@ use App\Models\Existencia;
 use App\Models\Producto;
 use App\Models\InventarioMovimiento;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class InventarioController extends Controller
 {
@@ -16,14 +17,19 @@ class InventarioController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search');
-        $activo = $request->query('activo');
+        $estado_stock = $request->query('estado_stock');
+        $stock_min = $request->query('stock_min');
+        $stock_max = $request->query('stock_max');
         $sucursalId = Auth::user()->sucursal_id;
 
         // =============================
-        // 📦 CONSULTA PRINCIPAL DE INVENTARIO
+        // 📦 CONSULTA PRINCIPAL DE INVENTARIO (SOLO PRODUCTOS ACTIVOS)
         // =============================
         $query = Existencia::with(['producto'])
-            ->where('sucursal_id', $sucursalId);
+            ->where('sucursal_id', $sucursalId)
+            ->whereHas('producto', function ($q) {
+                $q->where('activo', true); // Solo productos activos
+            });
 
         // 🔍 Filtro por búsqueda (SKU / nombre / descripción)
         if ($search) {
@@ -34,11 +40,26 @@ class InventarioController extends Controller
             });
         }
 
-        // 🟢 Filtro por estado (Activo / Inactivo)
-        if ($activo !== null && $activo !== '') {
-            $query->whereHas('producto', function ($q) use ($activo) {
-                $q->where('activo', $activo);
+        // 📊 Filtro por estado de stock
+        if ($estado_stock) {
+            $query->where(function($q) use ($estado_stock) {
+                if ($estado_stock == 'bajo') {
+                    $q->whereRaw('stock_actual <= stock_minimo');
+                } elseif ($estado_stock == 'medio') {
+                    $q->whereRaw('stock_actual > stock_minimo AND stock_actual <= stock_minimo * 1.5');
+                } elseif ($estado_stock == 'alto') {
+                    $q->whereRaw('stock_actual > stock_minimo * 1.5');
+                }
             });
+        }
+
+        // 🔢 Filtro por rango de stock
+        if ($stock_min) {
+            $query->where('stock_actual', '>=', $stock_min);
+        }
+
+        if ($stock_max) {
+            $query->where('stock_actual', '<=', $stock_max);
         }
 
         // 📊 Ordenar por stock actual
@@ -66,6 +87,12 @@ class InventarioController extends Controller
             ->where('sucursal_id', $sucursalId)
             ->sum('cantidad');
 
+        // 📊 Contador de productos activos
+        $totalActivos = Existencia::where('sucursal_id', $sucursalId)
+            ->whereHas('producto', function ($q) {
+                $q->where('activo', true);
+            })->count();
+
         // =============================
         // 📦 DEVOLVER VISTA
         // =============================
@@ -74,7 +101,8 @@ class InventarioController extends Controller
             'ventasDia',
             'mermaDia',
             'stockAgregado',
-            'acumuladoSemana'
+            'acumuladoSemana',
+            'totalActivos'
         ));
     }
 
@@ -179,5 +207,77 @@ class InventarioController extends Controller
         }])->findOrFail($productoId);
 
         return view('inventario.movimientos', compact('producto'));
+    }
+
+    /**
+     * Actualizar múltiples existencias a la vez
+     */
+    public function bulkUpdate(Request $request)
+    {
+        $sucursalId = Auth::user()->sucursal_id;
+        $user = Auth::user();
+        
+        $entradas = $request->input('entradas', []);
+        $salidas = $request->input('salidas', []);
+        
+        DB::beginTransaction();
+        
+        try {
+            foreach ($entradas as $existenciaId => $cantidadEntrada) {
+                $cantidadSalida = $salidas[$existenciaId] ?? 0;
+                
+                if ($cantidadEntrada > 0 || $cantidadSalida > 0) {
+                    $existencia = Existencia::where('id', $existenciaId)
+                        ->where('sucursal_id', $sucursalId)
+                        ->first();
+                    
+                    if ($existencia) {
+                        // Calcular nuevo stock
+                        $nuevoStock = $existencia->stock_actual + $cantidadEntrada - $cantidadSalida;
+                        if ($nuevoStock < 0) $nuevoStock = 0;
+                        
+                        $existencia->update(['stock_actual' => $nuevoStock]);
+                        
+                        // Registrar movimientos
+                        if ($cantidadEntrada > 0) {
+                            InventarioMovimiento::create([
+                                'producto_id' => $existencia->producto_id,
+                                'sucursal_id' => $existencia->sucursal_id,
+                                'usuario_id' => $user->id,
+                                'tipo' => 'entrada',
+                                'cantidad' => $cantidadEntrada,
+                                'motivo' => 'Entrada masiva desde inventario',
+                                'referencia_tipo' => 'existencia',
+                                'referencia_id' => $existencia->id,
+                            ]);
+                        }
+                        
+                        if ($cantidadSalida > 0) {
+                            InventarioMovimiento::create([
+                                'producto_id' => $existencia->producto_id,
+                                'sucursal_id' => $existencia->sucursal_id,
+                                'usuario_id' => $user->id,
+                                'tipo' => 'salida',
+                                'cantidad' => $cantidadSalida,
+                                'motivo' => 'Salida masiva desde inventario',
+                                'referencia_tipo' => 'existencia',
+                                'referencia_id' => $existencia->id,
+                            ]);
+                        }
+                    }
+                }
+            }
+            
+            DB::commit();
+            
+            return redirect()->route('inventario.index')
+                ->with('success', 'Inventario actualizado exitosamente.');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->route('inventario.index')
+                ->with('error', 'Error al actualizar el inventario: ' . $e->getMessage());
+        }
     }
 }
