@@ -270,12 +270,13 @@
                     </h3>
                     
                     <div class="space-y-3">
-                        <a href="{{ route('rutas.edit', $ruta) }}" 
-                           class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition">
-                            <i class="fas fa-edit"></i>
-                            Editar Datos Básicos
-                        </a>
-                        
+                         {{-- Agregas el botón para gastos --}}
+                    <a href="{{ route('gastos.create', ['ruta_id' => $ruta->id]) }}" 
+                        class="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition">               
+                        <i class="fas fa-money-bill"></i> 
+                        Agregar Gasto Ruta
+                    </a>
+                                
                         <a href="{{ route('rutas.index') }}" 
                            class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition">
                             <i class="fas fa-list"></i>

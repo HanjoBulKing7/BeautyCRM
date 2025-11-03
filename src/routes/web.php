@@ -92,26 +92,30 @@ Route::middleware(['auth'])->group(function () {
     });
 
 
-// ==================== 📦 PRODUCTOS ====================
-Route::prefix('productos')->group(function () {
-    Route::get('/', [ProductoController::class, 'index'])->name('productos.index');
-    Route::get('/inactivos', [ProductoController::class, 'inactive'])->name('productos.inactive');
-    Route::get('/crear', [ProductoController::class, 'create'])->name('productos.create');
-    Route::post('/', [ProductoController::class, 'store'])->name('productos.store');
-    Route::get('/{producto}', [ProductoController::class, 'show'])->name('productos.show');
-    Route::get('/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
-    Route::put('/{producto}', [ProductoController::class, 'update'])->name('productos.update');
-    Route::patch('/{producto}/activar', [ProductoController::class, 'activate'])->name('productos.activate');
-    Route::delete('/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
-});
+    // ==================== 📦 PRODUCTOS ====================
+    Route::prefix('productos')->group(function () {
+        Route::get('/', [ProductoController::class, 'index'])->name('productos.index');
+        Route::get('/inactivos', [ProductoController::class, 'inactivos'])->name('productos.inactivos');
+        Route::put('/{producto}/toggle', [ProductoController::class, 'toggle'])->name('productos.toggle');
+        Route::get('/crear', [ProductoController::class, 'create'])->name('productos.create');
+        Route::post('/', [ProductoController::class, 'store'])->name('productos.store');
+        Route::get('/{producto}', [ProductoController::class, 'show'])->name('productos.show');
+        Route::get('/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
+        Route::put('/{producto}', [ProductoController::class, 'update'])->name('productos.update');
+        Route::delete('/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
+    });
 
 
-    // ==================== 🧭 INVENTARIO ====================
+   // ==================== 🧭 INVENTARIO ====================
     Route::prefix('inventario')->group(function () {
         Route::get('/', [InventarioController::class, 'index'])->name('inventario.index');
+        // ELIMINAR ESTA RUTA ↓
+        // Route::get('/inactivos', [InventarioController::class, 'inactivos'])->name('inventario.inactivos');
+        Route::post('/bulk-update', [InventarioController::class, 'bulkUpdate'])->name('inventario.bulk-update');
         Route::get('/{existencia}', [InventarioController::class, 'show'])->name('inventario.show');
         Route::get('/{existencia}/edit', [InventarioController::class, 'edit'])->name('inventario.edit');
         Route::put('/{existencia}', [InventarioController::class, 'update'])->name('inventario.update');
+        Route::put('/producto/{producto}/toggle', [InventarioController::class, 'toggleProducto'])->name('inventario.toggle');
         Route::get('/movimientos/{producto}', [InventarioController::class, 'movimientos'])->name('inventario.movimientos');
     });
 
