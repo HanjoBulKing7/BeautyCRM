@@ -1,46 +1,8 @@
 @csrf
 
 <style>
+    /* Estilos base */
     .asterisco{ color:red; font-weight:700; font-size:1.1em; }
-    .currency-input, .precio-input { padding-left:2.5rem !important; }
-    .form-section{ background:#f9fafb; border-radius:.5rem; padding:1rem; margin-bottom:1rem; border-left:4px solid #3b82f6; }
-    .form-section-title{ font-weight:600; color:#374151; margin-bottom:.75rem; display:flex; align-items:center; gap:.5rem; }
-    .btn-primary{ background:#3b82f6; color:#fff; padding:.5rem 1rem; border-radius:.375rem; font-weight:500; transition:all .2s; }
-    .btn-primary:hover{ background:#2563eb; transform:translateY(-1px); box-shadow:0 4px 6px -1px rgba(0,0,0,.1); }
-    .btn-danger{ background:#ef4444; color:#fff; padding:.5rem; border-radius:.375rem; transition:all .2s; }
-    .btn-danger:hover{ background:#dc2626; transform:translateY(-1px); }
-    .input-field{ border:1px solid #d1d5db; border-radius:.375rem; padding:.5rem .75rem; width:100%; transition:border-color .2s, box-shadow .2s; }
-    .input-field:focus{ outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
-    .select-field{ border:1px solid #d1d5db; border-radius:.375rem; padding:.5rem .75rem; width:100%; transition:border-color .2s, box-shadow .2s; }
-    .select-field:focus{ outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
-    .pago-row,.producto-row{ background:#fff; border-radius:.5rem; padding:1rem; margin-bottom:.75rem; border:1px solid #e5e7eb; transition:all .2s; }
-    .pago-row:hover,.producto-row:hover{ box-shadow:0 2px 4px rgba(0,0,0,.05); border-color:#d1d5db; }
-    .relative .absolute{ color:#6b7280; }
-    .stock-warning{ color:#ef4444; font-size:.75rem; margin-top:.25rem; }
-
-.fixed-bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 255px; /* 👈 ancho de tu sidebar */
-    width: calc(100% - 255px); /* 👈 resta ese ancho al total */
-    background-color: white;
-    border-top: 1px solid #e5e7eb;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 50;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-}
-
-@media (max-width: 1024px) {
-    .fixed-bottom-bar {
-        left: 0;
-        width: 100%;
-    }
-}
-.asterisco{ color:red; font-weight:700; font-size:1.1em; }
     .currency-input, .precio-input { padding-left:2.5rem !important; }
     .form-section{ background:#f9fafb; border-radius:.5rem; padding:1rem; margin-bottom:1rem; border-left:4px solid #3b82f6; }
     .dark-mode .form-section{ background:#374151 !important; border-left-color:#60a5fa !important; }
@@ -71,47 +33,77 @@
     .stock-warning{ color:#ef4444; font-size:.75rem; margin-top:.25rem; }
     .dark-mode .stock-warning{ color:#f87171 !important; }
 
-.fixed-bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 255px; /* 👈 ancho de tu sidebar */
-    width: calc(100% - 255px); /* 👈 resta ese ancho al total */
-    background-color: white;
-    border-top: 1px solid #e5e7eb;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 50;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-}
-.dark-mode .fixed-bottom-bar {
-    background-color: #1f2937 !important;
-    border-top-color: #374151 !important;
-}
-
-@media (max-width: 1024px) {
-    .fixed-bottom-bar {
-        left: 0;
-        width: 100%;
+    /* Layout principal */
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
-}
+    
+    @media (min-width: 1024px) {
+        .main-grid {
+            grid-template-columns: 2fr 1fr;
+        }
+    }
 
-/* Agregar estas clases para los textos */
-.dark-mode .text-gray-600 { color: #d1d5db !important; }
-.dark-mode .text-green-600 { color: #4ade80 !important; }
-.dark-mode .text-red-600 { color: #f87171 !important; }
-.dark-mode .bg-gray-100 { background-color: #374151 !important; }
+    .fixed-bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 255px;
+        width: calc(100% - 255px);
+        background-color: white;
+        border-top: 1px solid #e5e7eb;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 50;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .dark-mode .fixed-bottom-bar {
+        background-color: #1f2937 !important;
+        border-top-color: #374151 !important;
+    }
 
+    @media (max-width: 1024px) {
+        .fixed-bottom-bar {
+            left: 0;
+            width: 100%;
+        }
+    }
+
+    /* Clases para los textos en modo oscuro */
+    .dark-mode .text-gray-600 { color: #d1d5db !important; }
+    .dark-mode .text-green-600 { color: #4ade80 !important; }
+    .dark-mode .text-red-600 { color: #f87171 !important; }
+    .dark-mode .bg-gray-100 { background-color: #374151 !important; }
+
+    /* Mejoras para las filas de productos y pagos */
+    .producto-row, .pago-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    @media (min-width: 768px) {
+        .producto-row {
+            grid-template-columns: repeat(12, 1fr);
+        }
+        
+        .pago-row {
+            grid-template-columns: repeat(12, 1fr);
+        }
+    }
 </style>
 
 <!-- Contenedor principal con padding-bottom para no tapar contenido -->
 <div class="pb-28">
     <!-- GRID 2/3 (izq) + 1/3 (der) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="main-grid">
         <!-- IZQUIERDA: 2/3 -->
-        <div class="lg:col-span-2 space-y-4">
+        <div class="space-y-4">
             <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
             <div class="form-section">
                 <div class="grid grid-cols-1 gap-4">
@@ -161,63 +153,64 @@
                 </button>
             </div>
         </div>
-<!-- DERECHA: 1/3 -->
-<div class="space-y-4">
-    <!-- SECCIÓN 3: MÉTODOS DE PAGO -->
-    <div class="form-section">
-        <h3 class="form-section-title">
-            <i class="fas fa-credit-card text-purple-500"></i> Métodos de Pago
-        </h3>
 
-        <div id="pagos-container" class="space-y-3 mb-3">
-            <!-- Pago por defecto -->
-            <div class="pago-row grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                <!-- Método (más ancho) -->
-                <div class="md:col-span-5">
-                    <label class="block text-sm font-medium mb-1">
-                        Método <span class="asterisco">*</span>
-                    </label>
-                    <select name="pagos[0][metodo]" class="pago-metodo select-field" required>
-                        <option value="efectivo" selected>Efectivo</option>
-                        <option value="tarjeta">Tarjeta</option>
-                        <option value="transferencia">Transferencia</option>
-                    </select>
-                </div>
+        <!-- DERECHA: 1/3 -->
+        <div class="space-y-4">
+            <!-- SECCIÓN 3: MÉTODOS DE PAGO -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <i class="fas fa-credit-card text-purple-500"></i> Métodos de Pago
+                </h3>
 
-                <!-- Monto -->
-                <div class="md:col-span-5">
-                    <label class="block text-sm font-medium mb-1">
-                        Monto <span class="asterisco">*</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2">$</span>
-                        <input type="number" step="0.01" name="pagos[0][monto]"
-                            class="pago-monto input-field currency-input" min="0.01" placeholder="0.00">
+                <div id="pagos-container" class="space-y-3 mb-3">
+                    <!-- Pago por defecto -->
+                    <div class="pago-row">
+                        <!-- Método (más ancho) -->
+                        <div class="md:col-span-5">
+                            <label class="block text-sm font-medium mb-1">
+                                Método <span class="asterisco">*</span>
+                            </label>
+                            <select name="pagos[0][metodo]" class="pago-metodo select-field" required>
+                                <option value="efectivo" selected>Efectivo</option>
+                                <option value="tarjeta">Tarjeta</option>
+                                <option value="transferencia">Transferencia</option>
+                            </select>
+                        </div>
+
+                        <!-- Monto -->
+                        <div class="md:col-span-5">
+                            <label class="block text-sm font-medium mb-1">
+                                Monto <span class="asterisco">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+                                <input type="number" step="0.01" name="pagos[0][monto]"
+                                    class="pago-monto input-field currency-input" min="0.01" placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <!-- Botón eliminar (más ancho y alineado) -->
+                        <div class="md:col-span-2 flex items-end">
+                            <button type="button"
+                                class="quitar-pago btn-danger w-full h-11 flex justify-center items-center"
+                                disabled>
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- Destinatario -->
+                        <div class="md:col-span-12 pago-destinatario-container hidden mt-2">
+                            <label class="block text-sm font-medium mb-1">
+                                Destinatario <span class="asterisco">*</span>
+                            </label>
+                            <select name="pagos[0][destinatario]" class="pago-destinatario select-field">
+                                <option value="">Seleccione</option>
+                                <option value="Karen">Karen</option>
+                                <option value="Ethan">Ethan</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Botón eliminar (más ancho y alineado) -->
-                <div class="md:col-span-2 flex items-end">
-                    <button type="button"
-                        class="quitar-pago btn-danger w-full h-11 flex justify-center items-center"
-                        disabled>
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
-                </div>
-
-                <!-- Destinatario -->
-                <div class="md:col-span-12 pago-destinatario-container hidden mt-2">
-                    <label class="block text-sm font-medium mb-1">
-                        Destinatario <span class="asterisco">*</span>
-                    </label>
-                    <select name="pagos[0][destinatario]" class="pago-destinatario select-field">
-                        <option value="">Seleccione</option>
-                        <option value="Karen">Karen</option>
-                        <option value="Ethan">Ethan</option>
-                    </select>
-                </div>
-            </div>
-        </div>
 
                 <div class="flex items-center gap-2 mb-3">
                     <span class="text-sm font-medium">Total pagado: </span>
@@ -274,10 +267,9 @@
     </div>
 </div>
 
-
 <!-- Template: Producto -->
 <template id="producto-template">
-    <div class="producto-row grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
+    <div class="producto-row">
         <div class="md:col-span-5">
             <label class="block text-sm font-medium mb-1">Producto</label>
             <select name="productos[INDEX][producto_id]" class="producto-select select-field" required>
@@ -319,6 +311,55 @@
             <button type="button" class="quitar-producto btn-danger w-full">
                 <i class="fas fa-times"></i>
             </button>
+        </div>
+    </div>
+</template>
+
+<!-- Template: Pago -->
+<template id="pago-template">
+    <div class="pago-row">
+        <!-- Método (más ancho) -->
+        <div class="md:col-span-5">
+            <label class="block text-sm font-medium mb-1">
+                Método <span class="asterisco">*</span>
+            </label>
+            <select name="pagos[INDEX][metodo]" class="pago-metodo select-field" required>
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="transferencia">Transferencia</option>
+            </select>
+        </div>
+
+        <!-- Monto -->
+        <div class="md:col-span-5">
+            <label class="block text-sm font-medium mb-1">
+                Monto <span class="asterisco">*</span>
+            </label>
+            <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+                <input type="number" step="0.01" name="pagos[INDEX][monto]"
+                    class="pago-monto input-field currency-input" min="0.01" placeholder="0.00">
+            </div>
+        </div>
+
+        <!-- Botón eliminar (más ancho y alineado) -->
+        <div class="md:col-span-2 flex items-end">
+            <button type="button"
+                class="quitar-pago btn-danger w-full h-11 flex justify-center items-center">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Destinatario -->
+        <div class="md:col-span-12 pago-destinatario-container hidden mt-2">
+            <label class="block text-sm font-medium mb-1">
+                Destinatario <span class="asterisco">*</span>
+            </label>
+            <select name="pagos[INDEX][destinatario]" class="pago-destinatario select-field">
+                <option value="">Seleccione</option>
+                <option value="Karen">Karen</option>
+                <option value="Ethan">Ethan</option>
+            </select>
         </div>
     </div>
 </template>

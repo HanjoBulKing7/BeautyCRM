@@ -30,7 +30,7 @@ class AuthController extends Controller
             'activo'   => 1
         ])) {
             $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
+                 return redirect()->route('ventas.dashboard');
         }
 
         return back()->withErrors([
@@ -75,6 +75,6 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Usuario registrado exitosamente.');
+        return redirect()->route('ventas.dashboard')->with('success', 'Usuario registrado exitosamente.');
     }
 }
