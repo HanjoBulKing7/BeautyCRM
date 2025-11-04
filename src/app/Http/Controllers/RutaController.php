@@ -106,7 +106,12 @@ class RutaController extends Controller
         }
 
         $ruta->load(['empleado', 'detalles.producto']);
-        $productos = Producto::where('activo', 1)->orderBy('nombre')->get();
+        $productos = Producto::where('activo', 1)
+            ->with(['existencias' => function($query) {
+                $query->where('sucursal_id', Auth::user()->sucursal_id);
+            }])
+            ->orderBy('nombre')
+            ->get();
 
         // Debug: verificar detalles cargados
         \Log::info('Detalles de la ruta:', [
@@ -178,7 +183,7 @@ class RutaController extends Controller
     }
 
     /**
-     * ➕ Agregar un producto a la ruta
+     * ➕ Agregar un producto a la ruta (método individual - mantener por compatibilidad)
      */
     public function addProducto(Request $request, Ruta $ruta)
     {
@@ -268,151 +273,379 @@ class RutaController extends Controller
     }
 
     /**
- * 🔄 Actualizar cantidades y ventas de un producto específico
- */
-public function updateDetalle(Request $request, RutaDetalle $detalle)
-{
-    \Log::info('=== ACTUALIZANDO DETALLE DE RUTA ===');
-    \Log::info('Datos recibidos:', $request->all());
+     * ➕ Agregar múltiples productos a la ruta (modal)
+     */
+    public function bulkAddProductos(Request $request, Ruta $ruta)
+    {
+        \Log::info('=== AGREGANDO MÚLTIPLES PRODUCTOS A RUTA ===');
+        \Log::info('Datos recibidos:', $request->all());
 
-    try {
-        $data = $request->validate([
-            'recargas' => 'required|integer|min:0',
-            'devoluciones' => 'required|integer|min:0',
-            'ventas' => 'required|integer|min:0',
-        ]);
+        try {
+            $productosSeleccionados = $request->input('productos_seleccionados', []);
+            $cargasIniciales = $request->input('carga_inicial', []);
 
-        \Log::info('Datos validados:', $data);
+        \Log::info('Productos seleccionados:', $productosSeleccionados);
+        \Log::info('Cargas iniciales:', $cargasIniciales);
 
         $user = Auth::user();
         $sucursalId = $user->sucursal_id;
 
-        DB::transaction(function () use ($detalle, $data, $user, $sucursalId) {
-            // 🔻 Obtener el producto y precio DENTRO de la transacción
-            $producto = $detalle->producto;
-            $precio = $producto->precio; // ← Esta línea estaba fuera
-            
-            $existencia = Existencia::where('producto_id', $producto->id)
-                ->where('sucursal_id', $sucursalId)
-                ->first();
+        DB::transaction(function () use ($ruta, $productosSeleccionados, $cargasIniciales, $user, $sucursalId) {
+            foreach ($productosSeleccionados as $productoId) {
+                $cargaInicial = $cargasIniciales[$productoId] ?? 0;
 
-            // 🔻 Calcular NUEVO STOCK DE RUTA
-            $stockActualRuta = $detalle->carga_inicial; // Stock actual en la ruta
-            $nuevoStockRuta = $stockActualRuta 
-                + $data['recargas']     // Agregar recargas
-                - $data['ventas']       // Restar ventas
-                + $data['devoluciones']; // Agregar devoluciones (vuelven a la ruta)
+                if ($cargaInicial > 0) {
+                    // Verificar si el producto ya está en la ruta
+                    $existe = RutaDetalle::where('ruta_id', $ruta->id)
+                        ->where('producto_id', $productoId)
+                        ->first();
 
-            // Verificar que no haya stock negativo en la ruta
-            if ($nuevoStockRuta < 0) {
-                throw new \Exception("No hay suficiente stock en la ruta. Stock actual: {$stockActualRuta}, Ventas solicitadas: {$data['ventas']}");
-            }
+                    if ($existe) {
+                        continue; // Saltar si ya existe
+                    }
 
-            // 🔻 Manejar RECARGAS (descontar del INVENTARIO GENERAL)
-            $recargasAnteriores = $detalle->recargas;
-            $nuevasRecargas = $data['recargas'];
-            $diferenciaRecargas = $nuevasRecargas - $recargasAnteriores;
+                    $producto = Producto::findOrFail($productoId);
 
-            if ($diferenciaRecargas > 0 && $existencia) {
-                // Verificar stock suficiente en inventario general para recargas
-                if ($existencia->stock_actual < $diferenciaRecargas) {
-                    throw new \Exception("Stock insuficiente en inventario general para recargas. Stock actual: {$existencia->stock_actual}, Recargas solicitadas: {$diferenciaRecargas}");
+                    // 🔻 Descontar CARGA INICIAL del INVENTARIO GENERAL
+                    $existencia = Existencia::where('producto_id', $productoId)
+                        ->where('sucursal_id', $sucursalId)
+                        ->first();
+
+                    if ($existencia) {
+                        // Verificar que haya suficiente stock en inventario general
+                        if ($existencia->stock_actual < $cargaInicial) {
+                            throw new \Exception("Stock insuficiente para {$producto->nombre}. Stock actual: {$existencia->stock_actual}, Carga inicial solicitada: {$cargaInicial}");
+                        }
+
+                        $nuevoStock = $existencia->stock_actual - $cargaInicial;
+                        $existencia->update(['stock_actual' => $nuevoStock]);
+
+                        // 🧾 Registrar movimiento de SALIDA en inventario general
+                        InventarioMovimiento::create([
+                            'producto_id' => $productoId,
+                            'sucursal_id' => $sucursalId,
+                            'usuario_id' => $user->id,
+                            'tipo' => 'salida',
+                            'cantidad' => $cargaInicial,
+                            'motivo' => "Carga inicial para ruta {$ruta->nombre}",
+                            'referencia_tipo' => 'ruta',
+                            'referencia_id' => $ruta->id,
+                        ]);
+                    }
+
+                    // Crear el detalle de la ruta
+                    RutaDetalle::create([
+                        'ruta_id' => $ruta->id,
+                        'producto_id' => $productoId,
+                        'carga_inicial' => $cargaInicial,
+                        'recargas' => 0,
+                        'devoluciones' => 0,
+                        'ventas' => 0,
+                        'precio_unitario' => $producto->precio,
+                        'total' => 0,
+                    ]);
+
+                    \Log::info('Producto agregado a ruta:', [
+                        'producto_id' => $productoId,
+                        'carga_inicial' => $cargaInicial
+                    ]);
                 }
-
-                // Descontar recargas del inventario general
-                $nuevoStockGeneral = $existencia->stock_actual - $diferenciaRecargas;
-                $existencia->update(['stock_actual' => $nuevoStockGeneral]);
-
-                \Log::info('Recargas descontadas del inventario general:', [
-                    'producto_id' => $producto->id,
-                    'recargas_adicionales' => $diferenciaRecargas,
-                    'stock_anterior_general' => $existencia->stock_actual,
-                    'stock_nuevo_general' => $nuevoStockGeneral
-                ]);
-
-                // 🧾 Registrar movimiento de SALIDA por recargas
-                InventarioMovimiento::create([
-                    'producto_id' => $producto->id,
-                    'sucursal_id' => $sucursalId,
-                    'usuario_id' => $user->id,
-                    'tipo' => 'salida',
-                    'cantidad' => $diferenciaRecargas,
-                    'motivo' => "Recarga para ruta {$detalle->ruta->nombre}",
-                    'referencia_tipo' => 'ruta',
-                    'referencia_id' => $detalle->ruta->id,
-                ]);
             }
-
-            // 🔻 Manejar DEVOLUCIONES (MERMA - afecta AMBOS inventarios)
-            $devolucionesAnteriores = $detalle->devoluciones;
-            $nuevasDevoluciones = $data['devoluciones'];
-            $diferenciaDevoluciones = $nuevasDevoluciones - $devolucionesAnteriores;
-
-            if ($diferenciaDevoluciones > 0) {
-                // Las devoluciones son MERMA - NO regresan al inventario general
-                // PERO SÍ regresan al stock de la ruta (por eso se suman arriba)
-                
-                \Log::info('Devoluciones registradas como merma:', [
-                    'producto_id' => $producto->id,
-                    'devoluciones_adicionales' => $diferenciaDevoluciones
-                ]);
-
-                // 🧾 Registrar movimiento de MERMA por devoluciones
-                InventarioMovimiento::create([
-                    'producto_id' => $producto->id,
-                    'sucursal_id' => $sucursalId,
-                    'usuario_id' => $user->id,
-                    'tipo' => 'ajuste',
-                    'cantidad' => $diferenciaDevoluciones,
-                    'motivo' => "Devolución/Merma de ruta {$detalle->ruta->nombre}",
-                    'referencia_tipo' => 'ruta',
-                    'referencia_id' => $detalle->ruta->id,
-                ]);
-            }
-
-            // 🔻 Manejar VENTAS (solo afectan el stock de la ruta)
-            // Las ventas ya se restaron en el cálculo del nuevoStockRuta
-
-            // Calcular total de ventas
-            $total = $data['ventas'] * $precio;
-
-            // 🔥 ACTUALIZAR EL DETALLE con el NUEVO STOCK DE RUTA
-            $detalle->update([
-                'carga_inicial' => $nuevoStockRuta, // Actualizar el stock de la ruta
-                'recargas' => $data['recargas'],
-                'devoluciones' => $data['devoluciones'],
-                'ventas' => $data['ventas'],
-                'precio_unitario' => $precio,
-                'total' => $total,
-            ]);
-
-            // Actualizar total global de la ruta
-            $detalle->ruta->update([
-                'total_venta' => $detalle->ruta->detalles()->sum('total')
-            ]);
-
-            \Log::info('Detalle actualizado - Stock de ruta:', [
-                'detalle_id' => $detalle->id,
-                'stock_ruta_anterior' => $stockActualRuta,
-                'stock_ruta_nuevo' => $nuevoStockRuta,
-                'ventas' => $data['ventas'],
-                'recargas' => $data['recargas'],
-                'devoluciones' => $data['devoluciones']
-            ]);
         });
 
-        return back()->with('success', 'Datos del producto actualizados correctamente.');
+        return back()->with('success', 'Productos agregados correctamente a la ruta.');
 
-    } catch (\Exception $e) {
-        \Log::error('Error al actualizar detalle de ruta:', [
-            'message' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ]);
-        
-        return back()->with('error', 'Error al actualizar producto: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error al agregar productos a ruta:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return back()->with('error', 'Error al agregar productos: ' . $e->getMessage());
+        }
     }
-}
+
+    /**
+     * 🔄 Actualizar múltiples productos de la ruta (bulk update)
+     */
+    public function bulkUpdate(Request $request, Ruta $ruta)
+    {
+        \Log::info('=== ACTUALIZANDO MÚLTIPLES PRODUCTOS DE RUTA ===');
+        \Log::info('Datos recibidos:', $request->all());
+
+        try {
+            $ventas = $request->input('ventas', []);
+            $recargas = $request->input('recargas', []);
+            $devoluciones = $request->input('devoluciones', []);
+
+            $user = Auth::user();
+            $sucursalId = $user->sucursal_id;
+
+            DB::transaction(function () use ($ruta, $ventas, $recargas, $devoluciones, $user, $sucursalId) {
+                $totalGeneral = 0;
+
+                foreach ($ventas as $detalleId => $nuevasVentas) {
+                    $detalle = RutaDetalle::with('producto')->find($detalleId);
+                    if (!$detalle || $detalle->ruta_id != $ruta->id) {
+                        continue;
+                    }
+
+                    $nuevasRecargas = $recargas[$detalleId] ?? 0;
+                    $nuevasDevoluciones = $devoluciones[$detalleId] ?? 0;
+
+                    // 🔻 Calcular NUEVO STOCK DE RUTA (CORREGIDO)
+                    $stockActualRuta = $detalle->carga_inicial;
+                    $nuevoStockRuta = $stockActualRuta 
+                        + $nuevasRecargas     // Agregar recargas
+                        - $nuevasVentas       // Restar ventas
+                        - $nuevasDevoluciones; // RESTAR devoluciones (NO sumar)
+
+                    // Verificar que no haya stock negativo en la ruta
+                    if ($nuevoStockRuta < 0) {
+                        throw new \Exception("No hay suficiente stock en la ruta para {$detalle->producto->nombre}. Stock actual: {$stockActualRuta}, Ventas: {$nuevasVentas}, Devoluciones: {$nuevasDevoluciones}");
+                    }
+
+                    // 🔻 Manejar RECARGAS (descontar del INVENTARIO GENERAL)
+                    $recargasAnteriores = $detalle->recargas;
+                    $diferenciaRecargas = $nuevasRecargas - $recargasAnteriores;
+
+                    if ($diferenciaRecargas > 0) {
+                        $existencia = Existencia::where('producto_id', $detalle->producto_id)
+                            ->where('sucursal_id', $sucursalId)
+                            ->first();
+
+                        if ($existencia) {
+                            // Verificar stock suficiente en inventario general para recargas
+                            if ($existencia->stock_actual < $diferenciaRecargas) {
+                                throw new \Exception("Stock insuficiente en inventario general para recargas de {$detalle->producto->nombre}. Stock actual: {$existencia->stock_actual}, Recargas solicitadas: {$diferenciaRecargas}");
+                            }
+
+                            // Descontar recargas del inventario general
+                            $nuevoStockGeneral = $existencia->stock_actual - $diferenciaRecargas;
+                            $existencia->update(['stock_actual' => $nuevoStockGeneral]);
+
+                            // 🧾 Registrar movimiento de SALIDA por recargas
+                            InventarioMovimiento::create([
+                                'producto_id' => $detalle->producto_id,
+                                'sucursal_id' => $sucursalId,
+                                'usuario_id' => $user->id,
+                                'tipo' => 'salida',
+                                'cantidad' => $diferenciaRecargas,
+                                'motivo' => "Recarga para ruta {$ruta->nombre}",
+                                'referencia_tipo' => 'ruta',
+                                'referencia_id' => $ruta->id,
+                            ]);
+                        }
+                    }
+
+                    // 🔻 Manejar DEVOLUCIONES (MERMA - NO regresan al inventario general)
+                    $devolucionesAnteriores = $detalle->devoluciones;
+                    $diferenciaDevoluciones = $nuevasDevoluciones - $devolucionesAnteriores;
+
+                    if ($diferenciaDevoluciones > 0) {
+                        // 🧾 Registrar movimiento de MERMA por devoluciones
+                        InventarioMovimiento::create([
+                            'producto_id' => $detalle->producto_id,
+                            'sucursal_id' => $sucursalId,
+                            'usuario_id' => $user->id,
+                            'tipo' => 'ajuste',
+                            'cantidad' => $diferenciaDevoluciones,
+                            'motivo' => "Devolución/Merma de ruta {$ruta->nombre}",
+                            'referencia_tipo' => 'ruta',
+                            'referencia_id' => $ruta->id,
+                        ]);
+
+                        \Log::info('Devoluciones registradas como merma:', [
+                            'producto_id' => $detalle->producto_id,
+                            'devoluciones_adicionales' => $diferenciaDevoluciones
+                        ]);
+                    }
+
+                    // Calcular total de ventas (las devoluciones NO afectan las ventas)
+                    $total = $nuevasVentas * $detalle->precio_unitario;
+                    $totalGeneral += $total;
+
+                    // 🔥 ACTUALIZAR EL DETALLE con el NUEVO STOCK DE RUTA
+                    $detalle->update([
+                        'carga_inicial' => $nuevoStockRuta, // Actualizar el stock de la ruta
+                        'recargas' => $nuevasRecargas,
+                        'devoluciones' => $nuevasDevoluciones,
+                        'ventas' => $nuevasVentas,
+                        'total' => $total,
+                    ]);
+
+                    \Log::info('Detalle actualizado - Stock de ruta:', [
+                        'detalle_id' => $detalle->id,
+                        'stock_ruta_anterior' => $stockActualRuta,
+                        'stock_ruta_nuevo' => $nuevoStockRuta,
+                        'ventas' => $nuevasVentas,
+                        'recargas' => $nuevasRecargas,
+                        'devoluciones' => $nuevasDevoluciones
+                    ]);
+                }
+
+                // Actualizar total global de la ruta
+                $ruta->update([
+                    'total_venta' => $totalGeneral
+                ]);
+
+                \Log::info('Total general actualizado:', ['total_venta' => $totalGeneral]);
+            });
+
+            return back()->with('success', 'Datos actualizados correctamente.');
+
+        } catch (\Exception $e) {
+            \Log::error('Error al actualizar productos de ruta:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return back()->with('error', 'Error al actualizar productos: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 🔄 Actualizar cantidades y ventas de un producto específico (método individual - mantener por compatibilidad)
+     */
+    public function updateDetalle(Request $request, RutaDetalle $detalle)
+    {
+        \Log::info('=== ACTUALIZANDO DETALLE DE RUTA ===');
+        \Log::info('Datos recibidos:', $request->all());
+
+        try {
+            $data = $request->validate([
+                'recargas' => 'required|integer|min:0',
+                'devoluciones' => 'required|integer|min:0',
+                'ventas' => 'required|integer|min:0',
+            ]);
+
+            \Log::info('Datos validados:', $data);
+
+            $user = Auth::user();
+            $sucursalId = $user->sucursal_id;
+
+            DB::transaction(function () use ($detalle, $data, $user, $sucursalId) {
+                // 🔻 Obtener el producto y precio DENTRO de la transacción
+                $producto = $detalle->producto;
+                $precio = $producto->precio;
+                
+                $existencia = Existencia::where('producto_id', $producto->id)
+                    ->where('sucursal_id', $sucursalId)
+                    ->first();
+
+                // 🔻 Calcular NUEVO STOCK DE RUTA (CORREGIDO)
+                $stockActualRuta = $detalle->carga_inicial;
+                $nuevoStockRuta = $stockActualRuta 
+                    + $data['recargas']     // Agregar recargas
+                    - $data['ventas']       // Restar ventas
+                    - $data['devoluciones']; // RESTAR devoluciones (NO sumar)
+
+                // Verificar que no haya stock negativo en la ruta
+                if ($nuevoStockRuta < 0) {
+                    throw new \Exception("No hay suficiente stock en la ruta. Stock actual: {$stockActualRuta}, Ventas: {$data['ventas']}, Devoluciones: {$data['devoluciones']}");
+                }
+
+                // 🔻 Manejar RECARGAS (descontar del INVENTARIO GENERAL)
+                $recargasAnteriores = $detalle->recargas;
+                $nuevasRecargas = $data['recargas'];
+                $diferenciaRecargas = $nuevasRecargas - $recargasAnteriores;
+
+                if ($diferenciaRecargas > 0 && $existencia) {
+                    // Verificar stock suficiente en inventario general para recargas
+                    if ($existencia->stock_actual < $diferenciaRecargas) {
+                        throw new \Exception("Stock insuficiente en inventario general para recargas. Stock actual: {$existencia->stock_actual}, Recargas solicitadas: {$diferenciaRecargas}");
+                    }
+
+                    // Descontar recargas del inventario general
+                    $nuevoStockGeneral = $existencia->stock_actual - $diferenciaRecargas;
+                    $existencia->update(['stock_actual' => $nuevoStockGeneral]);
+
+                    \Log::info('Recargas descontadas del inventario general:', [
+                        'producto_id' => $producto->id,
+                        'recargas_adicionales' => $diferenciaRecargas,
+                        'stock_anterior_general' => $existencia->stock_actual,
+                        'stock_nuevo_general' => $nuevoStockGeneral
+                    ]);
+
+                    // 🧾 Registrar movimiento de SALIDA por recargas
+                    InventarioMovimiento::create([
+                        'producto_id' => $producto->id,
+                        'sucursal_id' => $sucursalId,
+                        'usuario_id' => $user->id,
+                        'tipo' => 'salida',
+                        'cantidad' => $diferenciaRecargas,
+                        'motivo' => "Recarga para ruta {$detalle->ruta->nombre}",
+                        'referencia_tipo' => 'ruta',
+                        'referencia_id' => $detalle->ruta->id,
+                    ]);
+                }
+
+                // 🔻 Manejar DEVOLUCIONES (MERMA - NO regresan al inventario general)
+                $devolucionesAnteriores = $detalle->devoluciones;
+                $nuevasDevoluciones = $data['devoluciones'];
+                $diferenciaDevoluciones = $nuevasDevoluciones - $devolucionesAnteriores;
+
+                if ($diferenciaDevoluciones > 0) {
+                    // 🧾 Registrar movimiento de MERMA por devoluciones
+                    InventarioMovimiento::create([
+                        'producto_id' => $producto->id,
+                        'sucursal_id' => $sucursalId,
+                        'usuario_id' => $user->id,
+                        'tipo' => 'ajuste',
+                        'cantidad' => $diferenciaDevoluciones,
+                        'motivo' => "Devolución/Merma de ruta {$detalle->ruta->nombre}",
+                        'referencia_tipo' => 'ruta',
+                        'referencia_id' => $detalle->ruta->id,
+                    ]);
+
+                    \Log::info('Devoluciones registradas como merma:', [
+                        'producto_id' => $producto->id,
+                        'devoluciones_adicionales' => $diferenciaDevoluciones
+                    ]);
+                }
+
+                // Calcular total de ventas (las devoluciones NO afectan las ventas)
+                $total = $data['ventas'] * $precio;
+
+                // 🔥 ACTUALIZAR EL DETALLE con el NUEVO STOCK DE RUTA
+                $detalle->update([
+                    'carga_inicial' => $nuevoStockRuta,
+                    'recargas' => $data['recargas'],
+                    'devoluciones' => $data['devoluciones'],
+                    'ventas' => $data['ventas'],
+                    'precio_unitario' => $precio,
+                    'total' => $total,
+                ]);
+
+                // Actualizar total global de la ruta
+                $detalle->ruta->update([
+                    'total_venta' => $detalle->ruta->detalles()->sum('total')
+                ]);
+
+                \Log::info('Detalle actualizado - Stock de ruta:', [
+                    'detalle_id' => $detalle->id,
+                    'stock_ruta_anterior' => $stockActualRuta,
+                    'stock_ruta_nuevo' => $nuevoStockRuta,
+                    'ventas' => $data['ventas'],
+                    'recargas' => $data['recargas'],
+                    'devoluciones' => $data['devoluciones']
+                ]);
+            });
+
+            return back()->with('success', 'Datos del producto actualizados correctamente.');
+
+        } catch (\Exception $e) {
+            \Log::error('Error al actualizar detalle de ruta:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return back()->with('error', 'Error al actualizar producto: ' . $e->getMessage());
+        }
+    }
 
     /**
      * 🗑️ Eliminar un producto de la ruta

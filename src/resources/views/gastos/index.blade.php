@@ -32,13 +32,12 @@
         <h4 class="font-medium text-gray-700 mb-2 md:mb-3">Buscar gastos</h4>
 
         <div class="md:flex md:items-end md:gap-4">
-            <form method="GET" action="{{ route('gastos.index') }}" class="flex-1 space-y-2 md:space-y-0 md:flex md:gap-4 md:items-end">
+            <form method="GET" action="{{ route('gastos.index') }}" class="flex-1 space-y-2 md:space-y-0 md:grid md:grid-cols-4 md:gap-4 md:items-end">
                 @php
-                    // La fecha seleccionada viene del controller; si no, hoy.
                     $fechaSeleccionada = isset($fecha) ? $fecha : now()->toDateString();
                 @endphp
 
-                <div class="flex-1">
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
                     <select name="categoria" class="w-full p-2 border rounded-md text-sm">
                         <option value="">Todas las categorías</option>
@@ -50,7 +49,16 @@
                     </select>
                 </div>
 
-                <div class="flex-1">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                    <select name="tipo" class="w-full p-2 border rounded-md text-sm">
+                        <option value="">Todos los tipos</option>
+                        <option value="general" {{ request('tipo') == 'general' ? 'selected' : '' }}>Gastos Generales</option>
+                        <option value="ruta" {{ request('tipo') == 'ruta' ? 'selected' : '' }}>Gastos de Ruta</option>
+                    </select>
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
                     <input
                         type="date"
@@ -146,6 +154,7 @@
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                    <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ruta</th>
                     <th class="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
             </thead>
@@ -156,9 +165,6 @@
                         <td class="px-4 py-3 border">
                             <div class="font-medium">{{ $gasto->descripcion }}</div>
                             <div class="text-xs text-gray-500">{{ $gasto->metodo_pago }}</div>
-                            @if($gasto->sucursal)
-                                <div class="text-xs text-gray-500">{{ $gasto->sucursal->nombre }}</div>
-                            @endif
                         </td>
                         <td class="px-4 py-3 border">
                             <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
@@ -166,6 +172,17 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 border font-medium text-red-600">${{ number_format($gasto->monto, 2) }}</td>
+                        <td class="px-4 py-3 border">
+                            @if($gasto->ruta)
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-route text-blue-500 text-xs"></i>
+                                    <span class="text-xs text-blue-600">{{ $gasto->ruta->nombre }}</span>
+                                </div>
+                                <div class="text-xs text-gray-500">{{ $gasto->ruta->empleado->nombre }}</div>
+                            @else
+                                <span class="text-xs text-gray-400">General</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 border">
                             <div class="flex space-x-2">
                                 <a href="{{ route('gastos.edit', $gasto) }}" class="text-green-500 hover:text-green-700 p-1" title="Editar">
@@ -178,17 +195,12 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                                @if($gasto->comprobante_url)
-                                    <a href="{{ route('gastos.download.comprobante', $gasto) }}" class="text-purple-500 hover:text-purple-700 p-1" title="Descargar comprobante">
-                                        <i class="fas fa-download"></i>
-                                    </a>
-                                @endif
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-4 border text-center text-gray-500">
+                        <td colspan="6" class="px-4 py-4 border text-center text-gray-500">
                             No se encontraron gastos con los filtros aplicados.
                         </td>
                     </tr>

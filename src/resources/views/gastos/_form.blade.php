@@ -1,4 +1,30 @@
 @csrf
+
+@if(isset($ruta) && $ruta)
+    <!-- Campo oculto para ruta_id -->
+    <input type="hidden" name="ruta_id" value="{{ $ruta->id }}">
+    
+    <!-- Información de la ruta (solo lectura) -->
+    <div class="md:col-span-2 bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4">
+        <label class="block text-sm font-medium mb-2 text-blue-700">
+            <i class="fas fa-route text-blue-500 mr-2"></i>Gasto Asociado a Ruta
+        </label>
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <i class="fas fa-truck text-white"></i>
+            </div>
+            <div>
+                <p class="font-medium text-blue-900">{{ $ruta->nombre }}</p>
+                <p class="text-sm text-blue-600">
+                    Vendedor: {{ $ruta->empleado->nombre }} | 
+                    Fecha: {{ $ruta->fecha->format('d/m/Y') }}
+                </p>
+            </div>
+        </div>
+        <p class="text-xs text-blue-500 mt-2">Este gasto se asociará automáticamente a la ruta seleccionada</p>
+    </div>
+@endif
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
     <!-- Fila 1: Fecha y Categoría -->
     <div class="bg-gray-50 p-4 rounded-xl">
@@ -59,44 +85,4 @@
                class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" 
                required placeholder="Describe el gasto realizado">
     </div>
-
-    <!-- Fila 4: Comprobante (ancho completo) -->
-<!--     <div class="md:col-span-2 bg-gray-50 p-4 rounded-xl">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-file-upload text-indigo-500 mr-2"></i>Comprobante
-        </label>
-        <div class="flex items-center space-x-3">
-            <input type="file" name="comprobante" 
-                   class="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                   accept=".jpg,.jpeg,.png,.pdf">
-            
-            @if($gasto->comprobante_url)
-            <div class="flex items-center space-x-2 bg-green-100 px-3 py-2 rounded-lg">
-                <i class="fas fa-file-pdf text-green-600"></i>
-                <span class="text-sm text-green-700">Comprobante cargado</span>
-                <a href="{{ Storage::url($gasto->comprobante_url) }}" target="_blank" 
-                   class="text-blue-600 hover:text-blue-800 ml-2" title="Descargar">
-                    <i class="fas fa-download"></i>
-                </a>
-            </div>
-            @endif
-        </div>
-        <p class="text-xs text-gray-500 mt-2">Formatos permitidos: JPG, PNG, PDF (Máx. 2MB)</p>
-    </div>  -->
 </div>
-
-<!-- Estilos para mejorar la apariencia -->
-<style>
-    .focus\:ring-2:focus {
-        ring-width: 2px;
-    }
-    .transition {
-        transition: all 0.2s ease-in-out;
-    }
-    .bg-gray-50 {
-        background-color: #f9fafb;
-    }
-    .border-gray-300 {
-        border-color: #d1d5db;
-    }
-</style>
