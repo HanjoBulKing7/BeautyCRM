@@ -205,8 +205,9 @@
                             </label>
                             <select name="pagos[0][destinatario]" class="pago-destinatario select-field">
                                 <option value="">Seleccione</option>
-                                <option value="Karen">Karen</option>
-                                <option value="Ethan">Ethan</option>
+                                <option value="Ethan">Armando</option>
+                                <option value="Karen">Diana</option>
+
                             </select>
                         </div>
                     </div>
