@@ -30,8 +30,11 @@ class GastoController extends Controller
 
     public function index(Request $request)
     {
+        // Obtener la sucursal del usuario autenticado
+        $sucursalId = Auth::user()->sucursal_id;
+
         $query = Gasto::with(['sucursal', 'ruta', 'ruta.empleado'])
-            ->where('sucursal_id', auth()->user()->sucursal_id)
+            ->where('sucursal_id', $sucursalId)
             ->latest();
 
         // Filtro por categoría
@@ -62,14 +65,12 @@ class GastoController extends Controller
         $gastos = $query->paginate(20);
 
         // Calcular total del día
-        $totalDia = Gasto::where('sucursal_id', auth()->user()->sucursal_id)
+        $totalDia = Gasto::where('sucursal_id', $sucursalId)
             ->whereDate('fecha', $fecha)
             ->sum('monto');
 
-        // Obtener rutas para el filtro
-        $rutas = Ruta::where('sucursal_id', auth()->user()->sucursal_id)
-            ->orderBy('nombre')
-            ->get();
+        // Obtener rutas para el filtro (sin filtrar por sucursal)
+        $rutas = Ruta::orderBy('nombre')->get();
 
         return view('gastos.index', [
             'gastos' => $gastos,
@@ -96,64 +97,69 @@ class GastoController extends Controller
             'ruta' => $ruta
         ]);
     }
+public function store(Request $request)
+{
+    // Validar datos
+    $data = $request->validate([
+        'fecha' => 'required|date',
+        'categoria' => 'required|in:servicios,renta,insumos,nomina,mantenimiento,otros',
+        'descripcion' => 'required|string|max:255',
+        'monto' => 'required|numeric|min:0',
+        'metodo_pago' => 'required|in:efectivo,transferencia,tarjeta',
+        'ruta_id' => 'nullable|exists:rutas,id',
+        'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+    ]);
 
-    public function store(Request $request)
-    {
-        // Validar datos con las categorías permitidas (EXACTAMENTE como en el ENUM)
-        $data = $request->validate([
-            'fecha' => 'required|date',
-            'categoria' => 'required|in:servicios,renta,insumos,nomina,mantenimiento,otros',
-            'descripcion' => 'required|string|max:255',
-            'monto' => 'required|numeric|min:0',
-            'metodo_pago' => 'required|in:efectivo,transferencia,tarjeta',
-            'ruta_id' => 'nullable|exists:rutas,id',
-            'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
+    // Obtener la sucursal y usuario automáticamente del usuario autenticado
+    $sucursalId = Auth::user()->sucursal_id;
+    $usuarioId = Auth::user()->id;
 
-        // Obtener la sucursal y usuario automáticamente del usuario autenticado
-        $sucursal_id = Auth::user()->sucursal_id;
-        $usuario_id = Auth::user()->id;
-
-        // Verificar que el usuario tenga una sucursal asignada
-        if (!$sucursal_id) {
-            return redirect()->back()
-                ->with('error', 'No tienes una sucursal asignada. Contacta al administrador.')
-                ->withInput();
-        }
-
-        // Procesar comprobante si se subió
-        $comprobanteUrl = null;
-        if ($request->hasFile('comprobante')) {
-            $comprobanteUrl = $request->file('comprobante')->store('comprobantes', 'public');
-        }
-
-        // Crear el gasto
-        $gasto = Gasto::create([
-            'sucursal_id' => $sucursal_id,
-            'usuario_id' => $usuario_id,
-            'ruta_id' => $data['ruta_id'] ?? null,
-            'fecha' => $data['fecha'],
-            'categoria' => $data['categoria'],
-            'descripcion' => $data['descripcion'],
-            'monto' => $data['monto'],
-            'metodo_pago' => $data['metodo_pago'],
-            'comprobante_url' => $comprobanteUrl,
-        ]);
-
-        // Redirigir dependiendo de si es gasto de ruta o general
-        if ($data['ruta_id']) {
-            return redirect()->route('rutas.show', $data['ruta_id'])
-                ->with('success', 'Gasto de ruta registrado correctamente');
-        }
-
-        return redirect()->route('gastos.index')
-            ->with('success', 'Gasto registrado correctamente.');
+    // Verificar que el usuario tenga una sucursal asignada
+    if (!$sucursalId) {
+        return redirect()->back()
+            ->with('error', 'No tienes una sucursal asignada. Contacta al administrador.')
+            ->withInput();
     }
+
+    // Procesar comprobante si se subió
+    $comprobanteUrl = null;
+    if ($request->hasFile('comprobante')) {
+        $comprobanteUrl = $request->file('comprobante')->store('comprobantes', 'public');
+    }
+
+    // Crear el gasto
+    $gasto = Gasto::create([
+        'sucursal_id' => $sucursalId,
+        'usuario_id' => $usuarioId,
+        'ruta_id' => $data['ruta_id'] ?? null,
+        'fecha' => $data['fecha'],
+        'categoria' => $data['categoria'],
+        'descripcion' => $data['descripcion'],
+        'monto' => $data['monto'],
+        'metodo_pago' => $data['metodo_pago'],
+        'comprobante_url' => $comprobanteUrl,
+    ]);
+
+    // DEBUG: Verificar qué tenemos
+    logger('Gasto creado - Ruta ID: ' . ($gasto->ruta_id ?? 'NULL'));
+
+    // Redirigir dependiendo de si es gasto de ruta o general
+    if ($gasto->ruta_id) {
+        return redirect()->route('rutas.show', $gasto->ruta_id)
+            ->with('success', 'Gasto de ruta registrado correctamente');
+    }
+
+    return redirect()->route('gastos.index')
+        ->with('success', 'Gasto general registrado correctamente.');
+}
 
     public function show(Gasto $gasto)
     {
+        // Obtener la sucursal del usuario autenticado
+        $sucursalId = Auth::user()->sucursal_id;
+
         // Verificar que el gasto pertenezca a la sucursal del usuario
-        if ($gasto->sucursal_id !== Auth::user()->sucursal_id) {
+        if ($gasto->sucursal_id !== $sucursalId) {
             return redirect()
                 ->route('gastos.index')
                 ->with('error', 'No tienes permisos para ver este gasto.');
@@ -166,8 +172,11 @@ class GastoController extends Controller
 
     public function edit(Gasto $gasto)
     {
+        // Obtener la sucursal del usuario autenticado
+        $sucursalId = Auth::user()->sucursal_id;
+
         // Verificar que el gasto pertenezca a la sucursal del usuario
-        if ($gasto->sucursal_id !== Auth::user()->sucursal_id) {
+        if ($gasto->sucursal_id !== $sucursalId) {
             return redirect()
                 ->route('gastos.index')
                 ->with('error', 'No tienes permisos para editar este gasto.');
@@ -182,8 +191,11 @@ class GastoController extends Controller
 
     public function update(Request $request, Gasto $gasto)
     {
+        // Obtener la sucursal del usuario autenticado
+        $sucursalId = Auth::user()->sucursal_id;
+
         // Verificar que el gasto pertenezca a la sucursal del usuario
-        if ($gasto->sucursal_id !== Auth::user()->sucursal_id) {
+        if ($gasto->sucursal_id !== $sucursalId) {
             return redirect()
                 ->route('gastos.index')
                 ->with('error', 'No tienes permisos para editar este gasto.');
@@ -226,8 +238,11 @@ class GastoController extends Controller
 
     public function destroy(Gasto $gasto)
     {
+        // Obtener la sucursal del usuario autenticado
+        $sucursalId = Auth::user()->sucursal_id;
+
         // Verificar que el gasto pertenezca a la sucursal del usuario
-        if ($gasto->sucursal_id !== Auth::user()->sucursal_id) {
+        if ($gasto->sucursal_id !== $sucursalId) {
             return redirect()
                 ->route('gastos.index')
                 ->with('error', 'No tienes permisos para eliminar este gasto.');
@@ -256,8 +271,11 @@ class GastoController extends Controller
 
     public function downloadComprobante(Gasto $gasto)
     {
+        // Obtener la sucursal del usuario autenticado
+        $sucursalId = Auth::user()->sucursal_id;
+
         // Verificar que el gasto pertenezca a la sucursal del usuario
-        if ($gasto->sucursal_id !== Auth::user()->sucursal_id) {
+        if ($gasto->sucursal_id !== $sucursalId) {
             return redirect()
                 ->route('gastos.index')
                 ->with('error', 'No tienes permisos para acceder a este comprobante.');
