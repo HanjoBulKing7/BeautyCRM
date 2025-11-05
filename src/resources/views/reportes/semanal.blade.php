@@ -202,6 +202,12 @@
                             ${{ number_format($montoTotalSemana - ($datos['gastos'] ?? 0), 2) }}
                         </span>
                     </div>
+                    <div class="flex justify-between border-t pt-2 mt-2">
+                        <span class="text-gray-700 dark:text-gray-300 font-bold">Gastos Ruta - Ventas Ruta:</span>
+                        <span class="font-bold {{ (($datos['gastos_ruta_semana'] ?? 0) - ($datos['rutas_semanales']['estadisticas']->ventas_rutas ?? 0)) >= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
+                            ${{ number_format(($datos['gastos_ruta_semana'] ?? 0) - ($datos['rutas_semanales']['estadisticas']->ventas_rutas ?? 0), 2) }}
+                        </span>
+                    </div>
                 </div>
                 
                 <div class="space-y-3">

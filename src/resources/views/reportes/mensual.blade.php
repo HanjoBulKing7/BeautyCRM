@@ -109,6 +109,47 @@
             </div>
         </div>
         @endif
+
+        <!-- Balance de Rutas Mensual -->
+        <div class="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
+            <h6 class="font-semibold text-orange-700 mb-3 flex items-center dark:text-orange-300">
+                <i class="fas fa-calculator mr-2"></i>
+                Balance de Rutas - Mensual
+            </h6>
+            
+            @php
+                $gastosRutaMes = $datos['gastos_ruta_mes'] ?? 0;
+                $ventasRutaMes = $datos['rutas_mensuales']['estadisticas']->ventas_rutas ?? 0;
+                $balanceRutaMes = $gastosRutaMes - $ventasRutaMes;
+                $esPositivoMes = $balanceRutaMes >= 0;
+            @endphp
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Gastos de Ruta</div>
+                    <div class="text-lg font-semibold text-red-600 dark:text-red-400">
+                        ${{ number_format($gastosRutaMes, 2) }}
+                    </div>
+                </div>
+                
+                <div class="bg-white p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Ventas de Ruta</div>
+                    <div class="text-lg font-semibold text-green-600 dark:text-green-400">
+                        ${{ number_format($ventasRutaMes, 2) }}
+                    </div>
+                </div>
+                
+                <div class="bg-white p-3 rounded-lg border {{ $esPositivoMes ? 'border-red-200' : 'border-green-200' }} dark:bg-gray-700">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Balance Mensual</div>
+                    <div class="text-xl font-bold {{ $esPositivoMes ? 'text-red-600' : 'text-green-600' }} dark:{{ $esPositivoMes ? 'text-red-400' : 'text-green-400' }}">
+                        ${{ number_format($balanceRutaMes, 2) }}
+                    </div>
+                    <div class="text-xs {{ $esPositivoMes ? 'text-red-500' : 'text-green-500' }} dark:{{ $esPositivoMes ? 'text-red-400' : 'text-green-400' }}">
+                        {{ $esPositivoMes ? 'Pérdida' : 'Ganancia' }} en rutas
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     @endif
 

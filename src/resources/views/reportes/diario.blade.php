@@ -1,23 +1,23 @@
     <!-- Reporte Diario -->
-    <div class="bg-white p-4 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
-        <h4 class="font-semibold text-lg mb-4 flex items-center justify-between">
-            <div class="flex items-center">
-                <i class="fas fa-calendar-day text-green-500 mr-2"></i>
-                Reporte Diario - {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }}
-                @if($sucursal_id && $sucursales->where('id', $sucursal_id)->first())
-                <span class="ml-4 text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-300">
-                    Sucursal: {{ $sucursales->where('id', $sucursal_id)->first()->nombre }}
-                </span>
-                @endif
-            </div>
-            <div class="flex items-center gap-2">
-                <!-- Selector de fecha para día -->
-                <input type="date" id="fecha-dia" value="{{ $fecha }}" 
-                    class="border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-            </div>
-        </h4>   
+<div class="bg-white p-4 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
+    <h4 class="font-semibold text-lg mb-4 flex items-center justify-between">
+        <div class="flex items-center">
+            <i class="fas fa-calendar-day text-green-500 mr-2"></i>
+            Reporte Diario - {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }}
+            @if($sucursal_id && $sucursales->where('id', $sucursal_id)->first())
+            <span class="ml-4 text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-300">
+                Sucursal: {{ $sucursales->where('id', $sucursal_id)->first()->nombre }}
+            </span>
+            @endif
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Selector de fecha para día -->
+            <input type="date" id="fecha-dia" value="{{ $fecha }}" 
+                class="border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        </div>
+    </h4>   
 
-        <!-- Sección de Rutas - Reporte Diario -->
+    <!-- Sección de Rutas - Reporte Diario -->
     @if(isset($datos['rutas']) && $datos['rutas']['estadisticas']->total_rutas > 0)
     <div class="bg-white p-4 rounded-lg border mb-6 dark:bg-gray-800 dark:border-gray-700">
         <h5 class="font-semibold text-gray-700 mb-4 flex items-center dark:text-gray-300">
@@ -111,10 +111,51 @@
             </div>
         </div>
         @endif
+
+        <!-- Balance de Rutas -->
+        <div class="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
+            <h6 class="font-semibold text-orange-700 mb-3 flex items-center dark:text-orange-300">
+                <i class="fas fa-calculator mr-2"></i>
+                Balance de Rutas
+            </h6>
+            
+            @php
+                $gastosRuta = $datos['gastos_ruta'] ?? 0;
+                $ventasRuta = $datos['rutas']['estadisticas']->ventas_rutas ?? 0;
+                $balanceRuta = $gastosRuta - $ventasRuta;
+                $esPositivo = $balanceRuta >= 0;
+            @endphp
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Gastos de Ruta</div>
+                    <div class="text-lg font-semibold text-red-600 dark:text-red-400">
+                        ${{ number_format($gastosRuta, 2) }}
+                    </div>
+                </div>
+                
+                <div class="bg-white p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Ventas de Ruta</div>
+                    <div class="text-lg font-semibold text-green-600 dark:text-green-400">
+                        ${{ number_format($ventasRuta, 2) }}
+                    </div>
+                </div>
+                
+                <div class="bg-white p-3 rounded-lg border {{ $esPositivo ? 'border-red-200' : 'border-green-200' }} dark:bg-gray-700">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Balance (Gastos - Ventas)</div>
+                    <div class="text-xl font-bold {{ $esPositivo ? 'text-red-600' : 'text-green-600' }} dark:{{ $esPositivo ? 'text-red-400' : 'text-green-400' }}">
+                        ${{ number_format($balanceRuta, 2) }}
+                    </div>
+                    <div class="text-xs {{ $esPositivo ? 'text-red-500' : 'text-green-500' }} dark:{{ $esPositivo ? 'text-red-400' : 'text-green-400' }}">
+                        {{ $esPositivo ? 'Pérdida' : 'Ganancia' }} en rutas
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     @endif
         
-@if($datos && $datos['ventas']->total_ventas > 0)
+    @if($datos && $datos['ventas']->total_ventas > 0)
     <!-- Reporte Ventas Individuales -->
     <div class="bg-white p-4 rounded-lg border mb-6 dark:bg-gray-800 dark:border-gray-700">
         <h5 class="font-semibold text-gray-700 mb-4 flex items-center dark:text-gray-300">
@@ -231,29 +272,28 @@
             </div>
         </div>
     </div>
-
-        @else
-        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-            <i class="fas fa-inbox text-4xl mb-3"></i>
-            <p>No hay datos para la fecha seleccionada</p>
-        </div>
-        @endif
+    @else
+    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+        <i class="fas fa-inbox text-4xl mb-3"></i>
+        <p>No hay datos para la fecha seleccionada</p>
     </div>
+    @endif
+</div>
 
-    <script>
-    // Cambio de fecha para reporte diario
-    document.getElementById('fecha-dia').addEventListener('change', function() {
-        const fecha = this.value;
-        const url = new URL(window.location.href);
-        url.searchParams.set('fecha', fecha);
-        url.searchParams.set('tipo', 'diario');
-        
-        // Mantener el filtro de sucursal si existe
-        const sucursalSelect = document.getElementById('sucursal_id');
-        if (sucursalSelect && sucursalSelect.value) {
-            url.searchParams.set('sucursal_id', sucursalSelect.value);
-        }
-        
-        window.location.href = url.toString();
-    });
-    </script>
+<script>
+// Cambio de fecha para reporte diario
+document.getElementById('fecha-dia').addEventListener('change', function() {
+    const fecha = this.value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('fecha', fecha);
+    url.searchParams.set('tipo', 'diario');
+    
+    // Mantener el filtro de sucursal si existe
+    const sucursalSelect = document.getElementById('sucursal_id');
+    if (sucursalSelect && sucursalSelect.value) {
+        url.searchParams.set('sucursal_id', sucursalSelect.value);
+    }
+    
+    window.location.href = url.toString();
+});
+</script>
