@@ -6,6 +6,8 @@
 
 @section('content')
 <div class="bg-white p-4 md:p-6 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+   
+
     <!-- Tabs Navigation -->
     <div class="mb-6">
         <div class="flex space-x-4 border-b dark:border-gray-600">
@@ -38,7 +40,7 @@
                 <select id="sucursal_id" class="border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">Todas las sucursales</option>
                     @foreach($sucursales as $sucursal)
-                        <option value="{{ $sucursal->id }}" {{ $sucursal_id == $sucursal->id ? 'selected' : '' }}>
+                        <option value="{{ $sucursal->id }}" {{ request('sucursal_id') == $sucursal->id ? 'selected' : '' }}>
                             {{ $sucursal->nombre }}
                         </option>
                     @endforeach
@@ -57,7 +59,6 @@
             </button>
         </div>
     </div>
-
 
     <!-- Contenido del reporte -->
     <div class="bg-white p-4 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
@@ -83,11 +84,11 @@ function actualizarReporte() {
         const fechaInput = document.getElementById('fecha-dia');
         if (fechaInput) fecha = fechaInput.value;
     } else if (tipo === 'semanal') {
-        const semanaSelector = document.getElementById('semana_selector');
-        if (semanaSelector) fecha = semanaSelector.value;
+        const fechaSemana = document.getElementById('fecha-semana');
+        if (fechaSemana) fecha = fechaSemana.value;
     } else if (tipo === 'mensual') {
-        const mesSelector = document.getElementById('mes-selector');
-        if (mesSelector) fecha = mesSelector.value;
+        const fechaMes = document.getElementById('fecha-mes');
+        if (fechaMes) fecha = fechaMes.value + '-01'; // Convertir YYYY-MM a YYYY-MM-01
     }
     
     if (fecha) {
@@ -113,6 +114,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const sucursalSelect = document.getElementById('sucursal_id');
     if (sucursalSelect) {
         sucursalSelect.addEventListener('change', function() {
+            actualizarReporte();
+        });
+    }
+
+    // También agregar evento change a los inputs de fecha
+    const fechaDia = document.getElementById('fecha-dia');
+    if (fechaDia) {
+        fechaDia.addEventListener('change', function() {
+            actualizarReporte();
+        });
+    }
+
+    const fechaSemana = document.getElementById('fecha-semana');
+    if (fechaSemana) {
+        fechaSemana.addEventListener('change', function() {
+            actualizarReporte();
+        });
+    }
+
+    const fechaMes = document.getElementById('fecha-mes');
+    if (fechaMes) {
+        fechaMes.addEventListener('change', function() {
             actualizarReporte();
         });
     }

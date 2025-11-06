@@ -1,10 +1,13 @@
+@php
+use Carbon\Carbon;
+@endphp
 <!-- Reporte Mensual -->
 <div class="bg-white p-4 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
     @php
-        $fechaInicio = \Carbon\Carbon::parse($fecha)->startOfMonth();
-        $fechaFin = \Carbon\Carbon::parse($fecha)->endOfMonth();
-        $mesAnterior = \Carbon\Carbon::parse($fecha)->subMonth();
-        $mesSiguiente = \Carbon\Carbon::parse($fecha)->addMonth();
+        $fechaInicio = Carbon::parse($fecha)->startOfMonth();
+        $fechaFin = Carbon::parse($fecha)->endOfMonth();
+        $mesAnterior = Carbon::parse($fecha)->subMonth();
+        $mesSiguiente = Carbon::parse($fecha)->addMonth();
     @endphp
 
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
@@ -13,9 +16,9 @@
             <h4 class="font-semibold text-gray-800 dark:text-white">
                 Reporte Mensual - {{ $fechaInicio->locale('es')->translatedFormat('F Y') }}
             </h4>
-            @if($sucursal_id && $sucursales->where('id', $sucursal_id)->first())
+            @if(request('sucursal_id') && $sucursales->where('id', request('sucursal_id'))->first())
             <span class="ml-4 text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-300">
-                Sucursal: {{ $sucursales->where('id', $sucursal_id)->first()->nombre }}
+                Sucursal: {{ $sucursales->where('id', request('sucursal_id'))->first()->nombre }}
             </span>
             @endif
         </div>
@@ -42,114 +45,136 @@
         </div>
     </div>
 
-    @if($datos && $datos['resumen_mensual']->total_ventas > 0)
+    @if($datos && (
+        (isset($datos['resumen_mensual']) && ($datos['resumen_mensual']->monto_total ?? 0) > 0) || 
+        (isset($datos['rutas_mensuales']) && ($datos['rutas_mensuales']['estadisticas']->total_rutas ?? 0) > 0) ||
+        (isset($datos['metodos_pago_mensual']) && (
+            ($datos['metodos_pago_mensual']->efectivo ?? 0) > 0 ||
+            ($datos['metodos_pago_mensual']->transferencia ?? 0) > 0 ||
+            ($datos['metodos_pago_mensual']->tarjeta ?? 0) > 0
+        ))
+    ))
     <!-- Sección de Rutas - Reporte Mensual -->
-    @if(isset($datos['rutas_mensuales']) && $datos['rutas_mensuales']['estadisticas']->total_rutas > 0)
+    @if(isset($datos['rutas_mensuales']) && ($datos['rutas_mensuales']['estadisticas']->total_rutas ?? 0) > 0)
     <div class="bg-white p-4 rounded-lg border mb-6 dark:bg-gray-800 dark:border-gray-700">
         <h5 class="font-semibold text-gray-700 mb-4 flex items-center dark:text-gray-300">
             <i class="fas fa-route text-purple-500 mr-2"></i>
             Reporte de Rutas del Mes
         </h5>
 
-        <!-- Estadísticas principales de rutas -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <!-- Estadísticas principales de rutas - Gastos, Ventas, Balance -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            @php
+                // USAR LOS DATOS DE LA TABLA "RUTAS POR EMPLEADO" QUE SON LOS CORRECTOS
+                $totalVentasRutas = 0;
+                $totalGastosRutas = 0;
+                $totalBalanceRutas = 0;
+                
+                if(isset($datos['rutas_mensuales']['por_empleado']) && count($datos['rutas_mensuales']['por_empleado']) > 0) {
+                    foreach($datos['rutas_mensuales']['por_empleado'] as $ruta) {
+                        $totalVentasRutas += $ruta->total_ventas_monto;
+                        $totalGastosRutas += $ruta->gastos_ruta;
+                        $totalBalanceRutas += ($ruta->total_ventas_monto - $ruta->gastos_ruta);
+                    }
+                }
+                
+                $colorBalanceRutas = $totalBalanceRutas >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+            @endphp
+            
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200 dark:bg-red-900/20 dark:border-red-800">
+                <div class="text-red-600 font-bold text-2xl mb-1 dark:text-red-400">
+                    ${{ number_format($totalGastosRutas, 2) }}
+                </div>
+                <div class="text-red-700 dark:text-red-300">Gastos de Ruta</div>
+            </div>
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
                 <div class="text-blue-600 font-bold text-2xl mb-1 dark:text-blue-400">
-                    {{ $datos['rutas_mensuales']['estadisticas']->total_rutas }}
+                    ${{ number_format($totalVentasRutas, 2) }}
                 </div>
-                <div class="text-blue-700 text-sm dark:text-blue-300">Total Rutas</div>
-            </div>
-            <div class="bg-green-50 p-4 rounded-lg border border-green-200 dark:bg-green-900/20 dark:border-green-800">
-                <div class="text-green-600 font-bold text-2xl mb-1 dark:text-green-400">
-                    {{ $datos['rutas_mensuales']['estadisticas']->empleados_activos }}
-                </div>
-                <div class="text-green-700 text-sm dark:text-green-300">Empleados Activos</div>
+                <div class="text-blue-700 dark:text-blue-300">Ventas de Ruta</div>
             </div>
             <div class="bg-purple-50 p-4 rounded-lg border border-purple-200 dark:bg-purple-900/20 dark:border-purple-800">
-                <div class="text-purple-600 font-bold text-2xl mb-1 dark:text-purple-400">
-                    ${{ number_format($datos['rutas_mensuales']['estadisticas']->ventas_rutas, 2) }}
+                <div class="font-bold text-2xl mb-1 {{ $colorBalanceRutas }}">
+                    ${{ number_format($totalBalanceRutas, 2) }}
                 </div>
-                <div class="text-purple-700 text-sm dark:text-purple-300">Ventas Rutas</div>
-            </div>
-            <div class="bg-orange-50 p-4 rounded-lg border border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
-                <div class="text-orange-600 font-bold text-2xl mb-1 dark:text-orange-400">
-                    {{ $datos['rutas_mensuales']['estadisticas']->total_unidades_vendidas }}
-                </div>
-                <div class="text-orange-700 text-sm dark:text-orange-300">Unidades Vendidas</div>
+                <div class="text-purple-700 dark:text-purple-300">Balance Rutas</div>
             </div>
         </div>
 
-        <!-- Top empleados del mes -->
-        @if(isset($datos['rutas_mensuales']['top_empleados']) && count($datos['rutas_mensuales']['top_empleados']) > 0)
+        <!-- Rutas por empleado -->
+        @if(isset($datos['rutas_mensuales']['por_empleado']) && count($datos['rutas_mensuales']['por_empleado']) > 0)
         <div class="mb-6">
-            <h6 class="font-semibold text-gray-600 mb-3 dark:text-gray-400">Top Empleados del Mes</h6>
+            <h6 class="font-semibold text-gray-600 mb-3 dark:text-gray-400">Rutas por Empleado</h6>
             <div class="overflow-x-auto">
                 <table class="min-w-full bg-white dark:bg-gray-800">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">Empleado</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">Rutas</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">Nombre Ruta</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">Unidades Vendidas</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">Ventas Totales</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">Gastos</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">Balance</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">Devoluciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
-                        @foreach($datos['rutas_mensuales']['top_empleados'] as $empleado)
+                        @php
+                            $totalUnidades = 0;
+                            $totalVentas = 0;
+                            $totalGastos = 0;
+                            $totalBalance = 0;
+                            $totalDevoluciones = 0;
+                        @endphp
+                        
+                        @foreach($datos['rutas_mensuales']['por_empleado'] as $ruta)
+                        @php
+                            $balanceRuta = $ruta->total_ventas_monto - $ruta->gastos_ruta;
+                            $esPositivo = $balanceRuta >= 0;
+                            
+                            $totalUnidades += $ruta->total_ventas_unidades;
+                            $totalVentas += $ruta->total_ventas_monto;
+                            $totalGastos += $ruta->gastos_ruta;
+                            $totalBalance += $balanceRuta;
+                            $totalDevoluciones += $ruta->total_devoluciones;
+                        @endphp
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="px-4 py-2 text-sm dark:text-gray-300">{{ $empleado->empleado }}</td>
-                            <td class="px-4 py-2 text-sm dark:text-gray-300">{{ $empleado->total_rutas }}</td>
-                            <td class="px-4 py-2 text-sm dark:text-gray-300">{{ $empleado->total_ventas_unidades }}</td>
+                            <td class="px-4 py-2 text-sm dark:text-gray-300">{{ $ruta->empleado }}</td>
+                            <td class="px-4 py-2 text-sm dark:text-gray-300">{{ $ruta->nombre_ruta ?? 'Sin nombre' }}</td>
+                            <td class="px-4 py-2 text-sm dark:text-gray-300">{{ $ruta->total_ventas_unidades }}</td>
                             <td class="px-4 py-2 text-sm font-semibold text-green-600 dark:text-green-400">
-                                ${{ number_format($empleado->total_ventas_monto, 2) }}
+                                ${{ number_format($ruta->total_ventas_monto, 2) }}
                             </td>
+                            <td class="px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400">
+                                ${{ number_format($ruta->gastos_ruta, 2) }}
+                            </td>
+                            <td class="px-4 py-2 text-sm font-semibold {{ $esPositivo ? 'text-green-600' : 'text-red-600' }} dark:{{ $esPositivo ? 'text-green-400' : 'text-red-400' }}">
+                                ${{ number_format($balanceRuta, 2) }}
+                            </td>
+                            <td class="px-4 py-2 text-sm text-red-600 dark:text-red-400">{{ $ruta->total_devoluciones }}</td>
                         </tr>
                         @endforeach
+                        
+                        <!-- Fila de totales -->
+                        <tr class="bg-gray-50 font-semibold dark:bg-gray-700">
+                            <td class="px-4 py-2 text-sm dark:text-gray-300" colspan="2">TOTALES</td>
+                            <td class="px-4 py-2 text-sm dark:text-gray-300">{{ $totalUnidades }}</td>
+                            <td class="px-4 py-2 text-sm text-green-600 dark:text-green-400">
+                                ${{ number_format($totalVentas, 2) }}
+                            </td>
+                            <td class="px-4 py-2 text-sm text-red-600 dark:text-red-400">
+                                ${{ number_format($totalGastos, 2) }}
+                            </td>
+                            <td class="px-4 py-2 text-sm {{ $totalBalance >= 0 ? 'text-green-600' : 'text-red-600' }} dark:{{ $totalBalance >= 0 ? 'text-green-400' : 'text-red-400' }}">
+                                ${{ number_format($totalBalance, 2) }}
+                            </td>
+                            <td class="px-4 py-2 text-sm text-red-600 dark:text-red-400">{{ $totalDevoluciones }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
         @endif
-
-        <!-- Balance de Rutas Mensual -->
-        <div class="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
-            <h6 class="font-semibold text-orange-700 mb-3 flex items-center dark:text-orange-300">
-                <i class="fas fa-calculator mr-2"></i>
-                Balance de Rutas - Mensual
-            </h6>
-            
-            @php
-                $gastosRutaMes = $datos['gastos_ruta_mes'] ?? 0;
-                $ventasRutaMes = $datos['rutas_mensuales']['estadisticas']->ventas_rutas ?? 0;
-                $balanceRutaMes = $gastosRutaMes - $ventasRutaMes;
-                $esPositivoMes = $balanceRutaMes >= 0;
-            @endphp
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Gastos de Ruta</div>
-                    <div class="text-lg font-semibold text-red-600 dark:text-red-400">
-                        ${{ number_format($gastosRutaMes, 2) }}
-                    </div>
-                </div>
-                
-                <div class="bg-white p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Ventas de Ruta</div>
-                    <div class="text-lg font-semibold text-green-600 dark:text-green-400">
-                        ${{ number_format($ventasRutaMes, 2) }}
-                    </div>
-                </div>
-                
-                <div class="bg-white p-3 rounded-lg border {{ $esPositivoMes ? 'border-red-200' : 'border-green-200' }} dark:bg-gray-700">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Balance Mensual</div>
-                    <div class="text-xl font-bold {{ $esPositivoMes ? 'text-red-600' : 'text-green-600' }} dark:{{ $esPositivoMes ? 'text-red-400' : 'text-green-400' }}">
-                        ${{ number_format($balanceRutaMes, 2) }}
-                    </div>
-                    <div class="text-xs {{ $esPositivoMes ? 'text-red-500' : 'text-green-500' }} dark:{{ $esPositivoMes ? 'text-red-400' : 'text-green-400' }}">
-                        {{ $esPositivoMes ? 'Pérdida' : 'Ganancia' }} en rutas
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
     @endif
 
@@ -160,28 +185,43 @@
             Reporte Ventas Individuales
         </h5>
 
-        <!-- Estadísticas principales del mes -->
+        <!-- Estadísticas de la semana - Gastos, Ventas, Balance -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200 dark:bg-purple-900/20 dark:border-purple-800">
-                <div class="text-purple-600 font-bold text-2xl mb-1 dark:text-purple-400">{{ $datos['resumen_mensual']->total_ventas ?? 0 }}</div>
-                <div class="text-purple-700 text-sm dark:text-purple-300">Ventas Totales</div>
-                <div class="text-xs text-purple-500 mt-1 dark:text-purple-400">{{ $datos['resumen_mensual']->dias_con_ventas ?? 0 }} días con ventas</div>
-            </div>
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-                <div class="text-blue-600 font-bold text-2xl mb-1 dark:text-blue-400">${{ number_format($datos['resumen_mensual']->monto_total ?? 0, 2) }}</div>
-                <div class="text-blue-700 text-sm dark:text-blue-300">Ingreso Total</div>
-                <div class="text-xs text-blue-500 mt-1 dark:text-blue-400">Promedio: ${{ number_format($datos['resumen_mensual']->promedio_diario ?? 0, 2) }}/día</div>
-            </div>
+            @php
+                $montoTotalMes = $datos['resumen_mensual']->monto_total ?? 0;
+                $gastosMes = $datos['resumen_mensual']->total_gastos ?? 0;
+                $balanceVentas = $montoTotalMes - $gastosMes;
+                $colorBalanceVentas = $balanceVentas >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+            @endphp
+            
             <div class="bg-red-50 p-4 rounded-lg border border-red-200 dark:bg-red-900/20 dark:border-red-800">
-                <div class="text-red-600 font-bold text-2xl mb-1 dark:text-red-400">${{ number_format($datos['resumen_mensual']->total_gastos ?? 0, 2) }}</div>
-                <div class="text-red-700 text-sm dark:text-red-300">Gastos Totales</div>
-                <div class="text-xs text-red-500 mt-1 dark:text-red-400">
-                    Neto: ${{ number_format(($datos['resumen_mensual']->monto_total ?? 0) - ($datos['resumen_mensual']->total_gastos ?? 0), 2) }}
+                <div class="text-red-600 font-bold text-2xl mb-1 dark:text-red-400">
+                    ${{ number_format($gastosMes, 2) }}
                 </div>
+                <div class="text-red-700 dark:text-red-300">Gastos</div>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                <div class="text-blue-600 font-bold text-2xl mb-1 dark:text-blue-400">
+                    ${{ number_format($montoTotalMes, 2) }}
+                </div>
+                <div class="text-blue-700 dark:text-blue-300">Total Ventas</div>
+            </div>
+            
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200 dark:bg-purple-900/20 dark:border-purple-800">
+                <div class="font-bold text-2xl mb-1 {{ $colorBalanceVentas }}">
+                    ${{ number_format($balanceVentas, 2) }}
+                </div>
+                <div class="text-purple-700 dark:text-purple-300">Balance</div>
             </div>
         </div>
 
         <!-- Métodos de Pago del Mes -->
+        @if(isset($datos['metodos_pago_mensual']) && (
+            ($datos['metodos_pago_mensual']->efectivo ?? 0) > 0 ||
+            ($datos['metodos_pago_mensual']->transferencia ?? 0) > 0 ||
+            ($datos['metodos_pago_mensual']->tarjeta ?? 0) > 0
+        ))
         <h6 class="font-semibold text-gray-600 mb-3 dark:text-gray-400">Distribución por Método de Pago</h6>
         <div class="bg-white p-4 rounded-lg border mb-6 dark:bg-gray-800 dark:border-gray-700">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -212,24 +252,26 @@
                 @endforeach
             </div>
         </div>
+        @endif
 
         <!-- Resumen Financiero Mensual -->
+        @if(isset($datos['resumen_mensual']))
         <h6 class="font-semibold text-gray-600 mb-3 dark:text-gray-400">Resumen Financiero Mensual</h6>
         <div class="bg-white p-4 rounded-lg border mb-6 dark:bg-gray-800 dark:border-gray-700">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
                         <span class="text-gray-600 dark:text-gray-400">Ingresos Totales:</span>
-                        <span class="font-semibold text-green-600 dark:text-green-400">${{ number_format($datos['resumen_mensual']->monto_total ?? 0, 2) }}</span>
+                        <span class="font-semibold text-green-600 dark:text-green-400">${{ number_format($montoTotalMes, 2) }}</span>
                     </div>
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
                         <span class="text-gray-600 dark:text-gray-400">Gastos Totales:</span>
-                        <span class="font-semibold text-red-600 dark:text-red-400">-${{ number_format($datos['resumen_mensual']->total_gastos ?? 0, 2) }}</span>
+                        <span class="font-semibold text-red-600 dark:text-red-400">-${{ number_format($gastosMes, 2) }}</span>
                     </div>
                     <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
                         <span class="text-blue-700 font-bold dark:text-blue-300">Neto Mensual:</span>
                         <span class="font-bold text-blue-600 text-lg dark:text-blue-400">
-                            ${{ number_format(($datos['resumen_mensual']->monto_total ?? 0) - ($datos['resumen_mensual']->total_gastos ?? 0), 2) }}
+                            ${{ number_format($balanceVentas, 2) }}
                         </span>
                     </div>
                 </div>
@@ -252,6 +294,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Resumen Semanal del Mes -->
         @if(isset($datos['semanas_del_mes']) && count($datos['semanas_del_mes']) > 0)
@@ -292,41 +335,6 @@
             </div>
         </div>
         @endif
-
-        <!-- Top Días del Mes -->
-        @if(isset($datos['mejores_dias']) && count($datos['mejores_dias']) > 0)
-        <div>
-            <h6 class="font-semibold text-gray-600 mb-3 dark:text-gray-400">Mejores Días del Mes</h6>
-            <div class="bg-white p-4 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    @foreach($datos['mejores_dias'] as $index => $dia)
-                    <div class="bg-{{ $index == 0 ? 'yellow' : 'gray' }}-50 p-4 rounded-lg border border-{{ $index == 0 ? 'yellow' : 'gray' }}-200 dark:bg-{{ $index == 0 ? 'yellow' : 'gray' }}-900/20 dark:border-{{ $index == 0 ? 'yellow' : 'gray' }}-800">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="text-{{ $index == 0 ? 'yellow' : 'gray' }}-600 font-bold text-lg dark:text-{{ $index == 0 ? 'yellow' : 'gray' }}-400">
-                                #{{ $index + 1 }}
-                            </div>
-                            @if($index == 0)
-                            <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded dark:bg-yellow-800/30 dark:text-yellow-300">Mejor día</span>
-                            @endif
-                        </div>
-                        <div class="text-{{ $index == 0 ? 'yellow' : 'gray' }}-700 font-semibold dark:text-{{ $index == 0 ? 'yellow' : 'gray' }}-300">
-                            {{ \Carbon\Carbon::parse($dia->fecha)->translatedFormat('l d F') }}
-                        </div>
-                        <div class="text-{{ $index == 0 ? 'yellow' : 'gray' }}-600 text-xl font-bold mt-2 dark:text-{{ $index == 0 ? 'yellow' : 'gray' }}-400">
-                            ${{ number_format($dia->monto_total, 2) }}
-                        </div>
-                        <div class="text-{{ $index == 0 ? 'yellow' : 'gray' }}-500 text-sm mt-1 dark:text-{{ $index == 0 ? 'yellow' : 'gray' }}-400">
-                            {{ $dia->total_ventas }} ventas
-                        </div>
-                        <div class="text-xs text-{{ $index == 0 ? 'yellow' : 'gray' }}-400 mt-2 dark:text-{{ $index == 0 ? 'yellow' : 'gray' }}-500">
-                            Ticket promedio: ${{ number_format($dia->monto_total / max($dia->total_ventas, 1), 2) }}
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-        @endif
     </div>
 
     @else
@@ -337,21 +345,3 @@
     </div>
     @endif
 </div>
-
-<script>
-// Cambio de fecha para reporte mensual
-document.getElementById('fecha-mes').addEventListener('change', function() {
-    const fechaSeleccionada = this.value + '-01'; // Convertir YYYY-MM a YYYY-MM-01
-    const url = new URL(window.location.href);
-    url.searchParams.set('fecha', fechaSeleccionada);
-    url.searchParams.set('tipo', 'mensual');
-    
-    // Mantener el filtro de sucursal si existe
-    const sucursalSelect = document.getElementById('sucursal_id');
-    if (sucursalSelect && sucursalSelect.value) {
-        url.searchParams.set('sucursal_id', sucursalSelect.value);
-    }
-    
-    window.location.href = url.toString();
-});
-</script>
