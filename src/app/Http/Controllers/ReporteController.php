@@ -20,7 +20,7 @@ class ReporteController extends Controller
         ]);
         
         $tipo = $validated['tipo'] ?? 'diario';
-        $fecha = $validated['fecha'] ?? now()->format('Y-m-d');
+        $fecha = $validated['fecha'] ?? now()->timezone('America/Mexico_City')->format('Y-m-d');     
         $sucursal_id = $validated['sucursal_id'] ?? null;
         
         // Obtener lista de sucursales
