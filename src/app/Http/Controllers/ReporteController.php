@@ -386,6 +386,16 @@ class ReporteController extends Controller
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->first();
 
+        // Asegurar que el objeto no sea null
+        if (!$resumenMensual) {
+            $resumenMensual = (object)[
+                'total_ventas' => 0,
+                'monto_total' => 0,
+                'promedio_venta' => 0,
+                'dias_con_ventas' => 0
+            ];
+        }
+
         // Calcular promedio diario
         $resumenMensual->promedio_diario = $resumenMensual->monto_total / max($resumenMensual->dias_con_ventas, 1);
 
@@ -440,32 +450,94 @@ class ReporteController extends Controller
             }
         }
 
-        // Semanas del mes
-        $semanasDelMes = DB::table('ventas')
+        // Semanas del mes - VERSIÓN CORREGIDA
+        $semanasDelMes = collect();
+
+        // Obtener todas las ventas del mes agrupadas por semana
+        $ventasPorSemanaQuery = DB::table('ventas')
             ->select(
-                DB::raw('WEEK(fecha, 1) - WEEK(DATE_SUB(fecha, INTERVAL DAYOFMONTH(fecha) - 1 DAY), 1) + 1 as semana'),
-                DB::raw('COUNT(*) as total_ventas'),
-                DB::raw('COALESCE(SUM(total), 0) as monto_total'),
-                DB::raw('COALESCE(AVG(total), 0) as promedio_venta')
+                DB::raw('DATE(fecha) as fecha_venta'),
+                DB::raw('WEEK(fecha, 3) as numero_semana'),
+                DB::raw('total')
             )
-            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
-            ->groupBy(DB::raw('WEEK(fecha, 1) - WEEK(DATE_SUB(fecha, INTERVAL DAYOFMONTH(fecha) - 1 DAY), 1) + 1'))
-            ->orderBy('semana')
-            ->get();
+            ->whereBetween('fecha', [$fechaInicio, $fechaFin]);
+            
+        if ($sucursal_id) {
+            $ventasPorSemanaQuery->where('sucursal_id', $sucursal_id);
+        }
 
-        // Agregar nombre de semana
-        $semanasDelMes = $semanasDelMes->map(function($semana) {
-            $semana->semana_nombre = "Semana " . $semana->semana;
-            return $semana;
-        });
+        $ventasPorSemana = $ventasPorSemanaQuery->get();
 
-        // Calcular porcentaje del mes para cada semana
-        foreach ($semanasDelMes as $semana) {
-            if ($resumenMensual->monto_total > 0) {
-                $semana->porcentaje_mes = ($semana->monto_total / $resumenMensual->monto_total) * 100;
-            } else {
-                $semana->porcentaje_mes = 0;
+        // Si hay ventas, procesar por semana
+        if ($ventasPorSemana->count() > 0) {
+            $ventasAgrupadas = $ventasPorSemana->groupBy('numero_semana');
+            
+            $semanasDelMes = $ventasAgrupadas->map(function($ventasSemana, $numeroSemana) {
+                $montoTotal = $ventasSemana->sum('total');
+                $totalVentas = $ventasSemana->count();
+                
+                return (object)[
+                    'semana' => $numeroSemana,
+                    'semana_nombre' => "Semana " . $numeroSemana,
+                    'total_ventas' => $totalVentas,
+                    'monto_total' => $montoTotal,
+                    'promedio_venta' => $totalVentas > 0 ? $montoTotal / $totalVentas : 0,
+                    'porcentaje_mes' => 0 // Se calculará después
+                ];
+            })->sortBy('semana')->values();
+            
+            // Calcular porcentajes después de tener todas las semanas
+            $totalMensual = $resumenMensual->monto_total;
+            if ($totalMensual > 0) {
+                $semanasDelMes = $semanasDelMes->map(function($semana) use ($totalMensual) {
+                    $semana->porcentaje_mes = ($semana->monto_total / $totalMensual) * 100;
+                    return $semana;
+                });
             }
+        } else {
+            // Si no hay ventas, crear semanas vacías para el gráfico
+            $semanasDelMes = collect([
+                (object)[
+                    'semana' => 1,
+                    'semana_nombre' => "Semana 1",
+                    'total_ventas' => 0,
+                    'monto_total' => 0,
+                    'promedio_venta' => 0,
+                    'porcentaje_mes' => 0
+                ],
+                (object)[
+                    'semana' => 2,
+                    'semana_nombre' => "Semana 2", 
+                    'total_ventas' => 0,
+                    'monto_total' => 0,
+                    'promedio_venta' => 0,
+                    'porcentaje_mes' => 0
+                ],
+                (object)[
+                    'semana' => 3,
+                    'semana_nombre' => "Semana 3",
+                    'total_ventas' => 0,
+                    'monto_total' => 0,
+                    'promedio_venta' => 0,
+                    'porcentaje_mes' => 0
+                ],
+                (object)[
+                    'semana' => 4,
+                    'semana_nombre' => "Semana 4",
+                    'total_ventas' => 0,
+                    'monto_total' => 0,
+                    'promedio_venta' => 0,
+                    'porcentaje_mes' => 0
+                ],
+                (object)[
+                    'semana' => 5,
+                    'semana_nombre' => "Semana 5",
+                    'total_ventas' => 0,
+                    'monto_total' => 0,
+                    'promedio_venta' => 0,
+                    'porcentaje_mes' => 0
+                ]
+            ]);
         }
 
         // Mejores días del mes (top 3)
@@ -487,59 +559,71 @@ class ReporteController extends Controller
             ->limit(3)
             ->get();
 
-      // === NUEVO: Estadísticas de Rutas Mensuales ===
-    $rutasMensualesQuery = DB::table('rutas')
-        ->join('users', 'rutas.empleado_id', '=', 'users.id');
-    
-    if ($sucursal_id) {
-        $rutasMensualesQuery->where('users.sucursal_id', $sucursal_id);
-    }
-    
-    $estadisticasRutasMensuales = $rutasMensualesQuery
-        ->select(
-            DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
-            DB::raw('COUNT(DISTINCT rutas.empleado_id) as empleados_activos'),
-            DB::raw('COALESCE(SUM(rutas.total_venta), 0) as ventas_rutas'),
-            DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_unidades_vendidas'),
-            DB::raw('COALESCE(SUM(ruta_detalles.devoluciones), 0) as total_devoluciones'),
-            DB::raw('COUNT(DISTINCT DATE(rutas.fecha)) as dias_con_rutas')
-        )
-        ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id')
-        ->whereBetween('rutas.fecha', [$fechaInicio, $fechaFin])
-        ->first();
+        // === CORREGIDO: Estadísticas de Rutas Mensuales ===
+        $rutasMensualesQuery = DB::table('rutas')
+            ->join('users', 'rutas.empleado_id', '=', 'users.id');
+        
+        if ($sucursal_id) {
+            $rutasMensualesQuery->where('users.sucursal_id', $sucursal_id);
+        }
+        
+        $estadisticasRutasMensuales = $rutasMensualesQuery
+            ->select(
+                DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
+                DB::raw('COUNT(DISTINCT rutas.empleado_id) as empleados_activos'),
+                DB::raw('COALESCE(SUM(rutas.total_venta), 0) as ventas_rutas'),
+                DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_unidades_vendidas'),
+                DB::raw('COALESCE(SUM(ruta_detalles.devoluciones), 0) as total_devoluciones'),
+                DB::raw('COUNT(DISTINCT DATE(rutas.fecha)) as dias_con_rutas')
+            )
+            ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id')
+            ->whereBetween('rutas.fecha', [$fechaInicio, $fechaFin])
+            ->first();
 
-    // Top empleados del mes
-    $topEmpleadosRutasQuery = DB::table('rutas')
-        ->join('users', 'rutas.empleado_id', '=', 'users.id')
-        ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id');
-    
-    if ($sucursal_id) {
-        $topEmpleadosRutasQuery->where('users.sucursal_id', $sucursal_id);
-    }
-    
-    $topEmpleadosRutas = $topEmpleadosRutasQuery
-        ->select(
-            'users.nombre as empleado',
-            DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
-            DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_ventas_unidades'),
-            DB::raw('COALESCE(SUM(ruta_detalles.total), 0) as total_ventas_monto')
-        )
-        ->whereBetween('rutas.fecha', [$fechaInicio, $fechaFin])
-        ->groupBy('users.id', 'users.nombre')
-        ->orderBy('total_ventas_monto', 'DESC')
-        ->limit(5)
-        ->get();
+        // Asegurar que siempre haya un objeto, incluso si es vacío
+        if (!$estadisticasRutasMensuales) {
+            $estadisticasRutasMensuales = (object)[
+                'total_rutas' => 0,
+                'empleados_activos' => 0,
+                'ventas_rutas' => 0,
+                'total_unidades_vendidas' => 0,
+                'total_devoluciones' => 0,
+                'dias_con_rutas' => 0
+            ];
+        }
 
-    return [
-        'resumen_mensual' => $resumenMensual,
-        'metodos_pago_mensual' => $metodosPagoMensual,
-        'semanas_del_mes' => $semanasDelMes,
-        'mejores_dias' => $mejoresDias,
-        // === NUEVO: Datos de Rutas Mensuales ===
-        'rutas_mensuales' => [
-            'estadisticas' => $estadisticasRutasMensuales,
-            'top_empleados' => $topEmpleadosRutas
-        ]
-    ];
+        // Top empleados del mes
+        $topEmpleadosRutasQuery = DB::table('rutas')
+            ->join('users', 'rutas.empleado_id', '=', 'users.id')
+            ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id');
+        
+        if ($sucursal_id) {
+            $topEmpleadosRutasQuery->where('users.sucursal_id', $sucursal_id);
+        }
+        
+        $topEmpleadosRutas = $topEmpleadosRutasQuery
+            ->select(
+                'users.nombre as empleado',
+                DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
+                DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_ventas_unidades'),
+                DB::raw('COALESCE(SUM(ruta_detalles.total), 0) as total_ventas_monto')
+            )
+            ->whereBetween('rutas.fecha', [$fechaInicio, $fechaFin])
+            ->groupBy('users.id', 'users.nombre')
+            ->orderBy('total_ventas_monto', 'DESC')
+            ->limit(5)
+            ->get();
+
+        return [
+            'resumen_mensual' => $resumenMensual,
+            'metodos_pago_mensual' => $metodosPagoMensual,
+            'semanas_del_mes' => $semanasDelMes,
+            'mejores_dias' => $mejoresDias,
+            // === CORREGIDO: Datos de Rutas Mensuales ===
+            'rutas_mensuales' => [
+                'estadisticas' => $estadisticasRutasMensuales,
+                'top_empleados' => $topEmpleadosRutas
+            ]
+        ];
     }
 }

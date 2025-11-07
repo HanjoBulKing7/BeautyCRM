@@ -238,7 +238,7 @@
                                     <td class="px-4 py-3">
                                         <div class="flex items-center">
                                             <div class="w-20 bg-gray-200 rounded-full h-2 mr-2 dark:bg-gray-600">
-                                                <div class="bg-green-500 h-2 rounded-full" style="width: {{ $semana->porcentaje_mes }}%"></div>
+                                                <div class="bg-green-500 h-2 rounded-full" @style(["width: {$semana->porcentaje_mes}%"])></div>
                                             </div>
                                             <span class="text-sm text-gray-600 dark:text-gray-400">{{ number_format($semana->porcentaje_mes, 1) }}%</span>
                                         </div>
@@ -297,20 +297,138 @@
     @endif
 </div>
 
-<script>
-// Cambio de fecha para reporte mensual
-document.getElementById('fecha-mes').addEventListener('change', function() {
-    const fechaSeleccionada = this.value + '-01'; // Convertir YYYY-MM a YYYY-MM-01
-    const url = new URL(window.location.href);
-    url.searchParams.set('fecha', fechaSeleccionada);
-    url.searchParams.set('tipo', 'mensual');
+<!-- Gráfica de Ventas Mensuales -->
+<div class="bg-white p-6 rounded-xl shadow mt-6 dark:bg-gray-800 dark:border dark:border-gray-700">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center dark:text-gray-200">
+        <i class="fas fa-chart-bar text-purple-500 mr-2"></i>
+        Ventas Mensuales - {{ $fechaInicio->locale('es')->translatedFormat('F Y') }}
+    </h2>
+    <div class="bg-white p-4 rounded-lg border dark:bg-gray-800 dark:border-gray-700">
+        <canvas id="chartVentasMensuales" height="300"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="text/javascript">
+// Pasar datos desde PHP a JavaScript
+var datosGrafica = <?php echo json_encode($datos ?? []); ?>;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('chartVentasMensuales');
     
-    // Mantener el filtro de sucursal si existe
-    const sucursalSelect = document.getElementById('sucursal_id');
-    if (sucursalSelect && sucursalSelect.value) {
-        url.searchParams.set('sucursal_id', sucursalSelect.value);
+    if (!ctx) {
+        console.error('No se encontró el elemento canvas con id chartVentasMensuales');
+        return;
     }
+
+    // Extraer datos de semanas
+    const semanasData = datosGrafica.semanas_del_mes || [];
+    const semana1 = semanasData[0]?.monto_total ?? 0;
+    const semana2 = semanasData[1]?.monto_total ?? 0;
+    const semana3 = semanasData[2]?.monto_total ?? 0;
+    const semana4 = semanasData[3]?.monto_total ?? 0;
+    const semana5 = semanasData[4]?.monto_total ?? 0;
     
-    window.location.href = url.toString();
+    // Extraer datos de rutas
+    const ventasRutas = datosGrafica.rutas_mensuales?.estadisticas?.ventas_rutas ?? 0;
+
+    const ventasMensuales = {
+        labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'],
+        datasets: [
+            {
+                label: 'Ventas Individuales',
+                data: [semana1, semana2, semana3, semana4, semana5],
+                backgroundColor: 'rgba(79, 70, 229, 0.7)',
+                borderColor: 'rgba(79, 70, 229, 1)',
+                borderWidth: 2,
+                borderRadius: 6,
+                fill: true
+            },
+            {
+                label: 'Ventas Rutas',
+                data: [ventasRutas/4, ventasRutas/4, ventasRutas/4, ventasRutas/4, 0],
+                backgroundColor: 'rgba(236, 72, 153, 0.7)',
+                borderColor: 'rgba(236, 72, 153, 1)',
+                borderWidth: 2,
+                borderRadius: 6,
+                fill: true
+            }
+        ]
+    };
+
+    try {
+        // Configurar modo oscuro antes de crear la gráfica
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        if (isDarkMode) {
+            Chart.defaults.color = '#9CA3AF';
+            Chart.defaults.borderColor = '#374151';
+        }
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: ventasMensuales,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: isDarkMode ? '#9CA3AF' : '#6B7280',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: isDarkMode ? '#9CA3AF' : '#6B7280'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: isDarkMode ? '#9CA3AF' : '#6B7280',
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'nearest'
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                }
+            }
+        });
+        
+        console.log('Gráfica creada exitosamente');
+    } catch (error) {
+        console.error('Error al crear la gráfica:', error);
+    }
 });
 </script>

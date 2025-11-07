@@ -17,28 +17,30 @@
             </span>
             @endif
         </div>
-        <div class="flex items-center gap-2">
-            <!-- Selector de fecha para semana -->
-            <input type="date" id="fecha-semana" value="{{ $fecha }}" 
-                   class="border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        </div>
     </h4>
 
-    <!-- Información de la semana -->
+    <!-- Selector de semanas con calendario -->
     <div class="bg-gray-50 p-4 rounded-lg mb-6 dark:bg-gray-700">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-                <h5 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Semana {{ $semanaNumero }}, {{ $anio }}</h5>
-                <div class="text-sm text-gray-600 dark:text-gray-400">
-                    <i class="fas fa-calendar-alt mr-1"></i>
-                    <strong>Rango:</strong> 
-                    {{ $fechaInicio->translatedFormat('d M Y') }} — 
-                    {{ $fechaFin->translatedFormat('d M Y') }}
-                </div>
-            </div>
-            <button onclick="irASemanaActual()" class="mt-2 md:mt-0 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
-                <i class="fas fa-calendar-day mr-1"></i> Semana Actual
+        <label for="semana_selector" class="block text-sm font-medium mb-2 dark:text-gray-300">Selecciona una semana:</label>
+        <div class="flex items-center space-x-4">
+            <input 
+                type="text" 
+                id="semana_selector" 
+                class="w-full md:w-64 border rounded-lg p-2 bg-white cursor-pointer dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                placeholder="Seleccionar semana"
+                value="Semana {{ $semanaNumero }}, {{ $anio }}"
+                readonly
+            >
+            <button id="semana_hoy" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                <i class="fas fa-calendar-day mr-1"></i> Hoy
             </button>
+        </div>
+        
+        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <i class="fas fa-calendar-alt mr-1"></i>
+            <strong>Rango:</strong> 
+            {{ $fechaInicio->translatedFormat('d M Y') }} — 
+            {{ $fechaFin->translatedFormat('d M Y') }}
         </div>
     </div>
 
@@ -231,38 +233,283 @@
     @endif
 </div>
 
-<script>
-// Cambio de fecha para reporte semanal
-document.getElementById('fecha-semana').addEventListener('change', function() {
-    const fecha = this.value;
-    const url = new URL(window.location.href);
-    url.searchParams.set('fecha', fecha);
-    url.searchParams.set('tipo', 'semanal');
-    
-    // Mantener el filtro de sucursal si existe
-    const sucursalSelect = document.getElementById('sucursal_id');
-    if (sucursalSelect && sucursalSelect.value) {
-        url.searchParams.set('sucursal_id', sucursalSelect.value);
-    }
-    
-    window.location.href = url.toString();
-});
+<!-- Agregar Flatpickr CSS y JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/weekSelect/weekSelect.css">
 
-// Función para ir a la semana actual
-function irASemanaActual() {
-    const hoy = new Date();
-    const fechaActual = hoy.toISOString().split('T')[0];
+<style>
+/* Estilos personalizados para el calendario */
+.flatpickr-calendar {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* SEMANA COMPLETA SELECCIONADA - Esto es lo más importante */
+.flatpickr-day.week.selected {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+}
+
+/* Días en el rango de la semana seleccionada */
+.flatpickr-day.inRange {
+    background: #dbeafe !important;
+    border-color: #dbeafe !important;
+    color: #1e40af !important;
+}
+
+/* Días individuales seleccionados */
+.flatpickr-day.selected, 
+.flatpickr-day.startRange, 
+.flatpickr-day.endRange {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+}
+
+/* Efecto hover */
+.flatpickr-day:hover {
+    background: #e5e7eb !important;
+}
+
+.flatpickr-day.inRange:hover {
+    background: #bfdbfe !important;
+}
+
+/* Día actual */
+.flatpickr-day.today {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    font-weight: bold;
+}
+
+.flatpickr-day.today:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+/* Números de semana */
+.flatpickr-weekwrapper .flatpickr-weeks {
+    background: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+}
+
+.flatpickr-weekwrapper span.flatpickr-day {
+    color: #374151;
+    font-weight: 600;
+}
+
+/* Header */
+.flatpickr-current-month {
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.flatpickr-weekdays {
+    background: #f1f5f9;
+}
+
+.flatpickr-weekday {
+    color: #475569;
+    font-weight: 600;
+}
+
+/* Modo oscuro */
+.dark .flatpickr-calendar {
+    background: #374151;
+    border: 1px solid #4b5563;
+}
+
+.dark .flatpickr-weekdays {
+    background: #4b5563;
+}
+
+.dark .flatpickr-weekday {
+    color: #d1d5db;
+}
+
+.dark .flatpickr-day {
+    color: #d1d5db;
+}
+
+.dark .flatpickr-day:hover {
+    background: #4b5563 !important;
+}
+
+.dark .flatpickr-day.inRange {
+    background: #1e40af !important;
+    color: white !important;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/weekSelect/weekSelect.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Inicializando Flatpickr con weekSelect...');
     
-    const url = new URL(window.location.href);
-    url.searchParams.set('fecha', fechaActual);
-    url.searchParams.set('tipo', 'semanal');
-    
-    // Mantener el filtro de sucursal si existe
-    const sucursalSelect = document.getElementById('sucursal_id');
-    if (sucursalSelect && sucursalSelect.value) {
-        url.searchParams.set('sucursal_id', sucursalSelect.value);
+    // Función para colorear la semana
+    function highlightWeek(instance, selectedDate) {
+        // Calcular el lunes de la semana
+        const date = new Date(selectedDate);
+        const dayOfWeek = date.getDay();
+        const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        const monday = new Date(date.setDate(diff));
+        
+        // Limpiar clases previas
+        const allDays = instance.calendarContainer.querySelectorAll('.flatpickr-day');
+        allDays.forEach(day => {
+            day.classList.remove('week', 'inRange', 'selected', 'startRange', 'endRange');
+        });
+        
+        // Colorear los 7 días de la semana
+        for (let i = 0; i < 7; i++) {
+            const currentDay = new Date(monday);
+            currentDay.setDate(monday.getDate() + i);
+            
+            const dayElement = instance.calendarContainer.querySelector(
+                `.flatpickr-day[aria-label="${instance.formatDate(currentDay, 'F j, Y')}"]`
+            );
+            
+            if (dayElement && !dayElement.classList.contains('flatpickr-disabled')) {
+                if (i === 0) {
+                    dayElement.classList.add('startRange', 'selected', 'week');
+                } else if (i === 6) {
+                    dayElement.classList.add('endRange', 'selected', 'week');
+                } else {
+                    dayElement.classList.add('inRange', 'week');
+                }
+            }
+        }
     }
     
-    window.location.href = url.toString();
-}
+    // Verificar que el plugin esté disponible
+    if (typeof weekSelectPlugin === 'undefined') {
+        console.error('weekSelectPlugin no está disponible');
+        initBasicFlatpickr();
+        return;
+    }
+
+    try {
+        // Inicializar Flatpickr CON el plugin de semana
+        const picker = flatpickr("#semana_selector", {
+            locale: "es",
+            weekNumbers: true,
+            defaultDate: "{{ $fechaInicio->format('Y-m-d') }}",
+            plugins: [
+                new weekSelectPlugin({
+                    weekNumbers: true
+                })
+            ],
+            onReady: function(selectedDates, dateStr, instance) {
+                // Colorear la semana inicial
+                if (selectedDates.length > 0) {
+                    highlightWeek(instance, selectedDates[0]);
+                }
+            },
+            onMonthChange: function(selectedDates, dateStr, instance) {
+                // Mantener coloreada la semana al cambiar de mes
+                if (selectedDates.length > 0) {
+                    setTimeout(() => highlightWeek(instance, selectedDates[0]), 10);
+                }
+            },
+            onYearChange: function(selectedDates, dateStr, instance) {
+                // Mantener coloreada la semana al cambiar de año
+                if (selectedDates.length > 0) {
+                    setTimeout(() => highlightWeek(instance, selectedDates[0]), 10);
+                }
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length > 0) {
+                    // Colorear la nueva semana seleccionada
+                    highlightWeek(instance, selectedDates[0]);
+                    
+                    // Obtener el lunes de la semana seleccionada
+                    const selectedDate = selectedDates[0];
+                    const dayOfWeek = selectedDate.getDay();
+                    const diff = selectedDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                    const monday = new Date(selectedDate.setDate(diff));
+                    
+                    const year = monday.getFullYear();
+                    const month = String(monday.getMonth() + 1).padStart(2, '0');
+                    const day = String(monday.getDate()).padStart(2, '0');
+                    const fechaInicio = `${year}-${month}-${day}`;
+                    
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('fecha', fechaInicio);
+                    url.searchParams.set('tipo', 'semanal');
+                    
+                    const sucursalSelect = document.getElementById('sucursal_id');
+                    if (sucursalSelect && sucursalSelect.value) {
+                        url.searchParams.set('sucursal_id', sucursalSelect.value);
+                    }
+                    
+                    window.location.href = url.toString();
+                }
+            }
+        });
+
+        console.log('Flatpickr con weekSelect inicializado correctamente');
+
+        document.getElementById('semana_hoy').addEventListener('click', function() {
+            picker.setDate(new Date());
+        });
+
+    } catch (error) {
+        console.error('Error con weekSelect:', error);
+        initBasicFlatpickr();
+    }
+
+    // Función fallback si el plugin no funciona
+    function initBasicFlatpickr() {
+        console.log('Usando configuración básica...');
+        const picker = flatpickr("#semana_selector", {
+            locale: "es",
+            weekNumbers: true,
+            defaultDate: "{{ $fechaInicio->format('Y-m-d') }}",
+            mode: "single",
+            onReady: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length > 0) {
+                    highlightWeek(instance, selectedDates[0]);
+                }
+            },
+            onMonthChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length > 0) {
+                    setTimeout(() => highlightWeek(instance, selectedDates[0]), 10);
+                }
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length > 0) {
+                    highlightWeek(instance, selectedDates[0]);
+                    
+                    const selectedDate = selectedDates[0];
+                    const dayOfWeek = selectedDate.getDay();
+                    const diff = selectedDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                    const monday = new Date(selectedDate.setDate(diff));
+                    
+                    const year = monday.getFullYear();
+                    const month = String(monday.getMonth() + 1).padStart(2, '0');
+                    const day = String(monday.getDate()).padStart(2, '0');
+                    const fechaInicio = `${year}-${month}-${day}`;
+                    
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('fecha', fechaInicio);
+                    url.searchParams.set('tipo', 'semanal');
+                    
+                    const sucursalSelect = document.getElementById('sucursal_id');
+                    if (sucursalSelect && sucursalSelect.value) {
+                        url.searchParams.set('sucursal_id', sucursalSelect.value);
+                    }
+                    
+                    window.location.href = url.toString();
+                }
+            }
+        });
+
+        document.getElementById('semana_hoy').addEventListener('click', function() {
+            picker.setDate(new Date());
+        });
+    }
+});
 </script>
