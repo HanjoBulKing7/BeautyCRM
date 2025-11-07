@@ -23,7 +23,7 @@ class RutaController extends Controller
             ->orderBy('fecha', 'desc')
             ->paginate(10);
 
-        // ✅ Verificar si es un nuevo día y actualizar automáticamente
+        // ✅ Mantener cierre automático pero sin cambiar fecha
         foreach ($rutas as $ruta) {
             if ($ruta->fecha < now()->toDateString()) {
                 $this->cerrarDiaAutomatico($ruta);
@@ -100,7 +100,7 @@ class RutaController extends Controller
     {
         \Log::info('Mostrando ruta:', ['ruta_id' => $ruta->id]);
 
-        // Si es un nuevo día, se actualiza automáticamente
+        // ✅ Mantener cierre automático pero sin cambiar fecha
         if ($ruta->fecha < now()->toDateString()) {
             $this->cerrarDiaAutomatico($ruta);
         }
@@ -758,7 +758,7 @@ class RutaController extends Controller
     }
 
     /**
-     * ⚙️ Función interna → cerrar el día automáticamente
+     * ⚙️ Función interna → cerrar el día automáticamente (SIN CAMBIAR LA FECHA)
      */
     private function cerrarDiaAutomatico(Ruta $ruta)
     {
@@ -802,14 +802,10 @@ class RutaController extends Controller
                 ]);
             }
 
-            // Actualizar fecha de la ruta para el nuevo día
-            $ruta->update([
-                'fecha' => now()->toDateString()
-            ]);
-
-            \Log::info('Ruta actualizada para nuevo día:', [
-                'nueva_fecha' => now()->toDateString(),
-                'ruta_id' => $ruta->id
+            // ✅ MANTENER LA FECHA ORIGINAL - NO ACTUALIZAR
+            \Log::info('Ruta procesada para cierre de día (fecha mantenida):', [
+                'ruta_id' => $ruta->id,
+                'fecha_original' => $ruta->fecha
             ]);
         });
     }
