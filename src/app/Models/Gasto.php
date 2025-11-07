@@ -11,6 +11,22 @@ class Gasto extends Model
         'sucursal_id', 'usuario_id', 'ruta_id', 'fecha', 'categoria',
         'descripcion', 'monto', 'metodo_pago', 'comprobante_url'
     ];
+    const CATEGORIAS = [
+        'servicios' => 'Servicios',
+        'renta' => 'Renta',
+        'insumos' => 'Insumos',
+        'nomina' => 'Nómina',
+        'mantenimiento' => 'Mantenimiento',
+        'combustible' => 'Combustible',
+        'alimentos' => 'Alimentos',
+        'otros' => 'Otros'
+    ];
+
+    const METODOS_PAGO = [
+        'efectivo' => 'Efectivo',
+        'transferencia' => 'Transferencia',
+        'tarjeta' => 'Tarjeta'
+    ];
 
     protected $casts = [
         'fecha' => 'date',

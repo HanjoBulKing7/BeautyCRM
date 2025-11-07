@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Sucursal;
+use App\Models\Gasto;
+use Illuminate\Routing\Controller;
 
 class ReporteController extends Controller
 {
@@ -19,7 +21,7 @@ class ReporteController extends Controller
         ]);
         
         $tipo = $validated['tipo'] ?? 'diario';
-        $fecha = $validated['fecha'] ?? now()->format('Y-m-d');
+        $fecha = $validated['fecha'] ?? now()->timezone('America/Mexico_City')->format('Y-m-d');     
         $sucursal_id = $validated['sucursal_id'] ?? null;
         
         // Obtener lista de sucursales
@@ -59,13 +61,6 @@ class ReporteController extends Controller
             $ventasQuery->where('sucursal_id', $sucursal_id);
         }
         
-        // DEBUG: Verificar las ventas que encuentra
-        $ventasDebug = $ventasQuery->whereDate('fecha', $fecha)->get();
-        \Log::info("Ventas encontradas: " . $ventasDebug->count());
-        foreach($ventasDebug as $venta) {
-            \Log::info("Venta ID: " . $venta->id . " - Fecha: " . $venta->fecha . " - Total: " . $venta->total);
-        }
-        
         $ventas = $ventasQuery
             ->select(
                 DB::raw('COUNT(*) as total_ventas'),
@@ -75,14 +70,12 @@ class ReporteController extends Controller
                 DB::raw('COALESCE(SUM(descuento), 0) as descuento_total'),
                 DB::raw('COALESCE(SUM(impuestos), 0) as impuestos_total')
             )
-            ->where('fecha', '>=', $fecha . ' 00:00:00')
-            ->where('fecha', '<=', $fecha . ' 23:59:59')
+            ->whereDate('fecha', $fecha)
             ->first();
         
-        \Log::info("Resultado consulta ventas:");
-        \Log::info("Total ventas: " . ($ventas->total_ventas ?? 0));
-        \Log::info("Monto total: " . ($ventas->monto_total ?? 0));
-        
+        \Log::info("Ventas diarias - Total: " . ($ventas->total_ventas ?? 0));
+        \Log::info("Ventas diarias - Monto: " . ($ventas->monto_total ?? 0));
+
         // Consulta para artículos vendidos con filtro de sucursal
         $articulosQuery = DB::table('venta_detalles')
             ->join('ventas', 'venta_detalles.venta_id', '=', 'ventas.id');
@@ -96,8 +89,7 @@ class ReporteController extends Controller
                 DB::raw('COALESCE(SUM(venta_detalles.cantidad), 0) as total_articulos'),
                 DB::raw('COUNT(DISTINCT venta_detalles.producto_id) as productos_diferentes')
             )
-            ->where('ventas.fecha', '>=', $fecha . ' 00:00:00')
-            ->where('ventas.fecha', '<=', $fecha . ' 23:59:59')
+            ->whereDate('ventas.fecha', $fecha)
             ->first();
         
         // Consulta para métodos de pago con filtro de sucursal
@@ -114,10 +106,11 @@ class ReporteController extends Controller
                 DB::raw('COALESCE(SUM(pagos.monto), 0) as total_metodo')
             )
             ->where('pagos.estado', 'completado')
-            ->where('ventas.fecha', '>=', $fecha . ' 00:00:00')
-            ->where('ventas.fecha', '<=', $fecha . ' 23:59:59')
+            ->whereDate('ventas.fecha', $fecha)
             ->groupBy('pagos.metodo_pago')
             ->get();
+
+        \Log::info("Métodos de pago encontrados: " . $metodosPago->count());
         
         // Consulta para transferencias con filtro de sucursal
         $transferenciasQuery = DB::table('pagos')
@@ -134,13 +127,12 @@ class ReporteController extends Controller
             )
             ->where('pagos.metodo_pago', 'transferencia')
             ->where('pagos.estado', 'completado')
-            ->where('ventas.fecha', '>=', $fecha . ' 00:00:00')
-            ->where('ventas.fecha', '<=', $fecha . ' 23:59:59')
+            ->whereDate('ventas.fecha', $fecha)
             ->whereNotNull('pagos.destinatario_transferencia')
             ->groupBy('pagos.destinatario_transferencia')
             ->get();
         
-        // Gastos con filtro de sucursal
+        // Gastos generales con filtro de sucursal
         try {
             $gastosQuery = DB::table('gastos');
             
@@ -151,98 +143,132 @@ class ReporteController extends Controller
             $gastos = $gastosQuery
                 ->select(DB::raw('COALESCE(SUM(monto), 0) as total_gastos'))
                 ->whereDate('fecha', $fecha)
+                ->whereNull('ruta_id')
                 ->first();
             $gastosTotal = $gastos->total_gastos ?? 0;
         } catch (\Exception $e) {
             $gastosTotal = 0;
         }
 
+        \Log::info("Gastos generales: " . $gastosTotal);
 
- // === NUEVO: Estadísticas de Rutas ===
-    $rutasQuery = DB::table('rutas')
-        ->join('users', 'rutas.empleado_id', '=', 'users.id');
-    
-    if ($sucursal_id) {
-        $rutasQuery->where('users.sucursal_id', $sucursal_id);
-    }
-    
-    $estadisticasRutas = $rutasQuery
-        ->select(
-            DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
-            DB::raw('COUNT(DISTINCT rutas.empleado_id) as empleados_activos'),
-            DB::raw('COALESCE(SUM(rutas.total_venta), 0) as ventas_rutas')
-        )
-        ->whereDate('rutas.fecha', $fecha)
-        ->first();
+        // Gastos de Ruta para el día
+        try {
+            $gastosRutaQuery = Gasto::whereNotNull('ruta_id');
+            
+            if ($sucursal_id) {
+                $gastosRutaQuery->where('sucursal_id', $sucursal_id);
+            }
+            
+            $gastosRuta = $gastosRutaQuery
+                ->whereDate('fecha', $fecha)
+                ->sum('monto');
+        } catch (\Exception $e) {
+            $gastosRuta = 0;
+        }
 
-    // Detalles de rutas por empleado
-    $rutasPorEmpleadoQuery = DB::table('rutas')
-        ->join('users', 'rutas.empleado_id', '=', 'users.id')
-        ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id');
-    
-    if ($sucursal_id) {
-        $rutasPorEmpleadoQuery->where('users.sucursal_id', $sucursal_id);
-    }
-    
-    $rutasPorEmpleado = $rutasPorEmpleadoQuery
-        ->select(
-            'users.nombre as empleado',
-            DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
-            DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_ventas_unidades'),
-            DB::raw('COALESCE(SUM(ruta_detalles.total), 0) as total_ventas_monto'),
-            DB::raw('COALESCE(SUM(ruta_detalles.devoluciones), 0) as total_devoluciones')
-        )
-        ->whereDate('rutas.fecha', $fecha)
-        ->groupBy('users.id', 'users.nombre')
-        ->get();
+        \Log::info("Gastos ruta: " . $gastosRuta);
 
-    // Productos más vendidos en rutas
-    $productosRutasQuery = DB::table('ruta_detalles')
-        ->join('rutas', 'ruta_detalles.ruta_id', '=', 'rutas.id')
-        ->join('productos', 'ruta_detalles.producto_id', '=', 'productos.id')
-        ->join('users', 'rutas.empleado_id', '=', 'users.id');
-
-
-                \Log::info("=== FIN REPORTE DIARIO ===");
-
-    
-    if ($sucursal_id) {
-        $productosRutasQuery->where('users.sucursal_id', $sucursal_id);
-    }
-    
-    $productosRutas = $productosRutasQuery
-        ->select(
-            'productos.nombre as producto',
-            DB::raw('SUM(ruta_detalles.ventas) as total_vendido'),
-            DB::raw('SUM(ruta_detalles.devoluciones) as total_devoluciones'),
-            DB::raw('COALESCE(SUM(ruta_detalles.total), 0) as monto_total')
-        )
-        ->whereDate('rutas.fecha', $fecha)
-        ->groupBy('productos.id', 'productos.nombre')
-        ->orderBy('total_vendido', 'DESC')
-        ->limit(5)
-        ->get();
-
-    return [
-        'ventas' => $ventas,
-        'articulos' => $articulos,
-        'metodosPago' => $metodosPago,
-        'transferencias' => $transferencias,
-        'gastos' => $gastosTotal,
-        // === NUEVO: Datos de Rutas ===
-        'rutas' => [
-            'estadisticas' => $estadisticasRutas,
-            'por_empleado' => $rutasPorEmpleado,
-            'productos_top' => $productosRutas
-        ]
-    ];
+        // Estadísticas de Rutas
+        $rutasQuery = DB::table('rutas')
+            ->join('users', 'rutas.empleado_id', '=', 'users.id');
         
+        if ($sucursal_id) {
+            $rutasQuery->where('users.sucursal_id', $sucursal_id);
+        }
+        
+        $estadisticasRutas = $rutasQuery
+            ->select(
+                DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
+                DB::raw('COUNT(DISTINCT rutas.empleado_id) as empleados_activos'),
+                DB::raw('COALESCE(SUM(rutas.total_venta), 0) as ventas_rutas')
+            )
+            ->whereDate('rutas.fecha', $fecha)
+            ->first();
+
+        \Log::info("Rutas - Total: " . ($estadisticasRutas->total_rutas ?? 0));
+        \Log::info("Rutas - Ventas: " . ($estadisticasRutas->ventas_rutas ?? 0));
+
+        // Detalles de rutas por empleado CON NOMBRE DE RUTA Y GASTOS
+        $rutasPorEmpleadoQuery = DB::table('rutas')
+            ->join('users', 'rutas.empleado_id', '=', 'users.id')
+            ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id')
+            ->leftJoin('gastos', function($join) use ($fecha) {
+                $join->on('rutas.id', '=', 'gastos.ruta_id')
+                     ->whereDate('gastos.fecha', $fecha);
+            });
+
+        if ($sucursal_id) {
+            $rutasPorEmpleadoQuery->where('users.sucursal_id', $sucursal_id);
+        }
+
+        $rutasPorEmpleado = $rutasPorEmpleadoQuery
+            ->select(
+                'users.nombre as empleado',
+                'rutas.nombre as nombre_ruta',
+                'rutas.id as ruta_id',
+                DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_ventas_unidades'),
+                DB::raw('COALESCE(SUM(ruta_detalles.total), 0) as total_ventas_monto'),
+                DB::raw('COALESCE(SUM(ruta_detalles.devoluciones), 0) as total_devoluciones'),
+                DB::raw('COALESCE(SUM(gastos.monto), 0) as gastos_ruta')
+            )
+            ->whereDate('rutas.fecha', $fecha)
+            ->groupBy('rutas.id', 'users.id', 'users.nombre', 'rutas.nombre')
+            ->get();
+
+        \Log::info("Rutas por empleado encontradas: " . $rutasPorEmpleado->count());
+
+        // Productos más vendidos en rutas
+        $productosRutasQuery = DB::table('ruta_detalles')
+            ->join('rutas', 'ruta_detalles.ruta_id', '=', 'rutas.id')
+            ->join('productos', 'ruta_detalles.producto_id', '=', 'productos.id')
+            ->join('users', 'rutas.empleado_id', '=', 'users.id');
+
+        if ($sucursal_id) {
+            $productosRutasQuery->where('users.sucursal_id', $sucursal_id);
+        }
+        
+        $productosRutas = $productosRutasQuery
+            ->select(
+                'productos.nombre as producto',
+                DB::raw('SUM(ruta_detalles.ventas) as total_vendido'),
+                DB::raw('SUM(ruta_detalles.devoluciones) as total_devoluciones'),
+                DB::raw('COALESCE(SUM(ruta_detalles.total), 0) as monto_total')
+            )
+            ->whereDate('rutas.fecha', $fecha)
+            ->groupBy('productos.id', 'productos.nombre')
+            ->orderBy('total_vendido', 'DESC')
+            ->limit(5)
+            ->get();
+
+        \Log::info("=== FIN REPORTE DIARIO ===");
+
+        return [
+            'ventas' => $ventas,
+            'articulos' => $articulos,
+            'metodosPago' => $metodosPago,
+            'transferencias' => $transferencias,
+            'gastos' => $gastosTotal,
+            'gastos_ruta' => $gastosRuta,
+            'rutas' => [
+                'estadisticas' => $estadisticasRutas,
+                'por_empleado' => $rutasPorEmpleado,
+                'productos_top' => $productosRutas
+            ]
+        ];
     }
         
     private function obtenerReporteSemanal($fecha, $sucursal_id = null)
     {
+        \Log::info("=== INICIANDO REPORTE SEMANAL ===");
+        \Log::info("Fecha recibida: " . $fecha);
+        \Log::info("Sucursal ID: " . $sucursal_id);
+
+        // CORRECCIÓN: Usar la fecha como inicio y sumar 6 días
         $fechaInicio = Carbon::parse($fecha);
         $fechaFin = $fechaInicio->copy()->addDays(6);
+
+        \Log::info("Rango semanal: " . $fechaInicio->format('Y-m-d') . " a " . $fechaFin->format('Y-m-d'));
 
         $ventasPorDiaQuery = DB::table('ventas');
         
@@ -261,16 +287,20 @@ class ReporteController extends Controller
                 DB::raw('COALESCE(AVG(total), 0) as promedio_venta'),
                 DB::raw('DATE(fecha) as fecha_venta')
             )
-            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->whereBetween('fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')])
             ->groupBy(DB::raw('DATE(fecha)'))
             ->orderBy('fecha_venta')
             ->get()
             ->map(function ($item) {
                 $carbonDate = Carbon::parse($item->fecha_venta);
-                // Obtener el nombre del día en español
                 $item->dia_semana = $carbonDate->translatedFormat('l');
                 return $item;
             });
+
+        \Log::info("Ventas por día encontradas: " . $ventasPorDia->count());
+        foreach($ventasPorDia as $venta) {
+            \Log::info("Venta - Fecha: " . $venta->fecha_venta . " - Total: " . $venta->total_ventas . " - Monto: " . $venta->monto_total);
+        }
 
         // Obtener gastos totales de la semana
         $gastosQuery = DB::table('gastos');
@@ -279,68 +309,124 @@ class ReporteController extends Controller
         }
         $gastos = $gastosQuery
             ->select(DB::raw('COALESCE(SUM(monto), 0) as total_gastos'))
-            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->whereBetween('fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')])
+            ->whereNull('ruta_id')
             ->first();
         $gastosTotal = $gastos->total_gastos ?? 0;
 
+        \Log::info("Gastos totales: " . $gastosTotal);
+
+        // Gastos de Ruta para la semana
+        try {
+            $gastosRutaSemanaQuery = Gasto::whereNotNull('ruta_id');
+            
+            if ($sucursal_id) {
+                $gastosRutaSemanaQuery->where('sucursal_id', $sucursal_id);
+            }
+            
+            $gastosRutaSemana = $gastosRutaSemanaQuery
+                ->whereBetween('fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')])
+                ->sum('monto');
+        } catch (\Exception $e) {
+            $gastosRutaSemana = 0;
+        }
+
+        \Log::info("Gastos ruta: " . $gastosRutaSemana);
+
         $semanas = $this->generarSemanas();
 
-         // === NUEVO: Estadísticas de Rutas Semanales ===
-    $rutasSemanalesQuery = DB::table('rutas')
-        ->join('users', 'rutas.empleado_id', '=', 'users.id');
-    
-    if ($sucursal_id) {
-        $rutasSemanalesQuery->where('users.sucursal_id', $sucursal_id);
-    }
-    
-    $estadisticasRutasSemanales = $rutasSemanalesQuery
-        ->select(
-            DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
-            DB::raw('COUNT(DISTINCT rutas.empleado_id) as empleados_activos'),
-            DB::raw('COALESCE(SUM(rutas.total_venta), 0) as ventas_rutas'),
-            DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_unidades_vendidas'),
-            DB::raw('COALESCE(SUM(ruta_detalles.devoluciones), 0) as total_devoluciones')
-        )
-        ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id')
-        ->whereBetween('rutas.fecha', [$fechaInicio, $fechaFin])
-        ->first();
+        // Estadísticas de Rutas Semanales
+        $rutasSemanalesQuery = DB::table('rutas')
+            ->join('users', 'rutas.empleado_id', '=', 'users.id');
+        
+        if ($sucursal_id) {
+            $rutasSemanalesQuery->where('users.sucursal_id', $sucursal_id);
+        }
+        
+        $estadisticasRutasSemanales = $rutasSemanalesQuery
+            ->select(
+                DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
+                DB::raw('COUNT(DISTINCT rutas.empleado_id) as empleados_activos'),
+                DB::raw('COALESCE(SUM(rutas.total_venta), 0) as ventas_rutas'),
+                DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_unidades_vendidas'),
+                DB::raw('COALESCE(SUM(ruta_detalles.devoluciones), 0) as total_devoluciones')
+            )
+            ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id')
+            ->whereBetween('rutas.fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')])
+            ->first();
 
-    // Rutas por día de la semana
-    $rutasPorDiaQuery = DB::table('rutas')
-        ->join('users', 'rutas.empleado_id', '=', 'users.id');
-    
-    if ($sucursal_id) {
-        $rutasPorDiaQuery->where('users.sucursal_id', $sucursal_id);
-    }
-    
-    $rutasPorDia = $rutasPorDiaQuery
-        ->select(
-            DB::raw('DATE(rutas.fecha) as fecha'),
-            DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
-            DB::raw('COUNT(DISTINCT rutas.empleado_id) as empleados_activos'),
-            DB::raw('COALESCE(SUM(rutas.total_venta), 0) as ventas_totales')
-        )
-        ->whereBetween('rutas.fecha', [$fechaInicio, $fechaFin])
-        ->groupBy(DB::raw('DATE(rutas.fecha)'))
-        ->orderBy('fecha')
-        ->get()
-        ->map(function ($item) {
-            $carbonDate = Carbon::parse($item->fecha);
-            $item->dia_semana = $carbonDate->translatedFormat('l');
-            return $item;
-        });
+        \Log::info("Estadísticas rutas - Total: " . ($estadisticasRutasSemanales->total_rutas ?? 0));
+        \Log::info("Estadísticas rutas - Ventas: " . ($estadisticasRutasSemanales->ventas_rutas ?? 0));
 
-    return [
-        'ventas_por_dia' => $ventasPorDia,
-        'semanas' => $semanas,
-        'gastos' => $gastosTotal,
-        // === NUEVO: Datos de Rutas Semanales ===
-        'rutas_semanales' => [
-            'estadisticas' => $estadisticasRutasSemanales,
-            'por_dia' => $rutasPorDia
-        ]
-    ];
-    
+        // Rutas por día de la semana
+        $rutasPorDiaQuery = DB::table('rutas')
+            ->join('users', 'rutas.empleado_id', '=', 'users.id');
+        
+        if ($sucursal_id) {
+            $rutasPorDiaQuery->where('users.sucursal_id', $sucursal_id);
+        }
+        
+        $rutasPorDia = $rutasPorDiaQuery
+            ->select(
+                DB::raw('DATE(rutas.fecha) as fecha'),
+                DB::raw('COUNT(DISTINCT rutas.id) as total_rutas'),
+                DB::raw('COUNT(DISTINCT rutas.empleado_id) as empleados_activos'),
+                DB::raw('COALESCE(SUM(rutas.total_venta), 0) as ventas_totales')
+            )
+            ->whereBetween('rutas.fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')])
+            ->groupBy(DB::raw('DATE(rutas.fecha)'))
+            ->orderBy('fecha')
+            ->get()
+            ->map(function ($item) {
+                $carbonDate = Carbon::parse($item->fecha);
+                $item->dia_semana = $carbonDate->translatedFormat('l');
+                return $item;
+            });
+
+        \Log::info("Rutas por día encontradas: " . $rutasPorDia->count());
+
+        // Rutas por empleado semanales CON NOMBRE DE RUTA Y GASTOS
+        $rutasPorEmpleadoSemanalQuery = DB::table('rutas')
+            ->join('users', 'rutas.empleado_id', '=', 'users.id')
+            ->leftJoin('ruta_detalles', 'rutas.id', '=', 'ruta_detalles.ruta_id')
+            ->leftJoin('gastos', function($join) use ($fechaInicio, $fechaFin) {
+                $join->on('rutas.id', '=', 'gastos.ruta_id')
+                     ->whereBetween('gastos.fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')]);
+            });
+
+        if ($sucursal_id) {
+            $rutasPorEmpleadoSemanalQuery->where('users.sucursal_id', $sucursal_id);
+        }
+
+        $rutasPorEmpleadoSemanal = $rutasPorEmpleadoSemanalQuery
+            ->select(
+                'users.nombre as empleado',
+                'rutas.nombre as nombre_ruta',
+                'rutas.id as ruta_id',
+                DB::raw('COALESCE(SUM(ruta_detalles.ventas), 0) as total_ventas_unidades'),
+                DB::raw('COALESCE(SUM(ruta_detalles.total), 0) as total_ventas_monto'),
+                DB::raw('COALESCE(SUM(ruta_detalles.devoluciones), 0) as total_devoluciones'),
+                DB::raw('COALESCE(SUM(gastos.monto), 0) as gastos_ruta')
+            )
+            ->whereBetween('rutas.fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')])
+            ->groupBy('rutas.id', 'users.id', 'users.nombre', 'rutas.nombre')
+            ->get();
+
+        \Log::info("Rutas por empleado encontradas: " . $rutasPorEmpleadoSemanal->count());
+
+        \Log::info("=== FIN REPORTE SEMANAL ===");
+
+        return [
+            'ventas_por_dia' => $ventasPorDia,
+            'semanas' => $semanas,
+            'gastos' => $gastosTotal,
+            'gastos_ruta_semana' => $gastosRutaSemana,
+            'rutas_semanales' => [
+                'estadisticas' => $estadisticasRutasSemanales,
+                'por_dia' => $rutasPorDia,
+                'por_empleado' => $rutasPorEmpleadoSemanal
+            ]
+        ];
     }
 
     // Método para generar las semanas
@@ -410,6 +496,7 @@ class ReporteController extends Controller
             $gastos = $gastosQuery
                 ->select(DB::raw('COALESCE(SUM(monto), 0) as total_gastos'))
                 ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+                ->whereNull('ruta_id')
                 ->first();
             $totalGastos = $gastos->total_gastos ?? 0;
         } catch (\Exception $e) {
@@ -417,6 +504,22 @@ class ReporteController extends Controller
         }
 
         $resumenMensual->total_gastos = $totalGastos;
+
+        // Gastos de Ruta para el mes
+        try {
+            $gastosRutaMesQuery = Gasto::whereNotNull('ruta_id');
+            
+            if ($sucursal_id) {
+                $gastosRutaMesQuery->where('sucursal_id', $sucursal_id);
+            }
+            
+            $gastosRutaMes = $gastosRutaMesQuery
+                ->whereYear('fecha', $fechaInicio->year)
+                ->whereMonth('fecha', $fechaInicio->month)
+                ->sum('monto');
+        } catch (\Exception $e) {
+            $gastosRutaMes = 0;
+        }
 
         // Métodos de pago del mes
         $metodosPagoMensualQuery = DB::table('pagos')

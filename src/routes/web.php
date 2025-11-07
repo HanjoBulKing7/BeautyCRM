@@ -47,6 +47,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/rutas/{ruta}/edit', [RutaController::class, 'edit'])->name('rutas.edit');
     Route::put('/rutas/{ruta}', [RutaController::class, 'update'])->name('rutas.update');
     Route::delete('/rutas/{ruta}', [RutaController::class, 'destroy'])->name('rutas.destroy');
+    Route::post('/rutas/{ruta}/bulk-add-productos', [RutaController::class, 'bulkAddProductos'])->name('rutas.bulk-add-productos');
+    Route::post('/rutas/{ruta}/bulk-update', [RutaController::class, 'bulkUpdate'])->name('rutas.bulk-update');
 
     // Productos dentro de rutas
     Route::post('/rutas/{ruta}/add-producto', [RutaController::class, 'addProducto'])->name('rutas.addProducto');
