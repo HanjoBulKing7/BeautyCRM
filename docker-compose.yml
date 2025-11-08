@@ -1,55 +1,54 @@
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: elprogreso_app
+    container_name: beautycrm_app
     ports:
-      - "8020:8000"   # Laravel (artisan serve)
+      - "8021:8000"   # Cambié el puerto externo para evitar conflicto
     volumes:
       - ./src:/var/www/html
-      - composer-cache-elprogreso:/tmp/composer-cache
+      - composer-cache-beautycrm:/tmp/composer-cache
     depends_on:
       - mysql
     working_dir: /var/www/html
 
   node:
     image: node:20
-    container_name: elprogreso_node
+    container_name: beautycrm_node
     working_dir: /var/www/html
     volumes:
       - ./src:/var/www/html
-      - node_modules_elprogreso:/var/www/html/node_modules
+      - node_modules_beautycrm:/var/www/html/node_modules
     ports:
-      - "5174:5173"   # Vite
+      - "5175:5173"   # Cambié el puerto externo para evitar conflicto
     command: sh -c "npm install && npm run dev"
 
   mysql:
     image: mysql:8.0
-    container_name: elprogreso_mysql
+    container_name: beautycrm_mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: elprogreso
-      MYSQL_USER: elprogreso
-      MYSQL_PASSWORD: elprogreso
+      MYSQL_DATABASE: beautycrm
+      MYSQL_USER: beautycrm
+      MYSQL_PASSWORD: beautycrm
     ports:
-      - "3320:3306"
+      - "3321:3306"   # Cambié el puerto externo para evitar conflicto
     volumes:
-      - elprogreso_mysql_data:/var/lib/mysql
+      - beautycrm_mysql_data:/var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: elprogreso_phpmyadmin
+    container_name: beautycrm_phpmyadmin
     restart: always
     ports:
-      - "8082:80"
+      - "8083:80"   # Cambié el puerto externo para evitar conflicto
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: root
 
 volumes:
-  elprogreso_mysql_data:
-  composer-cache-elprogreso:
-  node_modules_elprogreso:
+  beautycrm_mysql_data:
+  composer-cache-beautycrm:
+  node_modules_beautycrm:
