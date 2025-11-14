@@ -1,27 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pago de Anticipo - Beauty Bonita</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/Anticipo.css') }}">
-</head>
-<body class="bg-[#eee7df]">
-
-    <!-- Header -->
-    <header class="bg-[#c8c2bc] text-white py-6">
-        <div class="container mx-auto px-6 flex justify-between items-center">
-            <img src="{{ asset('iconos/logo blanco.png') }}" alt="Beauty Bonita Logo" class="h-12">
-            <nav class="hidden md:flex space-x-8">
-                <a href="{{ url('/') }}" class="hover:text-rose-300 transition-colors">Inicio</a>
-                <a href="#servicios" class="hover:text-rose-300 transition-colors">Servicios</a>
-                <a href="#contacto" class="hover:text-rose-300 transition-colors">Contacto</a>
-            </nav>
-        </div>
-    </header>
-
+@extends('layouts.app') {{-- AGREGAR ESTA LÍNEA --}}
+@section('title', 'Inicio - Cliente')
+@section('content')
     <!-- Pago Section -->
     <section class="py-16">
         <div class="max-w-4xl mx-auto px-6">
@@ -137,7 +116,8 @@
             </div>
         </div>
     </section>
-
+@endsection
+@section('modals')
     <!-- Modal de Pago Exitoso -->
     <div id="pago-exitoso" class="modal">
         <div class="modal-contenido">
@@ -151,14 +131,7 @@
             </button>
         </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="bg-[#c8c2bc] text-white py-8">
-        <div class="max-w-6xl mx-auto px-6 text-center">
-            <p>© 2025 Beauty Bonita - Todos los derechos reservados</p>
-        </div>
-    </footer>
-
+@endsection
+@section('scripts')
     <script src="{{ asset('js/Anticipo.js') }}"></script>
-</body>
-</html>
+@endsection

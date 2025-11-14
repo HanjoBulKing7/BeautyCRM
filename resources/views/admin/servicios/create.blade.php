@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear Servicio - Beauty Bonita</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/feather-icons"></script>
-    <link rel="stylesheet" href="{{ asset('css/ServiciosAdmin.css') }}">
-</head>
-<body class="bg-gray-50">
+@extends('layouts.app') {{-- AGREGAR --}}
 
+@section('title', 'Crear Servicio - Beauty Bonita')
+
+@section('content')
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="mb-6">
             <a href="{{ route('admin.servicios.index') }}" class="text-gray-500 hover:text-gray-700 flex items-center">
@@ -134,9 +126,9 @@
             </form>
         </div>
     </div>
-
+@endsection
+@section('scripts')
     <script>
         feather.replace();
     </script>
-</body>
-</html>
+@endsection

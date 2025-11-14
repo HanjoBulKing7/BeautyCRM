@@ -1,42 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <!-- Tailwind -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  
-  <!-- Fuentes -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS personalizado -->
-  <link rel="stylesheet" href="{{ asset('css/sucursal.css') }}">
-
-  <title>Sucursal | Galería</title>
-</head>
-<body>
-
-  <!-- Header -->
-  <header class="relative z-50 bg-beige-900/70 backdrop-blur-md">
-    <nav class="flex items-center justify-between px-6 py-4 lg:px-12">
-      <!-- Logo -->
-      <div class="text-2xl font-bold tracking-wider">
-        <a href="{{ url('/') }}">
-          <img src="{{ asset('iconos/logo.png') }}" alt="Beauty Bonita Logo" class="h-10 md:h-16">
-        </a>
-      </div>
-
-      <!-- Desktop Navigation -->
-      <div class="hidden md:flex items-center space-x-6 text-black text-lg">
-        <a href="{{ url('/') }}" class="hover:text-black/80">Inicio</a>
-        <a href="#galeria" class="hover:text-black/80">Galería</a>
-        <a href="#ubicacion" class="hover:text-black/80">Dónde estamos</a>
-        <a href="#ofrecemos" class="hover:text-black/80">Qué ofrecemos</a>
-      </div>
-    </nav>
-  </header>
-
+@extends('layouts.app') {{-- AGREGAR ESTA LÍNEA --}}
+@section('title', 'Inicio - Cliente')
+@section('content')
   <!-- Galería -->
   <section id="galeria" class="mt-8 text-center">
     <header>
@@ -76,8 +40,8 @@
     <span class="close-btn">&times;</span>
     <img id="fullscreen-img" src="" alt="Foto en grande" />
   </div>
-
+@endsection
+@section('scripts')
   <!-- JS personalizado -->
   <script src="{{ asset('js/sucursal.js') }}" defer></script>
-</body>
-</html>
+@endsection

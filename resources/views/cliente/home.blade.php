@@ -1,3 +1,6 @@
+@extends('layouts.app') {{-- AGREGAR ESTA LÍNEA --}}
+@section('title', 'Inicio - Cliente')
+@section('content')
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -30,86 +33,6 @@
             <!-- Capa para contraste del texto -->
             <div class="absolute inset-0 bg-black/30"></div>
         </div>
-
-        <!-- Header -->
-        <header class="header">
-            <nav class="nav">
-                <!-- Logo -->
-                <a href="{{ url('/home') }}">
-                    <div class="logo">
-                        <img src="{{ asset('iconos/logo blanco.png') }}" alt="Beauty Logo" class="logo-img">
-                    </div>
-                </a>
-
-                <!-- Botón Móvil -->
-                <button id="menu-btn" class="rounded-full p-2" style="background-color: #f9f4ef52;">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                        <!-- Sombra suave -->
-                        <ellipse cx="12" cy="20" rx="5" ry="1.2" fill="rgba(0,0,0,0.08)" />
-
-                        <!-- Labial -->
-                        <!-- Tapa -->
-                        <rect x="10.5" y="3" width="3" height="6" rx="0.8" fill="#C17B7B" stroke="#5A3E36" stroke-width="0.8" />
-                        
-                        <!-- Barra del labial -->
-                        <rect x="10.5" y="9" width="3" height="5" fill="#EED1CC" stroke="#5A3E36" stroke-width="0.8" />
-                        
-                        <!-- Base -->
-                        <rect x="9.8" y="14" width="4.4" height="4" rx="0.8" fill="#9C7C6D" stroke="#5A3E36" stroke-width="0.8" />
-                    </svg>
-                </button>
-
-                <!-- Menú Escritorio -->
-                <div class="desktop-menu">
-                    <a href="{{ url('/interfaz') }}">Inicio</a>
-                    <a href="{{ url('/servicio') }}">Servicios</a>
-                    <a href="#galeria">Portafolio</a>
-                    <a href="#testimonios">Testimonios</a>
-                    <a href="#ubicacion">Sucursal</a>
-
-                    <!-- Logout -->
-                    @auth
-          <!-- Si el usuario está autenticado -->
-          <div class="relative user-menu-container">
-            <button id="user-menu-button" class="flex items-center focus:outline-none">
-              <span class="mr-1">{{ Auth::user()->name }}</span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-            <div id="user-menu" class="absolute hidden right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-              <a href="{{ url('perfil') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ver perfil</a>
-              <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cerrar sesión</button>
-              </form>
-            </div>
-          </div>
-        @else
-          <!-- Si el usuario no está autenticado -->
-          <a href="{{ route('login') }}">Iniciar sesión</a>
-        @endauth
-                </div>
-            </nav>
-
-            <!-- Menú Móvil -->
-            <div id="mobile-menu" class="mobile-menu">
-                <div class="mobile-menu-content">
-                    <a href="{{ url('/') }}">Inicio</a>
-                    <a href="{{ url('/servicio') }}">Servicios</a>
-                    <a href="#galeria">Portafolio</a>
-                    <a href="{{ url('sucursal') }}">Sucursal</a>
-                    <a href="#contacto">Testimonios</a>
-                    <a href="#contacto">Contacto</a>
-                    
-                    <div class="highlight-section">
-                        <p class="highlight-text">Resalta tu belleza</p>
-                        <a href="{{ url('reserva') }}" class="cta-button">Agenda tu cita</a>
-                        <p class="natural-text">Natural</p>
-                    </div>
-                </div>
-            </div>
-        </header>
 
         <!-- Hero Content CENTRADO -->
         <div class="relative z-10 flex items-center justify-start min-h-screen pl-6 md:pl-12 lg:pl-24">
@@ -620,3 +543,4 @@
     <script src="{{ asset('js/interfaz.js') }}"></script>
   </body>
 </html>
+@endsection
