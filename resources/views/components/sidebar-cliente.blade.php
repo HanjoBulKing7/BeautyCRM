@@ -1,74 +1,83 @@
-<div class="space-y-2">
-    <h2 class="text-lg font-semibold text-gray-700 mb-4 font-montas">Mi Cuenta</h2>
-    
+<ul class="space-y-3">
     <!-- Inicio Dashboard -->
-    <a href="{{ url('/home') }}" class="flex items-center px-4 py-3 text-gray-700 bg-blue-50 rounded-lg border border-blue-200">
-        <i class="fas fa-home mr-3 text-blue-600"></i>
-        <span class="font-medium">Inicio Dashboard</span>
-    </a>
-    
+    <li>
+        <a href="{{ url('/home') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('home') ? 'bg-blue-500 bg-opacity-80 font-semibold' : 'hover:bg-blue-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-home mr-4 text-xl transition-transform duration-300"></i>
+            <span>Inicio Dashboard</span>
+        </a>
+    </li>
+
     <!-- Servicios -->
-    <a href="{{ url('/servicio') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-        <i class="fas fa-spa mr-3 text-purple-600"></i>
-        <span>Servicios</span>
-    </a>
-    
+    <li>
+        <a href="{{ url('/servicio') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('servicio*') ? 'bg-purple-500 bg-opacity-80 font-semibold' : 'hover:bg-purple-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-spa mr-4 text-xl transition-transform duration-300"></i>
+            <span>Servicios</span>
+        </a>
+    </li>
+
     <!-- Reservar Cita -->
-    <a href="{{ url('/reserva') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-        <i class="fas fa-calendar-check mr-3 text-green-600"></i>
-        <span>Reservar Cita</span>
-    </a>
-    
+    <li>
+        <a href="{{ url('/reserva') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('reserva*') ? 'bg-green-500 bg-opacity-80 font-semibold' : 'hover:bg-green-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-calendar-check mr-4 text-xl transition-transform duration-300"></i>
+            <span>Reservar Cita</span>
+        </a>
+    </li>
+
     <!-- Sucursal -->
-    <a href="{{ url('/sucursal') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-        <i class="fas fa-map-marker-alt mr-3 text-orange-600"></i>
-        <span>Sucursal</span>
-    </a>
+    <li>
+        <a href="{{ url('/sucursal') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('sucursal*') ? 'bg-orange-500 bg-opacity-80 font-semibold' : 'hover:bg-orange-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-map-marker-alt mr-4 text-xl transition-transform duration-300"></i>
+            <span>Sucursal</span>
+        </a>
+    </li>
 
     <!-- Portafolio (Galería) -->
-    <a href="#galeria" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-        <i class="fas fa-images mr-3 text-pink-600"></i>
-        <span>Portafolio</span>
-    </a>
+    <li>
+        <a href="#galeria"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('galeria*') ? 'bg-pink-500 bg-opacity-80 font-semibold' : 'hover:bg-pink-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-images mr-4 text-xl transition-transform duration-300"></i>
+            <span>Portafolio</span>
+        </a>
+    </li>
     
     <!-- Testimonios -->
-    <a href="#testimonios" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-        <i class="fas fa-comments mr-3 text-teal-600"></i>
-        <span>Testimonios</span>
-    </a>
+    <li>
+        <a href="#testimonios"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('testimonios*') ? 'bg-teal-500 bg-opacity-80 font-semibold' : 'hover:bg-teal-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-comments mr-4 text-xl transition-transform duration-300"></i>
+            <span>Testimonios</span>
+        </a>
+    </li>
 
     <!-- Mi Perfil -->
-    <a href="{{ url('/perfil') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-        <i class="fas fa-user mr-3 text-red-600"></i>
-        <span>Mi Perfil</span>
-    </a>
+    <li>
+        <a href="{{ url('/perfil') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('perfil*') ? 'bg-red-500 bg-opacity-80 font-semibold' : 'hover:bg-red-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-user mr-4 text-xl transition-transform duration-300"></i>
+            <span>Mi Perfil</span>
+        </a>
+    </li>
 
-    <!-- Separador -->
-    <div class="pt-4 mt-4 border-t border-gray-200">
-        <h3 class="text-md font-semibold text-gray-600 mb-3">Acciones Rápidas</h3>
+    <!-- Separador para Acciones Rápidas -->
+    <li class="pt-4 mt-4 border-t border-gray-500">
+        <h3 class="text-md font-semibold mb-3 px-3">Acciones Rápidas</h3>
         
         <!-- WhatsApp -->
-        <a href="https://wa.me/524494049194" target="_blank" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition mb-2">
-            <i class="fab fa-whatsapp mr-3 text-green-500"></i>
+        <a href="https://wa.me/524494049194" target="_blank"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out hover:bg-green-500 hover:bg-opacity-30">
+            <i class="fab fa-whatsapp mr-4 text-xl transition-transform duration-300"></i>
             <span>Contactar por WhatsApp</span>
         </a>
-        
-        <!-- Agenda tu cita (destacado) 
-        <a href="{{ url('/reserva') }}" class="flex items-center px-4 py-3 bg-rose-50 text-rose-700 rounded-lg border border-rose-200 hover:bg-rose-100 transition">
-            <i class="fas fa-calendar-plus mr-3 text-rose-600"></i>
-            <span class="font-medium">Agendar Cita Rápida</span>
-        </a>
-        -->
-    </div>
-
-    <!-- Logout -->
-    <div class="pt-4 mt-4 border-t border-gray-200">
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                <i class="fas fa-sign-out-alt mr-3 text-gray-600"></i>
-                <span>Cerrar Sesión</span>
-            </button>
-        </form>
-    </div>
-</div>
+    </li>
+</ul>

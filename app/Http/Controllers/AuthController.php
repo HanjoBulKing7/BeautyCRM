@@ -49,25 +49,26 @@ class AuthController extends Controller
     }
 
     // Registrar cliente
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|confirmed|min:6',
-        ]);
+// Registrar usuario
+public function register(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|confirmed|min:6',
+        'role_id' => 'required|in:1,2,3', // Validar que sea uno de estos valores
+    ]);
 
-        // Crear el usuario con role_id = 1 (CLIENTE)
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id' => 1,
-        ]);
+    // Crear el usuario con el role_id seleccionado
+    User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'role_id' => $request->role_id,
+    ]);
 
-        return redirect()->route('login.form')->with('success', 'Cuenta creada correctamente. Ingresa con tus datos.');
-    }
-
+    return redirect()->route('login.form')->with('success', 'Cuenta creada correctamente. Ingresa con tus datos.');
+}
     // Logout
     public function logout(Request $request)
     {
