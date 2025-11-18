@@ -37,7 +37,6 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-
 // Registro de clientes
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register.form');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
@@ -45,21 +44,21 @@ Route::post('/register', [AuthController::class, 'register'])->name('register');
 // Rutas de Administración
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/home', function () {
-        // Verificar rol directamente
         if (!Auth::check() || Auth::user()->role_id != 3) {
             return redirect('/login')->with('error', 'No tienes permisos para acceder a esta sección.');
         }
         return view('admin.dashboard');
     })->name('dashboard');
 
-    
-
-    Route::get('/empleados', function () {
-        if (!Auth::check() || Auth::user()->role_id != 3) {
-            return redirect('/login')->with('error', 'No tienes permisos para acceder a esta sección.');
-        }
-        return view('admin.empleados.index');
-    })->name('empleados.index');
+    Route::prefix('empleados')->name('empleados.')->group(function () {
+        Route::get('/', [EmpleadoController::class, 'index'])->name('index');
+        Route::get('/create', [EmpleadoController::class, 'create'])->name('create');
+        Route::post('/', [EmpleadoController::class, 'store'])->name('store');
+        Route::get('/{empleado}', [EmpleadoController::class, 'show'])->name('show');
+        Route::get('/{empleado}/edit', [EmpleadoController::class, 'edit'])->name('edit');
+        Route::put('/{empleado}', [EmpleadoController::class, 'update'])->name('update');
+        Route::delete('/{empleado}', [EmpleadoController::class, 'destroy'])->name('destroy');
+    });
 
     Route::get('/citas', function () {
         if (!Auth::check() || Auth::user()->role_id != 3) {
@@ -76,22 +75,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     })->name('clientes.index');
 
     Route::resource('servicios', ServicioController::class)->names('servicios');
+    
     // Categorías de servicios - CRUD completo
     Route::resource('categoriaservicios', CategoriaServicioController::class)
         ->parameters(['categoriaservicios' => 'categoria']);
 });
-
-
-
-
-
-
-Route::get('/empleados/crear', [EmpleadoController::class, 'create'])->name('empleados.create');
-Route::post('/empleados', [EmpleadoController::class, 'store'])->name('empleados.store');
-
-
-
-Route::resource('clientes', ClienteController::class);
 
 // Rutas de Payment Stripe
 Route::get('/pagar', function () {
@@ -101,8 +89,6 @@ Route::get('/pagar', function () {
 Route::get('/checkout', [PagoController::class, 'checkout'])->name('checkout');
 Route::get('/success', [PagoController::class, 'success'])->name('success');
 Route::get('/cancel', [PagoController::class, 'cancel'])->name('cancel');
-
-
 
 // Ruta de diagnóstico
 Route::get('/debug-auth', function () {

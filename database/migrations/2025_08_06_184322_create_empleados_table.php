@@ -12,10 +12,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('empleados', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre');
-            $table->string('email')->unique();
+            $table->id()->nullable;
+            
+            // Datos personales y de contacto
+            $table->string('nombre', 100);
+            $table->string('apellido', 100);
             $table->string('telefono', 20);
+            $table->text('informacion_legal')->nullable();
+            
+            // Información laboral
+            $table->string('puesto')->nullable();
+            $table->string('departamento')->nullable();
+            $table->date('fecha_contratacion')->nullable();
+            $table->enum('estatus', ['activo', 'inactivo', 'vacaciones'])->default('activo');
+            
+            // Relación 1:1 con users
+            $table->foreignId('user_id')
+                  ->unique()
+                  ->constrained()
+                  ->onDelete('cascade');
+            
             $table->timestamps();
         });
     }
@@ -28,7 +44,3 @@ return new class extends Migration
         Schema::dropIfExists('empleados');
     }
 };
-
-
-
-

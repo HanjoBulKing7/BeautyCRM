@@ -40,6 +40,10 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function empleado()
+    {
+        return $this->hasOne(Empleado::class);
+    }
 
 
     
@@ -55,4 +59,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    protected $attributes = [
+    'user_id' => null,
+    ];
 }
