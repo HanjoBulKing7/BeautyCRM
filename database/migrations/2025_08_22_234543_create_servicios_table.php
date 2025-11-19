@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('servicios', function (Blueprint $table) {
@@ -18,13 +15,14 @@ return new class extends Migration
             $table->decimal('precio', 10, 2);
             $table->integer('duracion_minutos');
             $table->enum('estado', ['activo', 'inactivo'])->default('activo');
+            $table->string('categoria', 50)->nullable(); // ← Nueva columna
+            $table->string('imagen')->nullable();
+            $table->decimal('descuento', 10, 2)->default(0);
+            $table->text('caracteristicas')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('servicios');

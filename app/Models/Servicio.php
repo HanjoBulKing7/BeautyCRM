@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Servicio extends Model
 {
@@ -20,7 +19,7 @@ class Servicio extends Model
         'duracion_minutos',
         'estado',
         'imagen',
-        'id_categoria', // ← Ahora es llave foránea
+        'categoria', // ← Cambiado de id_categoria a categoria (string)
         'descuento',          
         'caracteristicas'     
     ];
@@ -40,11 +39,6 @@ class Servicio extends Model
     {
         return $this->hasMany(Cita::class, 'id_servicio');
     }
-    /**
-     * Relación con la categoría
-     */
-    public function categoria(): BelongsTo
-    {
-        return $this->belongsTo(CategoriaServicio::class, 'id_categoria');
-    }
+
+    // ← Se elimina la relación con categoría
 }

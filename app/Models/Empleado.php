@@ -18,16 +18,10 @@ class Empleado extends Model
         'departamento',
         'fecha_contratacion',
         'estatus',
-        'user_id'
     ];
 
     protected $casts = [
         'fecha_contratacion' => 'date',
         'estatus' => 'string'
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 }

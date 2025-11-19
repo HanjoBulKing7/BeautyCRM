@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Servicio;
-use App\Models\CategoriaServicio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,27 +10,26 @@ class ServicioController extends Controller
 {
     public function index()
     {
-        $servicios = Servicio::with('categoria')->get();
-        return view('admin.servicios.index', compact('servicios'));
-        
+        $servicios = Servicio::latest()->paginate(10);
+        return view('admin.servicios.index', compact('servicios')); // ← CAMBIADO
     }
 
     public function create()
     {
-        $categorias = CategoriaServicio::where('estado', 'activa')->get();
-        return view('admin.servicios.create', compact('categorias'));
+        $servicio = new Servicio();
+        return view('admin.servicios.create', compact('servicio')); // ← CAMBIADO
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nombre_servicio' => 'required|string|max:255',
-            'descripcion' => 'required|string',
+            'nombre_servicio' => 'required|string|max:100',
+            'descripcion' => 'nullable|string',
             'precio' => 'required|numeric|min:0',
             'duracion_minutos' => 'required|integer|min:1',
-            'id_categoria' => 'required|exists:categorias_servicios,id_categoria',
+            'categoria' => 'nullable|string|max:50',
             'estado' => 'required|in:activo,inactivo',
-            'descuento' => 'nullable|numeric|min:0|max:100',
+            'descuento' => 'nullable|numeric|min:0',
             'caracteristicas' => 'nullable|string',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
@@ -51,25 +49,24 @@ class ServicioController extends Controller
 
     public function show(Servicio $servicio)
     {
-        return view('admin.servicios.show', compact('servicio'));
+        return view('admin.servicios.show', compact('servicio')); // ← CAMBIADO
     }
 
     public function edit(Servicio $servicio)
     {
-        $categorias = CategoriaServicio::where('estado', 'activa')->get();
-        return view('admin.servicios.edit', compact('servicio', 'categorias'));
+        return view('admin.servicios.edit', compact('servicio')); // ← CAMBIADO
     }
 
     public function update(Request $request, Servicio $servicio)
     {
         $request->validate([
-            'nombre_servicio' => 'required|string|max:255',
-            'descripcion' => 'required|string',
+            'nombre_servicio' => 'required|string|max:100',
+            'descripcion' => 'nullable|string',
             'precio' => 'required|numeric|min:0',
             'duracion_minutos' => 'required|integer|min:1',
-            'id_categoria' => 'required|exists:categorias_servicios,id_categoria',
+            'categoria' => 'nullable|string|max:50',
             'estado' => 'required|in:activo,inactivo',
-            'descuento' => 'nullable|numeric|min:0|max:100',
+            'descuento' => 'nullable|numeric|min:0',
             'caracteristicas' => 'nullable|string',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
@@ -102,52 +99,5 @@ class ServicioController extends Controller
         $servicio->delete();
 
         return redirect()->route('admin.servicios.index')->with('success', 'Servicio eliminado correctamente');
-    }
-    /**
-     * Mostrar la página de servicio con filtrado por categoría
-     */
-    public function showServicePage(Request $request)
-    {
-        $categoriaSlug = $request->query('categoria');
-        
-        // Si se proporciona un slug de categoría, filtrar servicios
-        if ($categoriaSlug) {
-            $categoria = CategoriaServicio::where('slug', $categoriaSlug)
-                ->where('estado', 'activa')
-                ->first();
-            
-            if ($categoria) {
-                $servicios = Servicio::where('id_categoria', $categoria->id_categoria)
-                    ->where('estado', 'activo')
-                    ->get();
-                
-                return view('cliente.servicio', compact('servicios', 'categoria'));
-            }
-        }
-        
-        // Si no hay categoría o no se encuentra, mostrar todos los servicios activos
-        $servicios = Servicio::where('estado', 'activo')->get();
-        return view('cliente.servicio', compact('servicios'));
-    }
-
-    /**
-     * Obtener servicios por categoría (para AJAX)
-     */
-    public function getServiciosByCategoria($categoriaId)
-    {
-        $servicios = Servicio::where('id_categoria', $categoriaId)
-            ->where('estado', 'activo')
-            ->get();
-            
-        return response()->json($servicios);
-    }
-
-    /**
-     * Obtener detalles de un servicio específico (para AJAX)
-     */
-    public function getServicioDetails($servicioId)
-    {
-        $servicio = Servicio::with('categoria')->findOrFail($servicioId);
-        return response()->json($servicio);
     }
 }

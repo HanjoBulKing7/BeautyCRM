@@ -60,7 +60,4 @@ class User extends Authenticatable
         ];
     }
 
-    protected $attributes = [
-    'user_id' => null,
-    ];
 }

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('empleados', function (Blueprint $table) {
-            $table->id()->nullable;
+            $table->id();
             
             // Datos personales y de contacto
             $table->string('nombre', 100);
@@ -25,12 +25,6 @@ return new class extends Migration
             $table->string('departamento')->nullable();
             $table->date('fecha_contratacion')->nullable();
             $table->enum('estatus', ['activo', 'inactivo', 'vacaciones'])->default('activo');
-            
-            // Relación 1:1 con users
-            $table->foreignId('user_id')
-                  ->unique()
-                  ->constrained()
-                  ->onDelete('cascade');
             
             $table->timestamps();
         });

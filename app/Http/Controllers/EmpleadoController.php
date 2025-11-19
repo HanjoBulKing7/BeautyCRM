@@ -47,7 +47,6 @@ class EmpleadoController extends Controller
             'fecha_contratacion' => $request->fecha_contratacion,
             'estatus' => $request->estatus,
             'informacion_legal' => $request->informacion_legal,
-            'user_id', // ← ESTA LÍNEA ES CLAVE
         ]);
 
         return redirect()->route('admin.empleados.index')

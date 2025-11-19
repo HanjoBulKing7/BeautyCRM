@@ -6,16 +6,11 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\ServicioController;
-use App\Http\Controllers\CategoriaServicioController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 
 // Rutas Públicas (Cliente)
 Route::get('/home', [HomeController::class, 'index'])->name('cliente.home');
-
-Route::get('/servicio', [ServicioController::class, 'showServicePage'])->name('servicio');
-Route::get('/api/servicios/categoria/{categoriaId}', [ServicioController::class, 'getServiciosByCategoria']);
-Route::get('/api/servicio/{servicioId}', [ServicioController::class, 'getServicioDetails']);
 
 Route::get('/anticipo', function () {
     return view('cliente.anticipo');
@@ -74,15 +69,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         return view('admin.clientes.index');
     })->name('clientes.index');
 
-    Route::resource('servicios', ServicioController::class)->names('servicios');
-    
-    // Categorías de servicios - CRUD completo
-    Route::resource('categoriaservicios', CategoriaServicioController::class)
-        ->parameters(['categoriaservicios' => 'categoria']);
+    // SERVICIOS - CORREGIDO
+    Route::resource('servicios', ServicioController::class);
 });
 
 // Rutas de Payment Stripe
-Route::get('/pagar', function () {
+Route::get('/pagar', function () {  
     return view('metodo_pago');
 })->name('metodo.pago');
 
