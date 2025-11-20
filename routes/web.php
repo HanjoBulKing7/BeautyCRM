@@ -62,12 +62,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         return view('admin.citas.index');
     })->name('citas.index');
 
-    Route::get('/clientes', function () {
-        if (!Auth::check() || Auth::user()->role_id != 3) {
-            return redirect('/login')->with('error', 'No tienes permisos para acceder a esta sección.');
-        }
-        return view('admin.clientes.index');
-    })->name('clientes.index');
+    Route::prefix('clientes')->name('clientes.')->middleware(['auth'])->group(function () {
+        Route::get('/', [ClienteController::class, 'index'])->name('index');
+        Route::get('/create', [ClienteController::class, 'create'])->name('create');
+        Route::post('/', [ClienteController::class, 'store'])->name('store');
+        Route::get('/{cliente}', [ClienteController::class, 'show'])->name('show');
+        Route::get('/{cliente}/edit', [ClienteController::class, 'edit'])->name('edit');
+        Route::put('/{cliente}', [ClienteController::class, 'update'])->name('update');
+        Route::delete('/{cliente}', [ClienteController::class, 'destroy'])->name('destroy');
+    });
 
     // SERVICIOS - CORREGIDO
     Route::resource('servicios', ServicioController::class);
