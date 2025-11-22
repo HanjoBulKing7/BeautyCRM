@@ -55,13 +55,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{empleado}', [EmpleadoController::class, 'destroy'])->name('destroy');
     });
 
-    Route::get('/citas', function () {
-        if (!Auth::check() || Auth::user()->role_id != 3) {
-            return redirect('/login')->with('error', 'No tienes permisos para acceder a esta sección.');
-        }
-        return view('admin.citas.index');
-    })->name('citas.index');
+    // Rutas de Citas (REEMPLAZA la ruta simple que tenías)
+    Route::prefix('citas')->name('citas.')->group(function () {
+        Route::get('/', [CitaController::class, 'index'])->name('index');
+        Route::get('/create', [CitaController::class, 'create'])->name('create');
+        Route::post('/', [CitaController::class, 'store'])->name('store');
+        Route::get('/{cita}', [CitaController::class, 'show'])->name('show');
+        Route::get('/{cita}/edit', [CitaController::class, 'edit'])->name('edit');
+        Route::put('/{cita}', [CitaController::class, 'update'])->name('update');
+        Route::delete('/{cita}', [CitaController::class, 'destroy'])->name('destroy');
+    });
 
+    
     Route::prefix('clientes')->name('clientes.')->middleware(['auth'])->group(function () {
         Route::get('/', [ClienteController::class, 'index'])->name('index');
         Route::get('/create', [ClienteController::class, 'create'])->name('create');
@@ -72,9 +77,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{cliente}', [ClienteController::class, 'destroy'])->name('destroy');
     });
 
+    // Rutas de Google Calendar
+    Route::prefix('google')->name('google.')->group(function () {
+        Route::get('/connect', [GoogleCalendarController::class, 'connect'])->name('connect');
+        Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+        Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
+    });
     // SERVICIOS - CORREGIDO
     Route::resource('servicios', ServicioController::class);
 });
+
+// Callback de Google (fuera del grupo admin)
+Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
 
 // Rutas de Payment Stripe
 Route::get('/pagar', function () {  

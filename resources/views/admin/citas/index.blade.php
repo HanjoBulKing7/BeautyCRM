@@ -1,309 +1,129 @@
 @extends('layouts.app')
 
-@section('title', 'Panel de Administración')
-
 @section('content')
-        <!-- Header y botón -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-light text-gray-800">Gestión de Citas</h1>
-                <p class="text-gray-500 mt-1">Administra las citas programadas en tu salón</p>
-            </div>
-            <div class="flex space-x-3 mt-4 md:mt-0">
-                <button onclick="openCalendarView()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 flex items-center">
-                    <i data-feather="calendar" class="mr-2 w-4 h-4"></i>
-                    Vista Calendario
-                </button>
-                <button onclick="openModal()" class="btn-primary text-white px-4 py-2 rounded-md flex items-center">
-                    <i data-feather="plus" class="mr-2 w-4 h-4"></i>
-                    Nueva Cita
-                </button>
-            </div>
+<div class="container-fluid py-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h2><i class="fas fa-calendar-alt"></i> Gestión de Citas</h2>
         </div>
-
-        <!-- Filtros y búsqueda -->
-        <div class="card mb-6 p-4">
-            <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
-                <div class="relative w-full md:w-64">
-                    <i data-feather="search" class="absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text" placeholder="Buscar citas..." class="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300">
-                </div>
-                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                    <select class="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-sm">
-                        <option>Hoy</option>
-                        <option>Esta semana</option>
-                        <option>Este mes</option>
-                        <option>Personalizado</option>
-                    </select>
-                    <select class="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-sm">
-                        <option>Todos los estados</option>
-                        <option>Confirmadas</option>
-                        <option>Pendientes</option>
-                        <option>Canceladas</option>
-                        <option>Completadas</option>
-                    </select>
-                    <select class="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-300 text-sm">
-                        <option>Todos los empleados</option>
-                        <option>María González</option>
-                        <option>Carlos Martínez</option>
-                        <option>Ana López</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Vista de citas en cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Cita 1 -->
-            <div class="card p-5 hover:shadow-md transition-shadow duration-200">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <span class="badge-confirmed px-2 py-1 text-xs rounded-full">Confirmada</span>
-                        <h3 class="text-lg font-medium text-gray-800 mt-2">Maquillaje profesional</h3>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-sm text-gray-500">#C-00123</span>
-                        <div class="text-xs text-gray-400 mt-1">10:00 - 11:00</div>
-                    </div>
-                </div>
-                
-                <div class="flex items-center mb-3">
-                    <div class="flex-shrink-0 h-10 w-10">
-                        <img class="h-10 w-10 rounded-full" src="{{ asset('images/cejas.png') }}" alt="">
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">Laura Sánchez</p>
-                        <p class="text-xs text-gray-500">55 1234 5678</p>
-                    </div>
-                </div>
-                
-                <div class="flex items-center mb-4">
-                    <div class="flex-shrink-0 h-10 w-10">
-                        <img class="h-10 w-10 rounded-full" src="{{ asset('empleadas/carla.jpg') }}" alt="">
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">María González</p>
-                        <p class="text-xs text-gray-500">Estilista</p>
-                    </div>
-                </div>
-                
-                <div class="flex justify-between items-center text-sm">
-                    <div class="text-gray-700">$450.00</div>
-                    <div class="flex space-x-2">
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i data-feather="edit" class="w-4 h-4"></i>
-                        </button>
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i data-feather="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Cita 2 -->
-            <div class="card p-5 hover:shadow-md transition-shadow duration-200">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <span class="badge-pending px-2 py-1 text-xs rounded-full">Pendiente</span>
-                        <h3 class="text-lg font-medium text-gray-800 mt-2">Manicure básico</h3>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-sm text-gray-500">#C-00124</span>
-                        <div class="text-xs text-gray-400 mt-1">11:30 - 12:00</div>
-                    </div>
-                </div>
-                
-                <div class="flex items-center mb-3">
-                    <div class="flex-shrink-0 h-10 w-10">
-                        <img class="h-10 w-10 rounded-full" src="{{ asset('images/pestañas3.png') }}" alt="">
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">Ana Rodríguez</p>
-                        <p class="text-xs text-gray-500">55 8765 4321</p>
-                    </div>
-                </div>
-                
-                <div class="flex items-center mb-4">
-                    <div class="flex-shrink-0 h-10 w-10">
-                        <img class="h-10 w-10 rounded-full" src="{{ asset('empleadas/sofia.jpg') }}" alt="">
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">Ana López</p>
-                        <p class="text-xs text-gray-500">Manicurista</p>
-                    </div>
-                </div>
-                
-                <div class="flex justify-between items-center text-sm">
-                    <div class="text-gray-700">$180.00</div>
-                    <div class="flex space-x-2">
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i data-feather="edit" class="w-4 h-4"></i>
-                        </button>
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i data-feather="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Cita 3 -->
-            <div class="card p-5 hover:shadow-md transition-shadow duration-200">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <span class="badge-completed px-2 py-1 text-xs rounded-full">Completada</span>
-                        <h3 class="text-lg font-medium text-gray-800 mt-2">Corte de cabello</h3>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-sm text-gray-500">#C-00122</span>
-                        <div class="text-xs text-gray-400 mt-1">09:00 - 09:45</div>
-                    </div>
-                </div>
-                
-                <div class="flex items-center mb-3">
-                    <div class="flex-shrink-0 h-10 w-10">
-                        <img class="h-10 w-10 rounded-full" src="{{ asset('images/pestañas.png') }}" alt="">
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">Carla Méndez</p>
-                        <p class="text-xs text-gray-500">55 9876 5432</p>
-                    </div>
-                </div>
-                
-                <div class="flex items-center mb-4">
-                    <div class="flex-shrink-0 h-10 w-10">
-                        <img class="h-10 w-10 rounded-full" src="{{ asset('empleadas/maria.jpg') }}" alt="">
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">Maria Martínez</p>
-                        <p class="text-xs text-gray-500">Barbero</p>
-                    </div>
-                </div>
-                
-                <div class="flex justify-between items-center text-sm">
-                    <div class="text-gray-700">$250.00</div>
-                    <div class="flex space-x-2">
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i data-feather="edit" class="w-4 h-4"></i>
-                        </button>
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i data-feather="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Paginación -->
-        <div class="mt-6">
-            <div class="card px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            Mostrando <span class="font-medium">1</span> a <span class="font-medium">3</span> de <span class="font-medium">12</span> resultados
-                        </p>
-                    </div>
-                    <div>
-                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                <span class="sr-only">Anterior</span>
-                                <i data-feather="chevron-left" class="h-4 w-4"></i>
-                            </a>
-                            <a href="#" aria-current="page" class="z-10 bg-gray-100 border-gray-300 text-gray-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                                1
-                            </a>
-                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                2
-                            </a>
-                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                3
-                            </a>
-                            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                <span class="sr-only">Siguiente</span>
-                                <i data-feather="chevron-right" class="h-4 w-4"></i>
-                            </a>
-                        </nav>
-                    </div>
-                </div>
-            </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ route('admin.google.status') }}" class="btn btn-outline-primary me-2">
+                <i class="fab fa-google"></i> Google Calendar
+            </a>
+            <a href="{{ route('admin.citas.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nueva Cita
+            </a>
         </div>
     </div>
 
-    <!-- Modal para agregar/editar cita -->
-    <div id="appointmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-lg font-medium text-gray-800">Agregar Nueva Cita</h3>
-                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
-                    <i data-feather="x" class="w-5 h-5"></i>
-                </button>
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Servicio</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Empleado</th>
+                            <th>Estado</th>
+                            <th>Google</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($citas as $cita)
+                            <tr>
+                                <td><strong>#{{ $cita->id_cita }}</strong></td>
+                                <td>
+                                    <i class="fas fa-user text-primary"></i> {{ $cita->cliente->name }}
+                                    <br><small class="text-muted">{{ $cita->cliente->email }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ $cita->servicio->nombre_servicio }}</strong>
+                                    <br><small class="text-muted">{{ $cita->servicio->duracion_minutos }} min - ${{ number_format($cita->servicio->precio, 2) }}</small>
+                                </td>
+                                <td>{{ $cita->fecha_cita->format('d/m/Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($cita->hora_cita)->format('h:i A') }}</td>
+                                <td>
+                                    @if($cita->empleado)
+                                        <i class="fas fa-user-tie"></i> {{ $cita->empleado->nombre }}
+                                    @else
+                                        <span class="text-muted">Sin asignar</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 
+                                        $cita->estado_cita === 'completada' ? 'success' : 
+                                        ($cita->estado_cita === 'confirmada' ? 'primary' : 
+                                        ($cita->estado_cita === 'cancelada' ? 'danger' : 'warning')) 
+                                    }}">
+                                        {{ ucfirst($cita->estado_cita) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @if($cita->synced_with_google)
+                                        <i class="fas fa-check-circle text-success" title="Sincronizado con Google Calendar"></i>
+                                    @else
+                                        <i class="fas fa-times-circle text-muted" title="No sincronizado"></i>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ route('admin.citas.show', $cita) }}" class="btn btn-info" title="Ver">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ route('admin.citas.edit', $cita) }}" class="btn btn-warning" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ route('admin.citas.destroy', $cita) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger" 
+                                                    onclick="return confirm('¿Eliminar esta cita?')" title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No hay citas registradas</p>
+                                    <a href="{{ route('admin.citas.create') }}" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Crear primera cita
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-            
-            <form class="p-4">
-                <div class="mb-4">
-                    <label for="cliente" class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
-                    <select id="cliente" name="cliente" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300">
-                        <option value="">Seleccione un cliente</option>
-                        <option value="1">Laura Sánchez (55 1234 5678)</option>
-                        <option value="2">Ana Rodríguez (55 8765 4321)</option>
-                        <option value="3">Carlos Méndez (55 9876 5432)</option>
-                    </select>
+
+            @if($citas->hasPages())
+                <div class="mt-3">
+                    {{ $citas->links() }}
                 </div>
-                
-                <div class="mb-4">
-                    <label for="servicio" class="block text-sm font-medium text-gray-700 mb-1">Servicio</label>
-                    <select id="servicio" name="servicio" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300">
-                        <option value="">Seleccione un servicio</option>
-                        <option value="1">Maquillaje profesional ($450.00 - 60 min)</option>
-                        <option value="2">Manicure básico ($180.00 - 30 min)</option>
-                        <option value="3">Corte de cabello ($250.00 - 45 min)</option>
-                    </select>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="empleado" class="block text-sm font-medium text-gray-700 mb-1">Empleado</label>
-                    <select id="empleado" name="empleado" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300">
-                        <option value="">Seleccione un empleado</option>
-                        <option value="1">María González (Estilista)</option>
-                        <option value="2">Carlos Martínez (Barbero)</option>
-                        <option value="3">Ana López (Manicurista)</option>
-                    </select>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                        <input type="date" id="fecha" name="fecha" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300">
-                    </div>
-                    
-                    <div>
-                        <label for="hora" class="block text-sm font-medium text-gray-700 mb-1">Hora</label>
-                        <input type="time" id="hora" name="hora" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300">
-                    </div>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="estado" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                    <select id="estado" name="estado" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300">
-                        <option value="confirmed">Confirmada</option>
-                        <option value="pending">Pendiente</option>
-                        <option value="cancelled">Cancelada</option>
-                    </select>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="notas" class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
-                    <textarea id="notas" name="notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300" placeholder="Notas adicionales..."></textarea>
-                </div>
-                
-                <div class="flex justify-end space-x-3 pt-4 border-t">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancelar</button>
-                    <button type="submit" class="btn-primary text-white px-4 py-2 rounded-md">Guardar Cita</button>
-                </div>
-            </form>
+            @endif
         </div>
     </div>
-@endsection
-@section('scripts')
-    <!-- JS personalizado -->
-    <script src="{{ asset('js/CitasAdmin.js') }}" defer></script>
+</div>
 @endsection

@@ -11,7 +11,7 @@ class Cita extends Model
 
     protected $table = 'citas';
     protected $primaryKey = 'id_cita';
-    
+
     protected $fillable = [
         'id_cliente',
         'id_servicio',
@@ -19,28 +19,22 @@ class Cita extends Model
         'fecha_cita',
         'hora_cita',
         'estado_cita',
-        'observaciones'
+        'observaciones',
+        'google_event_id',
+        'synced_with_google',
     ];
 
     protected $casts = [
         'fecha_cita' => 'date',
-        'hora_cita' => 'datetime:H:i'
+        'synced_with_google' => 'boolean',
     ];
 
     /**
-     * Relación con el cliente
+     * Relación con el cliente (User)
      */
     public function cliente()
     {
-        return $this->belongsTo(User::class, 'id_cliente', 'id_usuario');
-    }
-
-    /**
-     * Relación con el empleado
-     */
-    public function empleado()
-    {
-        return $this->belongsTo(User::class, 'id_empleado', 'id_usuario');
+        return $this->belongsTo(User::class, 'id_cliente', 'id');
     }
 
     /**
@@ -48,14 +42,14 @@ class Cita extends Model
      */
     public function servicio()
     {
-        return $this->belongsTo(Servicio::class, 'id_servicio');
+        return $this->belongsTo(Servicio::class, 'id_servicio', 'id_servicio');
     }
 
     /**
-     * Relación con los pagos
+     * Relación con el empleado
      */
-    public function pagos()
+    public function empleado()
     {
-        return $this->hasMany(Pago::class, 'id_cita');
+        return $this->belongsTo(Empleado::class, 'id_empleado', 'id_empleado');
     }
 }
