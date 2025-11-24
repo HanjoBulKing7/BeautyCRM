@@ -26,6 +26,7 @@ RUN composer config process-timeout 1000
 
 # **Mejora:** Instalar las dependencias AHORA (en la capa de construcción).
 # Esto acelera el inicio del contenedor y aprovecha la caché de Docker.
+ENV COMPOSER_PROCESS_TIMEOUT=600
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Copiar el resto del código fuente (esto debe ir DESPUÉS de composer install)
