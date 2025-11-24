@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\CitaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmpleadoController;
@@ -54,7 +54,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{empleado}', [EmpleadoController::class, 'update'])->name('update');
         Route::delete('/{empleado}', [EmpleadoController::class, 'destroy'])->name('destroy');
     });
-
+    
     // Rutas de Citas (REEMPLAZA la ruta simple que tenías)
     Route::prefix('citas')->name('citas.')->group(function () {
         Route::get('/', [CitaController::class, 'index'])->name('index');
@@ -86,9 +86,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // SERVICIOS - CORREGIDO
     Route::resource('servicios', ServicioController::class);
 });
-
-// Callback de Google (fuera del grupo admin)
-Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
 
 // Rutas de Payment Stripe
 Route::get('/pagar', function () {  

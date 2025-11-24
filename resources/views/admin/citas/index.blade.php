@@ -1,129 +1,50 @@
-@extends('layouts.app')
-
-@section('content')
-<div class="container-fluid py-4">
-    <div class="row mb-3">
-        <div class="col-md-8">
-            <h2><i class="fas fa-calendar-alt"></i> Gestión de Citas</h2>
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="{{ route('admin.google.status') }}" class="btn btn-outline-primary me-2">
-                <i class="fab fa-google"></i> Google Calendar
-            </a>
-            <a href="{{ route('admin.citas.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nueva Cita
-            </a>
-        </div>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
-    <div class="card shadow">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Cliente</th>
-                            <th>Servicio</th>
-                            <th>Fecha</th>
-                            <th>Hora</th>
-                            <th>Empleado</th>
-                            <th>Estado</th>
-                            <th>Google</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($citas as $cita)
-                            <tr>
-                                <td><strong>#{{ $cita->id_cita }}</strong></td>
-                                <td>
-                                    <i class="fas fa-user text-primary"></i> {{ $cita->cliente->name }}
-                                    <br><small class="text-muted">{{ $cita->cliente->email }}</small>
-                                </td>
-                                <td>
-                                    <strong>{{ $cita->servicio->nombre_servicio }}</strong>
-                                    <br><small class="text-muted">{{ $cita->servicio->duracion_minutos }} min - ${{ number_format($cita->servicio->precio, 2) }}</small>
-                                </td>
-                                <td>{{ $cita->fecha_cita->format('d/m/Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($cita->hora_cita)->format('h:i A') }}</td>
-                                <td>
-                                    @if($cita->empleado)
-                                        <i class="fas fa-user-tie"></i> {{ $cita->empleado->nombre }}
-                                    @else
-                                        <span class="text-muted">Sin asignar</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge bg-{{ 
-                                        $cita->estado_cita === 'completada' ? 'success' : 
-                                        ($cita->estado_cita === 'confirmada' ? 'primary' : 
-                                        ($cita->estado_cita === 'cancelada' ? 'danger' : 'warning')) 
-                                    }}">
-                                        {{ ucfirst($cita->estado_cita) }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    @if($cita->synced_with_google)
-                                        <i class="fas fa-check-circle text-success" title="Sincronizado con Google Calendar"></i>
-                                    @else
-                                        <i class="fas fa-times-circle text-muted" title="No sincronizado"></i>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{{ route('admin.citas.show', $cita) }}" class="btn btn-info" title="Ver">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('admin.citas.edit', $cita) }}" class="btn btn-warning" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('admin.citas.destroy', $cita) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger" 
-                                                    onclick="return confirm('¿Eliminar esta cita?')" title="Eliminar">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="9" class="text-center py-4">
-                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                    <p class="text-muted">No hay citas registradas</p>
-                                    <a href="{{ route('admin.citas.create') }}" class="btn btn-primary">
-                                        <i class="fas fa-plus"></i> Crear primera cita
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Calendar Integration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Google Calendar Integration</h1>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                <p class="text-blue-700">
+                    🎉 ¡Bienvenido a la integración con Google Calendar!
+                </p>
             </div>
 
-            @if($citas->hasPages())
-                <div class="mt-3">
-                    {{ $citas->links() }}
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Card para conectar con Google -->
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Conectar con Google</h2>
+                    <p class="text-gray-600 mb-4">Conecta tu cuenta de Google para sincronizar el calendario.</p>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                        Conectar Google Calendar
+                    </button>
                 </div>
-            @endif
+
+                <!-- Card para ver eventos -->
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Ver Eventos</h2>
+                    <p class="text-gray-600 mb-4">Visualiza y gestiona tus eventos del calendario.</p>
+                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                        Ver Mis Eventos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Placeholder para el calendario -->
+            <div class="mt-8">
+                <h2 class="text-2xl font-semibold mb-4">Calendario</h2>
+                <div class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <p class="text-gray-500">Aquí se mostrará el calendario de Google</p>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-@endsection
+</body>
+</html>
