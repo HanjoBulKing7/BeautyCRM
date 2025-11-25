@@ -21,6 +21,11 @@ return new class extends Migration
             $table->enum('estado_cita', ['pendiente', 'confirmada', 'cancelada', 'completada'])->default('pendiente');
             $table->text('observaciones')->nullable();
             
+            // Campos de Google Calendar - SIN ->after()
+            $table->string('google_event_id')->nullable();
+            $table->boolean('synced_with_google')->default(false);
+            $table->timestamp('last_sync_at')->nullable();
+            
             $table->foreign('id_cliente')
                 ->references('id')
                 ->on('users')

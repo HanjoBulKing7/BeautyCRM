@@ -7,7 +7,9 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\GoogleCalendarController;
 use Illuminate\Support\Facades\Auth;
+
 
 // Rutas Públicas (Cliente)
 Route::get('/home', [HomeController::class, 'index'])->name('cliente.home');
@@ -55,7 +57,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{empleado}', [EmpleadoController::class, 'destroy'])->name('destroy');
     });
     
-    // Rutas de Citas (REEMPLAZA la ruta simple que tenías)
+    // Rutas de Citas
     Route::prefix('citas')->name('citas.')->group(function () {
         Route::get('/', [CitaController::class, 'index'])->name('index');
         Route::get('/create', [CitaController::class, 'create'])->name('create');
@@ -64,6 +66,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/{cita}/edit', [CitaController::class, 'edit'])->name('edit');
         Route::put('/{cita}', [CitaController::class, 'update'])->name('update');
         Route::delete('/{cita}', [CitaController::class, 'destroy'])->name('destroy');
+        
+        // Rutas de sincronización con Google Calendar
+        Route::post('/{cita}/sync', [CitaController::class, 'syncWithGoogle'])->name('sync');
+        Route::post('/sync-all', [CitaController::class, 'syncAllWithGoogle'])->name('sync-all');
     });
 
     
@@ -85,6 +91,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
     // SERVICIOS - CORREGIDO
     Route::resource('servicios', ServicioController::class);
+
+    // Rutas de Google Calendar
+    Route::prefix('google')->name('google.')->group(function () {
+    Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');
+    Route::get('/callback', [GoogleCalendarController::class, 'callback'])->name('callback');
+    Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+    Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
+});
 });
 
 // Rutas de Payment Stripe
