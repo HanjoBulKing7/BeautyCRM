@@ -38,6 +38,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register.form');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 
+//Redirection URI for Google Client Route 
+
+Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback']);
 // Rutas de Administración
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/home', function () {
@@ -95,7 +98,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Rutas de Google Calendar
     Route::prefix('google')->name('google.')->group(function () {
     Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');
-    Route::get('/callback', [GoogleCalendarController::class, 'callback'])->name('callback');
     Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
     Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
 });

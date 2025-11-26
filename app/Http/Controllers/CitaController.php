@@ -41,9 +41,9 @@ class CitaController extends Controller
 
     public function create()
     {
-        $clientes = User::where('role_id', 1)->get();
+        $clientes = User::all();
         $servicios = Servicio::all();
-        $empleados = User::where('role_id', 2)->get();
+        $empleados = User::all();
 
         return view('admin.citas.create', compact('clientes', 'servicios', 'empleados'));
     }
