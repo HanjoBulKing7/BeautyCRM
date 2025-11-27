@@ -110,7 +110,7 @@ class GoogleCalendarService
             $calendar = $this->getClient();
 
             $event = new Event([
-                'summary' => 'Cita: ' . $cita->servicio->nombre,
+                'summary' => 'Cita: ' . $cita->servicio->nombre_servicio,
                 'description' => $this->buildEventDescription($cita),
                 'start' => new EventDateTime([
                     'dateTime' => $cita->startDateTime,
@@ -121,7 +121,6 @@ class GoogleCalendarService
                     'timeZone' => 'America/Mexico_City',
                 ]),
                 'location' => 'Salón de Belleza',
-                'attendees' => $this->buildAttendees($cita),
             ]);
 
             $createdEvent = $calendar->events->insert('primary', $event);
@@ -130,7 +129,7 @@ class GoogleCalendarService
         } catch (\Exception $e) {
             throw $e;
         }
-    }
+    } 
 
     /**
      * Actualizar evento en Google Calendar
@@ -146,7 +145,7 @@ class GoogleCalendarService
 
             $event = $calendar->events->get('primary', $cita->google_event_id);
             
-            $event->setSummary('Cita: ' . $cita->servicio->nombre);
+            $event->setSummary('Cita: ' . $cita->servicio->nombre_servicio);
             $event->setDescription($this->buildEventDescription($cita));
             $event->setStart(new EventDateTime([
                 'dateTime' => $cita->startDateTime,
@@ -200,14 +199,12 @@ class GoogleCalendarService
      */
     protected function buildEventDescription(Cita $cita)
     {
-        $description = "Cita de {$cita->cliente->name}";
-        $description .= "\nServicio: {$cita->servicio->nombre}";
+        $description = "\nCita de : {$cita->servicio->nombre_servicio}";
         $description .= "\nPrecio: $" . number_format($cita->servicio->precio, 2);
-        
-        if ($cita->empleado) {
-            $description .= "\nEmpleado: {$cita->empleado->name}";
-        }
-        
+        // Duración del servicio
+        $duracion = $cita->servicio->duracion ?? 60;
+        $description .= "\nDuración: {$duracion} minutos";
+
         if ($cita->observaciones) {
             $description .= "\nObservaciones: {$cita->observaciones}";
         }

@@ -81,7 +81,7 @@
                                                 data-duracion="{{ $servicio->duracion ?? 60 }}"
                                                 data-precio="{{ $servicio->precio }}"
                                                 {{ old('id_servicio') == $servicio->id_servicio ? 'selected' : '' }}>
-                                            {{ $servicio->nombre }} - ${{ number_format($servicio->precio, 2) }} 
+                                            {{ $servicio->nombre_servicio }} - ${{ number_format($servicio->precio, 2) }} 
                                             ({{ $servicio->duracion ?? 60 }} min)
                                         </option>
                                     @endforeach
