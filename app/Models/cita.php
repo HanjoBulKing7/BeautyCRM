@@ -80,4 +80,8 @@ class Cita extends Model
     {
         return $this->synced_with_google && !empty($this->google_event_id);
     }
+    public function venta()
+    {
+        return $this->hasOne(Venta::class, 'id_cita');
+    }
 }

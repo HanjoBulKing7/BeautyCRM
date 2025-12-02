@@ -29,6 +29,17 @@
         </a>
     </li>
 
+    <!-- Ventas -->
+    <li>
+        <a href="{{ url('/admin/ventas') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('admin/ventas*') ? 'bg-red-500 bg-opacity-80 font-semibold' : 'hover:bg-red-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-user-check mr-4 text-xl transition-transform duration-300"></i>
+            <span>Ventas</span>
+        </a>
+    </li>
+
+
     <!-- Clientes -->
     <li>
         <a href="{{ url('/admin/clientes') }}"
@@ -46,6 +57,16 @@
                   {{ request()->is('admin/empleados*') ? 'bg-red-500 bg-opacity-80 font-semibold' : 'hover:bg-red-400 hover:bg-opacity-30' }}">
             <i class="fas fa-user-check mr-4 text-xl transition-transform duration-300"></i>
             <span>Empleados</span>
+        </a>
+    </li>
+
+    <!-- Reportes -->
+    <li>
+        <a href="{{ url('/admin/reportes') }}"
+           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
+                  {{ request()->is('admin/reportes*') ? 'bg-red-500 bg-opacity-80 font-semibold' : 'hover:bg-red-400 hover:bg-opacity-30' }}">
+            <i class="fas fa-user-check mr-4 text-xl transition-transform duration-300"></i>
+            <span>Reportes</span>
         </a>
     </li>
 </ul>

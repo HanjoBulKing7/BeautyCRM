@@ -48,6 +48,7 @@ class CitaController extends Controller
         return view('admin.citas.create', compact('clientes', 'servicios', 'empleados'));
     }
 
+    // En el método store, después de $cita = Cita::create($validated);
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -62,6 +63,11 @@ class CitaController extends Controller
 
         try {
             $cita = Cita::create($validated);
+
+            // ✅ NUEVO: Si se crea como completada, crear venta
+            if ($cita->estado_cita === 'completada') {
+                $this->crearVentaDesdeCita($cita);
+            }
 
             // Intentar sincronizar con Google Calendar si está conectado
             try {
@@ -118,7 +124,15 @@ class CitaController extends Controller
         ]);
 
         try {
+            $oldEstado = $cita->estado_cita;
+            $newEstado = $validated['estado_cita'];
+            
             $cita->update($validated);
+
+            // ✅ NUEVO: Crear venta automática cuando se marca como completada
+            if ($oldEstado !== 'completada' && $newEstado === 'completada') {
+                $this->crearVentaDesdeCita($cita);
+            }
 
             // Sincronizar con Google Calendar si está conectado
             try {
@@ -150,6 +164,43 @@ class CitaController extends Controller
             return redirect()->back()
                 ->with('error', 'Error al actualizar la cita: ' . $e->getMessage())
                 ->withInput();
+        }
+    }
+
+    // ✅ NUEVO MÉTODO: Crear venta desde cita
+    private function crearVentaDesdeCita(Cita $cita)
+    {
+        try {
+            // Verificar si ya existe una venta para esta cita
+            if ($cita->venta) {
+                return $cita->venta;
+            }
+
+            // Obtener el precio del servicio
+            $servicio = $cita->servicio;
+            
+            // Crear la venta
+            $venta = \App\Models\Venta::create([
+                'id_cita' => $cita->id_cita,
+                'id_cliente' => $cita->id_cliente,
+                'id_empleado' => $cita->id_empleado,
+                'id_servicio' => $cita->id_servicio,
+                'fecha_venta' => now(),
+                'subtotal' => $servicio->precio,
+                'descuento' => 0,
+                'total' => $servicio->precio,
+                'forma_pago' => 'efectivo', // Por defecto, se puede editar después
+                'estado_venta' => 'pagada',
+                'observaciones' => 'Venta automática generada al completar cita #' . $cita->id_cita
+            ]);
+
+            \Log::info('Venta creada automáticamente para cita #' . $cita->id_cita . ', Venta #' . $venta->id_venta);
+            
+            return $venta;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error al crear venta desde cita: ' . $e->getMessage());
+            return null;
         }
     }
 

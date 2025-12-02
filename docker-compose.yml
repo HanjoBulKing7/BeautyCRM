@@ -7,22 +7,44 @@ services:
     ports:
       - "8021:8000"
     volumes:
-      - ./:/var/www/html  # ✅ CORREGIDO: mapea toda la carpeta actual
+      # ✅ OPTIMIZACIÓN 1: Usar :cached para mejorar performance en Mac/Windows
+      - ./:/var/www/html:cached
+      
+      # ✅ OPTIMIZACIÓN 2: Excluir directorios pesados (evita sincronización innecesaria)
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+      - /var/www/html/storage/framework/cache
+      - /var/www/html/storage/framework/sessions
+      - /var/www/html/storage/framework/views
+      - /var/www/html/bootstrap/cache
+      
+      # ✅ OPTIMIZACIÓN 3: Usar volúmenes nombrados para vendor
+      - vendor-beautycrm:/var/www/html/vendor
       - composer-cache-beautycrm:/tmp/composer-cache
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy  # ✅ Espera a que MySQL esté listo
     working_dir: /var/www/html
+    environment:
+      # ✅ OPTIMIZACIÓN 4: Variables de entorno para performance
+      - PHP_OPCACHE_ENABLE=1
+      - PHP_OPCACHE_REVALIDATE_FREQ=0
+      - PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
+    networks:
+      - beautycrm_network
 
   node:
-    image: node:20
+    image: node:20-alpine  # ✅ OPTIMIZACIÓN 5: Usar alpine (más ligero)
     container_name: beautycrm_node
     working_dir: /var/www/html
     volumes:
-      - ./:/var/www/html  # ✅ CORREGIDO: misma ruta que app
+      - ./:/var/www/html:cached
       - node_modules_beautycrm:/var/www/html/node_modules
     ports:
       - "5175:5173"
-    command: sh -c "npm install && npm run dev"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    networks:
+      - beautycrm_network
 
   mysql:
     image: mysql:8.0
@@ -37,6 +59,17 @@ services:
       - "3321:3306"
     volumes:
       - beautycrm_mysql_data:/var/lib/mysql
+      # ✅ OPTIMIZACIÓN 6: Configuración MySQL para desarrollo
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    # ✅ OPTIMIZACIÓN 7: Healthcheck para dependencias
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - beautycrm_network
+    command: --default-authentication-plugin=mysql_native_password
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -47,8 +80,25 @@ services:
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: root
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - beautycrm_network
+
+# ✅ OPTIMIZACIÓN 8: Red personalizada
+networks:
+  beautycrm_network:
+    driver: bridge
 
 volumes:
   beautycrm_mysql_data:
+    driver: local
   composer-cache-beautycrm:
+    driver: local
   node_modules_beautycrm:
+    driver: local
+  vendor-beautycrm:  # ✅ Nuevo volumen para vendor
+    driver: local

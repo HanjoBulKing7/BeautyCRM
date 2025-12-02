@@ -8,6 +8,8 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\VentaController;
+use App\Http\Controllers\ReporteController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -97,10 +99,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Rutas de Google Calendar
     Route::prefix('google')->name('google.')->group(function () {
-    Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');
-    Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
-    Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
-});
+        Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');
+        Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+        Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
+    });
+
+    Route::prefix('ventas')->name('ventas.')->group(function () {
+        Route::get('/', [VentaController::class, 'index'])->name('index');
+        Route::get('/exportar', [VentaController::class, 'exportar'])->name('exportar');
+    });
+    // Reportes
+    Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    Route::get('reportes/exportar/{tipo}', [ReporteController::class, 'exportarReporte'])->name('reportes.exportar');
+
 });
 
 // Rutas de Payment Stripe
