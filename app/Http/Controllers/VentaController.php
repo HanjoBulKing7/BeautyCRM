@@ -1,87 +1,146 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Venta;
-use App\Models\User;
-use App\Models\Servicio;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Models\Cita;
 
 class VentaController extends Controller
 {
     /**
-     * Mostrar listado SIMPLE de ventas
+     * Display a listing of ventas (solo lectura)
      */
+// En VentaController.php - método index
     public function index(Request $request)
     {
-        // Fechas por defecto: mes actual
-        $fechaInicio = $request->input('fecha_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $fechaFin = $request->input('fecha_fin', Carbon::now()->endOfMonth()->format('Y-m-d'));
-
-        // Obtener ventas con filtro de fechas
-        $ventas = Venta::with(['cliente', 'empleado', 'servicio'])
-            ->whereBetween('fecha_venta', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59'])
-            ->orderBy('fecha_venta', 'desc')
-            ->paginate(15); // Menos registros por página para más simple
-
-        // Métricas básicas
-        $totalVentas = $ventas->sum('total');
-        $ventasCount = $ventas->total();
+        // Obtener parámetros de filtro con valores por defecto
+        $fechaInicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
+        $fechaFin = $request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d'));
+        
+        // **CAMBIO IMPORTANTE**: Obtener citas completadas que tengan venta
+        $query = Cita::with([
+            'servicio',
+            'cliente:id,name,email',
+            'empleado:id,name',
+            'venta' // Incluir la relación venta
+        ])->where('estado_cita', 'completada');
+        
+        // Aplicar filtros de fecha a través de la relación venta
+        if ($request->filled('fecha_inicio')) {
+            $query->whereHas('venta', function($q) use ($fechaInicio) {
+                $q->whereDate('fecha_venta', '>=', $fechaInicio);
+            });
+        }
+        
+        if ($request->filled('fecha_fin')) {
+            $query->whereHas('venta', function($q) use ($fechaFin) {
+                $q->whereDate('fecha_venta', '<=', $fechaFin);
+            });
+        }
+        
+        // Ordenar por fecha de venta más reciente
+        $citasCompletadas = $query->orderByDesc('fecha_cita')
+                                ->orderByDesc('hora_cita')
+                                ->paginate(20);
+        
+        // Calcular estadísticas
+        $totalVentas = 0;
+        $ventasCount = 0;
+        
+        foreach ($citasCompletadas as $cita) {
+            if ($cita->venta) {
+                $totalVentas += $cita->venta->total;
+                $ventasCount++;
+            }
+        }
+        
         $promedioVenta = $ventasCount > 0 ? $totalVentas / $ventasCount : 0;
-
+        
         return view('admin.ventas.index', compact(
-            'ventas',
-            'fechaInicio',
-            'fechaFin',
+            'citasCompletadas',
             'totalVentas',
             'ventasCount',
-            'promedioVenta'
+            'promedioVenta',
+            'fechaInicio',
+            'fechaFin'
         ));
     }
 
     /**
-     * Exportar a CSV (opcional y simple)
+     * Display a specific venta (solo lectura)
      */
-    public function exportar(Request $request)
+    // En VentaController.php - método show
+    public function show($id)
     {
-        $fechaInicio = $request->input('fecha_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $fechaFin = $request->input('fecha_fin', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        // Buscar la venta con todas las relaciones necesarias
+        $venta = Venta::with([
+            'cita.servicio',
+            'cita.cliente',
+            'cita.empleado'
+        ])->findOrFail($id);
         
-        $ventas = Venta::with(['cliente', 'servicio', 'empleado'])
-            ->whereBetween('fecha_venta', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59'])
-            ->orderBy('fecha_venta', 'desc')
-            ->get();
-
-        $filename = "ventas_{$fechaInicio}_a_{$fechaFin}.csv";
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\""
-        ];
-
-        $callback = function() use ($ventas) {
-            $file = fopen('php://output', 'w');
+        // Si no existe la venta, redirigir a la cita completada
+        if (!$venta) {
+            // Buscar la cita completada
+            $cita = Cita::with(['servicio', 'cliente', 'empleado'])
+                        ->where('id_cita', $id)
+                        ->where('estado_cita', 'completada')
+                        ->firstOrFail();
             
-            // Encabezados simples
-            fputcsv($file, ['Fecha', 'Cliente', 'Servicio', 'Empleado', 'Total', 'Forma Pago']);
+            return view('admin.ventas.cita-detalle', compact('cita'));
+        }
+        
+        return view('admin.ventas.show', compact('venta'));
+    }
 
-            // Datos
-            foreach ($ventas as $venta) {
-                fputcsv($file, [
-                    $venta->fecha_venta->format('d/m/Y H:i'),
-                    $venta->cliente->nombre . ' ' . $venta->cliente->apellido,
-                    $venta->servicio->nombre_servicio,
-                    $venta->empleado->nombre,
-                    $venta->total,
-                    $venta->forma_pago
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+    /**
+     * Reporte de ventas detallado (solo lectura)
+     */
+    public function reporte(Request $request)
+    {
+        $fechaInicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
+        $fechaFin = $request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d'));
+        
+        $ventas = Venta::with(['cita.servicio', 'cita.empleado'])
+            ->whereBetween('fecha_venta', [$fechaInicio, $fechaFin])
+            ->orderBy('fecha_venta')
+            ->get();
+            
+        // Agrupar por servicio
+        $ventasPorServicio = $ventas->groupBy('cita.servicio.nombre_servicio')
+            ->map(function ($group) {
+                return [
+                    'total' => $group->sum('total'),
+                    'cantidad' => $group->count(),
+                    'servicio' => $group->first()->cita->servicio
+                ];
+            })->sortByDesc('total');
+            
+        // Agrupar por empleado
+        $ventasPorEmpleado = $ventas->groupBy('cita.empleado.name')
+            ->map(function ($group) {
+                return [
+                    'total' => $group->sum('total'),
+                    'cantidad' => $group->count(),
+                    'comisiones' => $group->sum('comision_empleado'),
+                    'empleado' => $group->first()->cita->empleado
+                ];
+            })->sortByDesc('total');
+            
+        // Totales generales
+        $totalGeneral = $ventas->sum('total');
+        $totalComisiones = $ventas->sum('comision_empleado');
+        
+        return view('admin.ventas.reporte', compact(
+            'ventas',
+            'ventasPorServicio',
+            'ventasPorEmpleado',
+            'totalGeneral',
+            'totalComisiones',
+            'fechaInicio',
+            'fechaFin'
+        ));
     }
 }

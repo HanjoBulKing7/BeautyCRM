@@ -103,14 +103,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
         Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
     });
+    
 
-    Route::prefix('ventas')->name('ventas.')->group(function () {
-        Route::get('/', [VentaController::class, 'index'])->name('index');
-        Route::get('/exportar', [VentaController::class, 'exportar'])->name('exportar');
-    });
+    // Solo index y show - no hay create, store, edit, update, destroy
+    Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+    Route::get('/ventas/{id}', [VentaController::class, 'show'])->name('ventas.show');
+
+
     // Reportes
     Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
     Route::get('reportes/exportar/{tipo}', [ReporteController::class, 'exportarReporte'])->name('reportes.exportar');
+
+    // Ruta adicional para reporte
+    Route::get('/ventas/reporte', [\App\Http\Controllers\Admin\VentaController::class, 'reporte'])
+        ->name('ventas.reporte');
+    
+    // Ruta para completar cita con pago
+    Route::post('/citas/{id}/completar', [\App\Http\Controllers\Admin\CitaController::class, 'completarConPago'])
+        ->name('citas.completar.con-pago');
 
 });
 

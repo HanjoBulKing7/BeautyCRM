@@ -101,16 +101,37 @@ class GoogleCalendarService
         ]);
     }
 
-    /**
-     * Crear evento en Google Calendar para una cita
-     */
+    // En GoogleCalendarService.php - Modifica el método createEventFromCita:
     public function createEventFromCita(Cita $cita)
     {
         try {
             $calendar = $this->getClient();
 
+            // ✅ Asegurar que las relaciones están cargadas
+            $cita->load(['servicio', 'cliente', 'empleado']);
+
+            // ✅ Verificar que startDateTime y endDateTime existen
+            if (!$cita->startDateTime || !$cita->endDateTime) {
+                \Log::error('Fechas inválidas para Google Calendar', [
+                    'cita_id' => $cita->id_cita,
+                    'start' => $cita->startDateTime,
+                    'end' => $cita->endDateTime,
+                    'fecha_cita' => $cita->fecha_cita,
+                    'hora_cita' => $cita->hora_cita
+                ]);
+                throw new \Exception('Fecha y hora de la cita no están configuradas correctamente');
+            }
+
+            // ✅ Depuración: Log de las fechas
+            \Log::info('Creando evento Google Calendar', [
+                'cita_id' => $cita->id_cita,
+                'start' => $cita->startDateTime,
+                'end' => $cita->endDateTime,
+                'summary' => 'Cita: ' . ($cita->servicio->nombre_servicio ?? 'Sin servicio')
+            ]);
+
             $event = new Event([
-                'summary' => 'Cita: ' . $cita->servicio->nombre_servicio,
+                'summary' => 'Cita: ' . ($cita->servicio->nombre_servicio ?? 'Sin servicio'),
                 'description' => $this->buildEventDescription($cita),
                 'start' => new EventDateTime([
                     'dateTime' => $cita->startDateTime,
@@ -125,12 +146,21 @@ class GoogleCalendarService
 
             $createdEvent = $calendar->events->insert('primary', $event);
             
+            \Log::info('✅ Evento creado exitosamente en Google Calendar', [
+                'cita_id' => $cita->id_cita,
+                'event_id' => $createdEvent->getId()
+            ]);
+            
             return $createdEvent;
         } catch (\Exception $e) {
+            \Log::error('❌ Error al crear evento Google Calendar', [
+                'cita_id' => $cita->id_cita,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
-    } 
-
+    }
     /**
      * Actualizar evento en Google Calendar
      */

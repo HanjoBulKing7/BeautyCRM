@@ -96,9 +96,12 @@ class CitaController extends Controller
         }
     }
 
+    // En CitaController.php - método show
     public function show(Cita $cita)
     {
-        $cita->load(['cliente', 'servicio', 'empleado']);
+        // Cargar todas las relaciones necesarias
+        $cita->load(['cliente', 'servicio', 'empleado', 'venta']);
+        
         return view('admin.citas.show', compact('cita'));
     }
 
@@ -167,7 +170,7 @@ class CitaController extends Controller
         }
     }
 
-    // ✅ NUEVO MÉTODO: Crear venta desde cita
+
     private function crearVentaDesdeCita(Cita $cita)
     {
         try {
@@ -178,20 +181,18 @@ class CitaController extends Controller
 
             // Obtener el precio del servicio
             $servicio = $cita->servicio;
+            $total = $servicio->precio ?? 0;
             
-            // Crear la venta
+            // Calcular comisión (ejemplo: 15% del servicio)
+            $comision_empleado = $total * 0.15;
+
+            // Crear la venta con la estructura CORRECTA de tu tabla ventas
             $venta = \App\Models\Venta::create([
                 'id_cita' => $cita->id_cita,
-                'id_cliente' => $cita->id_cliente,
-                'id_empleado' => $cita->id_empleado,
-                'id_servicio' => $cita->id_servicio,
-                'fecha_venta' => now(),
-                'subtotal' => $servicio->precio,
-                'descuento' => 0,
-                'total' => $servicio->precio,
-                'forma_pago' => 'efectivo', // Por defecto, se puede editar después
-                'estado_venta' => 'pagada',
-                'observaciones' => 'Venta automática generada al completar cita #' . $cita->id_cita
+                'total' => $total,
+                'forma_pago' => 'efectivo', // Valor por defecto
+                'comision_empleado' => $comision_empleado,
+                'notas' => 'Venta automática generada al completar cita #' . $cita->id_cita
             ]);
 
             \Log::info('Venta creada automáticamente para cita #' . $cita->id_cita . ', Venta #' . $venta->id_venta);
