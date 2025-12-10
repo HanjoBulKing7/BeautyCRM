@@ -317,4 +317,24 @@ class GoogleCalendarService
             throw $e;
         }
     }
+
+        public function disconnect(Request $request)
+    {
+        GoogleToken::where('user_id', Auth::id())->delete();
+
+        return redirect()
+            ->back()
+            ->with('success', 'Se ha desconectado tu cuenta de Google correctamente. Puedes volver a conectarla cuando quieras.');
+    }
+
+    /**
+     * (Opcional) Fuerza una reconexión: borra el token y manda al flujo de OAuth.
+     */
+    public function reconnect(Request $request)
+    {
+        GoogleToken::where('user_id', Auth::id())->delete();
+
+        // Asumo que ya tienes esta ruta para iniciar el OAuth:
+        return redirect()->route('google.redirect');
+    }
 }

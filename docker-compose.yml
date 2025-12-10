@@ -87,6 +87,14 @@ services:
         condition: service_healthy
     networks:
       - beautycrm_network
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: beautycrm_mailpit
+    ports:
+      - "8025:8025"  # UI web de Mailpit
+      - "1025:1025"  # Puerto SMTP
+    networks:
+      - beautycrm_network
 
 # ✅ OPTIMIZACIÓN 8: Red personalizada
 networks:

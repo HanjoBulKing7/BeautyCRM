@@ -38,35 +38,48 @@
         @endif
 
         <!-- Estadísticas de Google Calendar -->
-        @if($isConnected)
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fab fa-google text-blue-500 mr-3"></i>
-                    </div>
-                    <div>
-                        <p class="text-blue-700 font-medium">Conectado a Google Calendar</p>
-                        <p class="text-blue-600 text-sm mt-1">Las citas se sincronizan automáticamente</p>
-                    </div>
+        @if($isGoogleConnected)
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between mb-6">
+                <div>
+                    <p class="font-semibold text-blue-700 flex items-center gap-2">
+                        <i class="fas fa-link"></i>
+                        Conectado a Google Calendar
+                    </p>
+                    <p class="text-sm text-blue-600">
+                        Las citas nuevas se sincronizan automáticamente con tu calendario.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-2">
+
+                    {{-- Desconectar: solo borra el token --}}
+                    <form method="POST" action="{{ route('admin.google.disconnect') }}">
+                        @csrf
+                        <button type="submit"
+                            class="px-3 py-2 text-xs font-semibold rounded-md bg-red-100 text-red-700 hover:bg-red-200">
+                            Desconectar
+                        </button>
+                    </form>
                 </div>
             </div>
         @else
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fab fa-google text-yellow-500 mr-3"></i>
-                    </div>
-                    <div>
-                        <p class="text-yellow-700">
-                            <a href="{{ route('admin.google.auth') }}" class="font-medium underline hover:text-yellow-800">
-                                Conectar con Google Calendar
-                            </a>
-                            para sincronizar citas automáticamente
-                        </p>
-                    </div>
+            {{-- Estado NO conectado: muestra tu botón de conectar actual --}}
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between mb-6">
+                <div>
+                    <p class="font-semibold text-yellow-800">
+                        No estás conectado a Google Calendar
+                    </p>
+                    <p class="text-sm text-yellow-700">
+                        Conecta tu cuenta para sincronizar automáticamente tus citas.
+                    </p>
                 </div>
+                <a href="{{ route('admin.google.auth')}}"
+                class="px-3 py-2 text-xs font-semibold rounded-md bg-yellow-600 text-white hover:bg-yellow-700">
+                    Conectar con Google
+                </a>
             </div>
         @endif
+
 
         <!-- Tarjeta de acciones -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">

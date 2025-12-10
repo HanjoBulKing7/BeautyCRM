@@ -91,13 +91,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Rutas de Google Calendar
     Route::prefix('google')->name('google.')->group(function () {
         Route::get('/connect', [GoogleCalendarController::class, 'connect'])->name('connect');
-        Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+        Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');   
+        Route::post('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
         Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
     });
     // SERVICIOS - CORREGIDO
     Route::resource('servicios', ServicioController::class);
 
-    // Rutas de Google Calendar
+    // Rutas de Google Calendar (dentro de Route::prefix('admin')->name('admin.'))
     Route::prefix('google')->name('google.')->group(function () {
         Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');
         Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');

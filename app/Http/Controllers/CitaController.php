@@ -7,6 +7,11 @@ use App\Models\Cita;
 use App\Models\User;
 use App\Models\Servicio;
 use App\Services\GoogleCalendarService;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CitaConfirmadaMail;
+use Illuminate\Support\Facades\Log;
+use App\Models\GoogleToken;
+
 
 class CitaController extends Controller
 {
@@ -27,6 +32,7 @@ class CitaController extends Controller
         $clientes = User::where('role_id', 1)->get();
         $servicios = Servicio::all();
         $empleados = User::where('role_id', 2)->get();
+        $isGoogleConnected = GoogleToken::where('user_id', auth()->id())->exists();
         
         // Verificar conexión con Google Calendar de forma segura
         try {
@@ -36,7 +42,7 @@ class CitaController extends Controller
             $isConnected = false;
         }
 
-        return view('admin.citas.index', compact('citas', 'clientes', 'servicios', 'empleados', 'isConnected'));
+        return view('admin.citas.index', compact('citas', 'clientes', 'servicios', 'empleados', 'isConnected','isGoogleConnected'));
     }
 
     public function create()
@@ -52,49 +58,105 @@ class CitaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_cliente' => 'required|exists:users,id',
-            'id_servicio' => 'required|exists:servicios,id_servicio',
-            'id_empleado' => 'nullable|exists:users,id',
-            'fecha_cita' => 'required|date',
-            'hora_cita' => 'required|date_format:H:i',
-            'estado_cita' => 'required|in:pendiente,confirmada,cancelada,completada',
+            'id_cliente'    => 'required|exists:users,id',
+            'id_servicio'   => 'required|exists:servicios,id_servicio',
+            'id_empleado'   => 'nullable|exists:users,id',
+            'fecha_cita'    => 'required|date',
+            'hora_cita'     => 'required|date_format:H:i',
+            'estado_cita'   => 'required|in:pendiente,confirmada,cancelada,completada',
             'observaciones' => 'nullable|string|max:500',
         ]);
 
         try {
+            // 1) Crear la cita
             $cita = Cita::create($validated);
+            Log::info('DEBUG: Cita creada', ['cita_id' => $cita->id_cita ?? null]);
 
-            // ✅ NUEVO: Si se crea como completada, crear venta
+            // 2) Si se crea como completada, crear venta
             if ($cita->estado_cita === 'completada') {
                 $this->crearVentaDesdeCita($cita);
+                Log::info('DEBUG: Venta creada desde cita', ['cita_id' => $cita->id_cita ?? null]);
             }
 
-            // Intentar sincronizar con Google Calendar si está conectado
+            // 3) Sincronizar con Google Calendar (si hay token)
+            $googleEventLink = null;
+
             try {
-                $tokenExists = \App\Models\GoogleToken::where('user_id', auth()->id())->exists();
+                $tokenExists = GoogleToken::where('user_id', auth()->id())->exists();
+
                 if ($tokenExists) {
                     $event = $this->googleCalendar->createEventFromCita($cita);
-                    
+
                     $cita->update([
-                        'google_event_id' => $event->getId(),
+                        'google_event_id'    => $event->getId(),
                         'synced_with_google' => true,
-                        'last_sync_at' => now(),
+                        'last_sync_at'       => now(),
+                    ]);
+
+                    // htmlLink del evento
+                    if (method_exists($event, 'getHtmlLink')) {
+                        $googleEventLink = $event->getHtmlLink();
+                    } elseif (property_exists($event, 'htmlLink')) {
+                        $googleEventLink = $event->htmlLink;
+                    }
+
+                    Log::info('DEBUG: Evento Google creado', [
+                        'cita_id' => $cita->id_cita ?? null,
+                        'event_id' => $event->getId(),
+                        'html_link' => $googleEventLink,
+                    ]);
+                } else {
+                    Log::info('DEBUG: Usuario sin GoogleToken, no se sincroniza con Google', [
+                        'user_id' => auth()->id(),
                     ]);
                 }
             } catch (\Exception $e) {
-                // Log the error but don't fail the cita creation
-                \Log::error('Error syncing cita with Google Calendar: ' . $e->getMessage());
+                Log::error('Error syncing cita with Google Calendar: ' . $e->getMessage());
             }
 
+            // 4) Enviar correo al cliente
+            try {
+                $cita->load(['cliente', 'servicio', 'empleado']);
+
+                $cliente = $cita->cliente;
+
+                Log::info('DEBUG: Datos de cliente para correo', [
+                    'cliente_id'    => optional($cliente)->id,
+                    'cliente_email' => optional($cliente)->email,
+                ]);
+
+                if ($cliente && !empty($cliente->email)) {
+                    Mail::to($cliente->email)->send(
+                        new CitaConfirmadaMail($cita, $googleEventLink)
+                    );
+
+                    Log::info('DEBUG: Correo de cita enviado sin excepción', [
+                        'cita_id' => $cita->id_cita ?? null,
+                        'email'   => $cliente->email,
+                    ]);
+                } else {
+                    Log::warning('DEBUG: No se envió correo: cliente sin email', [
+                        'cita_id' => $cita->id_cita ?? null,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Error sending cita confirmation email: ' . $e->getMessage());
+            }
+
+            // 5) Redirección normal
             return redirect()->route('admin.citas.index')
                 ->with('success', 'Cita creada exitosamente.');
 
         } catch (\Exception $e) {
+            Log::error('Error general al crear cita: ' . $e->getMessage());
+
             return redirect()->back()
                 ->with('error', 'Error al crear la cita: ' . $e->getMessage())
                 ->withInput();
         }
     }
+
+
 
     // En CitaController.php - método show
     public function show(Cita $cita)
