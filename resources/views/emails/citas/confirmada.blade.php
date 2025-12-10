@@ -1,30 +1,30 @@
 @component('mail::message')
-# Hola {{ $cita->cliente->name }},
+# Cita confirmada
 
-Gracias por agendar tu cita en **{{ config('app.name') }}**.
+Hola {{ optional($cita->cliente)->name ?? 'cliente' }},
+
+Tu cita en **{{ config('app.name') }}** ha sido confirmada.
 
 @component('mail::panel')
+**Servicio:** {{ optional($cita->servicio)->nombre_servicio ?? 'Servicio' }}  
 **Fecha:** {{ $fecha_legible }}  
-**Horario:** {{ $hora_inicio }} – {{ $hora_fin }} (Hora local)  
-**Servicio:** {{ $cita->servicio->nombre_servicio }}  
+**Hora:** {{ $hora }}  
 **Profesional:** {{ optional($cita->empleado)->name ?? 'Por asignar' }}  
-**Lugar:** {{ config('app.salon_address', 'Salón de Belleza') }}
 @endcomponent
 
-@isset($googleEventLink)
+@if(!empty($googleEventLink))
+Puedes ver o gestionar tu cita desde Google Calendar en el siguiente enlace:
+
 @component('mail::button', ['url' => $googleEventLink])
-Ver cita en Google Calendar
+Ver en Google Calendar
 @endcomponent
-@endisset
+@endif
 
-Si necesitas reprogramar o cancelar tu cita, por favor contáctanos:
+@if(!empty($cita->observaciones))
+> **Notas de la cita:**  
+> {{ $cita->observaciones }}
+@endif
 
-- Teléfono: {{ config('app.salon_phone', 'N/A') }}  
-- Correo: {{ config('mail.from.address') }}
-
-Gracias por confiar en nosotros.  
-Te esperamos.
-
-Saludos cordiales,  
+Gracias por confiar en nosotros 💅  
 **{{ config('app.name') }}**
 @endcomponent

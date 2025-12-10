@@ -233,7 +233,7 @@ class CitaController extends Controller
     }
 
 
-    private function crearVentaDesdeCita(Cita $cita)
+    function crearVentaDesdeCita(Cita $cita)
     {
         try {
             // Verificar si ya existe una venta para esta cita
@@ -244,25 +244,25 @@ class CitaController extends Controller
             // Obtener el precio del servicio
             $servicio = $cita->servicio;
             $total = $servicio->precio ?? 0;
-            
-            // Calcular comisión (ejemplo: 15% del servicio)
-            $comision_empleado = $total * 0.15;
 
-            // Crear la venta con la estructura CORRECTA de tu tabla ventas
+            // ✅ Crear la venta SOLO con las columnas que existen en la tabla `ventas`
             $venta = \App\Models\Venta::create([
-                'id_cita' => $cita->id_cita,
-                'total' => $total,
+                'id_cita'    => $cita->id_cita,
+                'total'      => $total,
                 'forma_pago' => 'efectivo', // Valor por defecto
-                'comision_empleado' => $comision_empleado,
-                'notas' => 'Venta automática generada al completar cita #' . $cita->id_cita
+                // No guardamos comisión ni notas en la BD por ahora
             ]);
 
-            \Log::info('Venta creada automáticamente para cita #' . $cita->id_cita . ', Venta #' . $venta->id_venta);
-            
+            \Log::info(
+                'Venta creada automáticamente para cita #' . $cita->id_cita . ', Venta #' . $venta->id_venta
+
             return $venta;
-            
+
         } catch (\Exception $e) {
-            \Log::error('Error al crear venta desde cita: ' . $e->getMessage());
+            \Log::error('Error al crear venta desde cita: ' . $e->getMessage(), [
+                'cita_id' => $cita->id_cita ?? null,
+            ]);
+
             return null;
         }
     }
