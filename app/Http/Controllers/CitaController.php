@@ -255,6 +255,7 @@ class CitaController extends Controller
 
             \Log::info(
                 'Venta creada automáticamente para cita #' . $cita->id_cita . ', Venta #' . $venta->id_venta
+            );
 
             return $venta;
 
