@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,10 @@ class Cita extends Model
     use HasFactory;
 
     protected $primaryKey = 'id_cita';
-    
+
+    // ✅ Zona horaria real del negocio
+    private const TZ = 'America/Mexico_City';
+
     protected $fillable = [
         'id_cliente',
         'id_servicio',
@@ -51,49 +55,55 @@ class Cita extends Model
         return $this->hasOne(Venta::class, 'id_cita', 'id_cita');
     }
 
-    // ✅ NUEVO: Accesor para startDateTime en formato ISO 8601
+    /**
+     * ✅ Accesor: inicio en ISO8601 pero interpretado desde el inicio en TZ México
+     * Ej: 2025-12-23T20:00:00-06:00
+     */
     public function getStartDateTimeAttribute()
     {
         if (!$this->fecha_cita || !$this->hora_cita) {
             return null;
         }
-        
-        // Combinar fecha y hora
-        $dateTime = Carbon::parse($this->fecha_cita->format('Y-m-d') . ' ' . $this->hora_cita);
-        
-        // Convertir a formato ISO 8601 con timezone
-        return $dateTime->setTimezone('America/Mexico_City')->format('c'); // 'c' = ISO 8601
+
+        $raw = $this->fecha_cita->format('Y-m-d') . ' ' . $this->hora_cita;
+
+        // ✅ Interpretar como hora local de México (NO convertir desde UTC)
+        $dt = Carbon::parse($raw, self::TZ);
+
+        return $dt->toIso8601String();
     }
 
-    // ✅ NUEVO: Accesor para endDateTime (inicio + duración del servicio)
+    /**
+     * ✅ Accesor: fin = inicio + duración del servicio (min)
+     */
     public function getEndDateTimeAttribute()
     {
-        if (!$this->startDateTime) {
+        if (!$this->fecha_cita || !$this->hora_cita) {
             return null;
         }
-        
-        $start = Carbon::parse($this->startDateTime);
-        
-        // Obtener duración del servicio (en minutos)
-        $duracion = 60; // valor por defecto 1 hora
-        
-        if ($this->servicio && $this->servicio->duracion) {
-            $duracion = $this->servicio->duracion;
-        }
-        
-        // Sumar duración al inicio
-        $end = $start->copy()->addMinutes($duracion);
-        
-        return $end->format('c'); // 'c' = ISO 8601
+
+        $raw = $this->fecha_cita->format('Y-m-d') . ' ' . $this->hora_cita;
+
+        $start = Carbon::parse($raw, self::TZ);
+
+        $duracion = (int) ($this->servicio->duracion ?? 60);
+
+        $end = (clone $start)->addMinutes($duracion);
+
+        return $end->toIso8601String();
     }
 
-    // ✅ NUEVO: Accesor para fecha y hora combinadas (opcional, para uso interno)
+    /**
+     * ✅ Accesor interno: objeto Carbon en TZ México
+     */
     public function getFechaHoraAttribute()
     {
         if (!$this->fecha_cita || !$this->hora_cita) {
             return null;
         }
-        
-        return Carbon::parse($this->fecha_cita->format('Y-m-d') . ' ' . $this->hora_cita);
+
+        $raw = $this->fecha_cita->format('Y-m-d') . ' ' . $this->hora_cita;
+
+        return Carbon::parse($raw, self::TZ);
     }
 }
