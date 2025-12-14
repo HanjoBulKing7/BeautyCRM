@@ -29,6 +29,20 @@ class CitaController extends Controller
             ->orderBy('hora_cita', 'desc')
             ->get();
 
+        // Crear arreglo de eventos para el calendario
+        $calendarEvents = $citas->map(function ($cita) {
+            // formatear fecha y hora a ISO 8601
+            $start = \Carbon\Carbon::parse($cita->fecha_cita->format('Y-m-d') . ' ' . $cita->hora_cita);
+
+            return [
+                'id'    => $cita->id_cita,
+                'title' => $cita->servicio->nombre ?? 'Cita',
+                'start' => $start->format('Y-m-d\TH:i:s'),
+                // Opcional: si quieres duración fija de 1h
+                'end'   => $start->copy()->addHour()->format('Y-m-d\TH:i:s'),
+            ];
+        })->values();
+
         $clientes = User::where('role_id', 1)->get();
         $servicios = Servicio::all();
         $empleados = User::where('role_id', 2)->get();
@@ -42,7 +56,7 @@ class CitaController extends Controller
             $isConnected = false;
         }
 
-        return view('admin.citas.index', compact('citas', 'clientes', 'servicios', 'empleados', 'isConnected','isGoogleConnected'));
+        return view('admin.citas.index', compact('citas', 'clientes', 'servicios', 'empleados', 'isConnected','isGoogleConnected', 'calendarEvents'));
     }
 
     public function create()

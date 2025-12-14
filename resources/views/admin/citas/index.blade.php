@@ -8,6 +8,17 @@
         <p class="text-gray-600">Administra todas las citas de tu salón de belleza</p>
     </div>
 
+    {{-- Card del calendario de citas --}}
+<div class="bg-white shadow rounded-lg p-4 mb-6">
+    <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+        <i class="fas fa-calendar-alt text-pink-500"></i>
+        Calendario de Citas
+    </h3>
+
+    <div id="citas-calendar" class="beauty-calendar"></div> {{-- 👈 importante --}}
+</div>
+
+
     <!-- Contenedor principal centrado con ancho máximo -->
     <div class="max-w-7xl mx-auto">
         <!-- Mensajes -->
@@ -232,3 +243,57 @@
     </div>
 </div>
 @endsection
+
+{{-- Estilos de FullCalendar por CDN --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
+
+{{-- Script de FullCalendar por CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('citas-calendar');
+        if (!calendarEl) return;
+
+        // Eventos que vienen desde el controlador
+        const events = @json($calendarEvents ?? []);
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',          // Español
+            firstDay: 1,           // Lunes
+            height: 'auto',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: ''          // Puedes poner 'dayGridMonth,listWeek' si quieres más vistas
+            },
+            events: events,
+
+            // Esto hace que se vean como marcas / tags dentro del día
+            eventDisplay: 'list-item',
+
+            // Opcional: tooltip simple
+            eventMouseEnter(info) {
+                const title = info.event.title;
+                const start = info.event.start;
+                if (!start) return;
+
+                const fecha = start.toLocaleDateString('es-MX', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const hora = start.toLocaleTimeString('es-MX', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                info.el.title = `${title} - ${fecha} ${hora}`;
+            },
+        });
+
+        calendar.render();
+    });
+</script>
