@@ -1,0 +1,342 @@
+@font-face {
+  font-family: Slussen;
+  src: url(fonts/Slussen-Compressed-Black.woff2) format("woff2");
+  font-display: swap;
+  font-weight: 900;
+  font-stretch: compressed;
+}
+@font-face {
+  font-family: Slussen;
+  src: url(fonts/Slussen-Expanded-Black.woff2) format("woff2");
+  font-display: swap;
+  font-weight: 900;
+  font-stretch: expanded;
+}
+@font-face {
+  font-family: Slussen;
+  src: url(fonts/Slussen-Regular.woff2) format("woff2");
+  font-display: swap;
+  font-weight: 400;
+}
+@font-face {
+  font-family: Slussen;
+  src: url(fonts/Slussen-Bold.woff2) format("woff2");
+  font-display: swap;
+  font-weight: 700;
+}
+
+.lenis-main-wrapper {
+  font-family: Slussen;
+  font-size: 16px;
+  font-weight: 400;
+  background: #ffffff;
+  color: #969696;
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  font-size: 60px;
+  font-weight: 900;
+  line-height: 85%;
+  border-left: 3px solid #969696;
+  padding: 25px;
+  margin: 0;
+}
+
+h2 span {
+  display: block;
+}
+
+h3 {
+  font-size: 20px;
+  font-stretch: expanded;
+  color: #ffffff;
+  line-height: 100%;
+}
+
+h2,
+h3,
+h4 {
+  text-transform: uppercase;
+}
+
+.lenis-container {
+  width: 95%;
+  margin: auto;
+}
+
+section {
+  padding: 50px 0;
+}
+
+.lenis-col {
+  width: 50%;
+}
+
+#lenis-vertical {
+  height: 200vh;
+  width: 100vw;
+}
+
+.lenis-vertical__content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.lenis-vertical__content .lenis-col_left {
+  height: 100%;
+}
+
+.lenis-vertical__content .lenis-col.len_is-col_right {
+  width: 40%;
+}
+
+.lenis-vertical__item:not(:last-child) {
+  margin-bottom: 240px;
+}
+
+#lenis-horizontal {
+  padding: 100px 0;
+}
+
+.lenis-horizontal__content {
+  display: flex;
+}
+
+.lenis-horizontal__item {
+  background: #fff;
+  border-radius: 15px;
+  padding: 40px 30px;
+  min-width: 320px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.lenis-horizontal__item:not(:last-child) {
+  margin-right: 50px;
+}
+
+.lenis-horizontal__num {
+  font-size: 80px;
+  font-weight: 900;
+  font-stretch: condensed;
+  color: #ff98a2;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  opacity: 0.1;
+  z-index: 0;
+}
+
+.lenis-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+.lenis-card-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #7d6b5d;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
+
+.lenis-card-description {
+  font-size: 16px;
+  color: #7d6b5d;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+.lenis-card-button {
+  display: inline-block;
+  background: #ff98a2;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.lenis-card-button:hover {
+  background: #e8858f;
+  transform: translateY(-3px);
+}
+
+.lenis-image-container {
+  width: 100%;
+  height: 200px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lenis-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* ==============================
+   HEADER / NAV
+   ============================== */
+.lenis-header {
+  position: relative;
+  z-index: 50;
+  background: transparent;
+  font-family: "Montserrat", sans-serif;
+}
+.lenis-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem;
+}
+
+/* Logo */
+.lenis-logo-img {
+  height: 60px;
+  display: block;
+}
+
+/* Menú de escritorio */
+.lenis-desktop-menu {
+  display: none;
+  align-items: center;
+  gap: 1.5rem;
+}
+.lenis-desktop-menu a {
+  color: #ffffff !important;
+  text-decoration: none;
+  margin-left: 0;
+  transition: color 0.2s ease;
+}
+.lenis-desktop-menu a:hover {
+  color: #f9a8d4 !important;
+}
+
+/* Botón "hamburguesa" móvil */
+#lenis-menu-btn {
+  display: none;
+  border: 0;
+  border-radius: 9999px;
+  padding: 0.5rem;
+  background-color: rgba(249, 244, 239, 0.32);
+  cursor: pointer;
+}
+
+/* ==============================
+   MENÚ MÓVIL
+   ============================== */
+.lenis-mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #f5ebdd;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+  z-index: 55;
+}
+.lenis-mobile-menu.active {
+  display: block;
+}
+.lenis-mobile-menu-content {
+  display: flex;
+  flex-direction: column;
+}
+.lenis-mobile-menu a {
+  color: #5a3e36;
+  text-decoration: none;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(90, 62, 54, 0.1);
+  font-size: 1rem;
+}
+
+/* Bloque destacado dentro del menú móvil */
+.lenis-highlight-section {
+  margin: 1rem 0;
+  text-align: center;
+}
+.lenis-highlight-text {
+  font-style: italic;
+  color: #9c7c6d;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+.lenis-cta-button {
+  background: #b7796e;
+  color: #ffffff;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  display: block;
+  font-weight: 500;
+  margin: 0.5rem 0;
+  text-decoration: none;
+}
+.lenis-natural-text {
+  color: #9c7c6d;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Fuente Montserrat para el hero */
+.lenis-font-montas {
+  font-family: "Montserrat", sans-serif;
+}
+
+/* ==============================
+   RESPONSIVE
+   ============================== */
+@media (min-width: 768px) {
+  .lenis-desktop-menu {
+    display: flex;
+  }
+  #lenis-menu-btn {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  #lenis-menu-btn {
+    display: inline-flex;
+  }
+  .lenis-mobile-menu.active {
+    display: block;
+  }
+}
+
+/* Hero background con imagen */
+.lenis-hero-bg {
+  position: relative;
+  min-height: 100vh;
+  background: url("imagenes/Beige Blogger Moderna Personal Sitio web.png")
+    center/cover no-repeat;
+}
+
+/* Overlay para mejor contraste del texto */
+.lenis-hero-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3); /* Overlay oscuro para contraste */
+  z-index: 1;
+}
+
+/* Asegurar que el contenido esté sobre el overlay */
+.lenis-hero-bg > * {
+  position: relative;
+  z-index: 2;
+}
