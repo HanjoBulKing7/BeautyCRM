@@ -1,170 +1,153 @@
 @extends('layouts.app')
 
-@section('title', 'Empleados - Salón de Belleza')
-
 @section('page-title', 'Gestión de Empleados')
 
+@section('title', 'Empleados - Salón de Belleza')
+
 @section('content')
-<div class="bg-white p-3 md:p-6 rounded-lg shadow-sm border border-gray-200">
-    <!-- Encabezado con botones -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
-        <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-2 md:mb-0">
-            <i class="fas fa-users mr-3 text-pink-400"></i>
-            Empleados
-        </h3>
+<div class="container mx-auto px-4 py-6">
+
+    <!-- Encabezado -->
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
         <div>
-            <a href="{{ route('admin.empleados.create') }}" 
-               class="bg-pink-400 hover:bg-pink-500 text-gray-900 px-3 py-2 md:px-4 md:py-2 rounded-lg flex items-center text-sm md:text-base 
-                      transform transition duration-200 hover:scale-105 shadow-sm">
-                <i class="fas fa-plus mr-2"></i>
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-pink-100 text-pink-700">
+                    <!-- icon: briefcase (empleados) -->
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1m-9 0h10a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2zm0 6h10"/>
+                    </svg>
+                </span>
+                Empleados
+            </h1>
+            <p class="text-gray-600 mt-1">Administra los empleados registrados del salón</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.empleados.create') }}"
+               class="inline-flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
                 Nuevo Empleado
             </a>
         </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="bg-gray-50 p-3 md:p-4 rounded-lg mb-4 md:mb-6 border border-gray-200">
-        <form method="GET" action="{{ route('admin.empleados.index') }}" class="space-y-2 md:space-y-0 md:flex md:gap-4 md:items-end">
-            <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
-                <input type="text" name="search" value="{{ request('search') }}" 
-                       class="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-gold-500 focus:border-gold-500" 
-                       placeholder="Nombre, apellido, puesto o departamento">
-            </div>
-
-            <div class="flex gap-2 pt-2 md:pt-0">
-                <button type="submit" class="bg-gold-500 hover:bg-gold-600 text-gray-900 px-3 py-2 rounded-lg flex items-center text-sm flex-1 justify-center shadow-sm">
-                    <i class="fas fa-filter mr-1"></i> Filtrar
-                </button>
-                <a href="{{ route('admin.empleados.index') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-2 rounded-lg flex items-center text-sm flex-1 justify-center shadow-sm">
-                    <i class="fas fa-times mr-1"></i> Limpiar
-                </a>
-            </div>
-        </form>
-    </div>
-
-    <!-- Tabla de empleados -->
-    <div class="overflow-x-auto">
-        <!-- Vista para móviles (tarjetas) -->
-        <div class="md:hidden space-y-3">
-            @forelse($empleados as $empleado)
-                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <div class="font-medium text-gray-900">{{ $empleado->nombre }} {{ $empleado->apellido }}</div>
-                            <div class="text-sm text-gray-500">{{ $empleado->puesto }}</div>
-                        </div>
-                        <div class="text-right">
-                            <span class="font-medium text-gold-600 capitalize">{{ $empleado->departamento }}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="px-2 py-1 text-xs font-medium rounded-full 
-                            {{ $empleado->estatus == 'activo' ? 'bg-green-100 text-green-800' : '' }}
-                            {{ $empleado->estatus == 'inactivo' ? 'bg-red-100 text-red-800' : '' }}
-                            {{ $empleado->estatus == 'vacaciones' ? 'bg-blue-100 text-blue-800' : '' }}">
-                            {{ ucfirst($empleado->estatus) }}
-                        </span>
-                        <span class="text-xs text-gray-500">
-                            Tel: {{ $empleado->telefono }}
-                        </span>
-                    </div>
-
-                    <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-                        <div class="flex space-x-2">
-                            <a href="{{ route('admin.empleados.edit', $empleado) }}" class="text-gold-500 hover:text-gold-700 p-1 transition-colors" title="Editar">
-                                <i class="fas fa-edit text-sm"></i>
-                            </a>
-                            <form action="{{ route('admin.empleados.destroy', $empleado) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-400 hover:text-red-600 p-1 transition-colors" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este empleado?')">
-                                    <i class="fas fa-trash text-sm"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="text-center py-6 text-gray-500">
-                    <i class="fas fa-users text-3xl text-gray-300 mb-2"></i>
-                    <p>No se encontraron empleados.</p>
-                </div>
-            @endforelse
-        </div>
-
-        <!-- Vista para desktop (tabla) -->
-        <table class="min-w-full bg-white border border-gray-200 hidden md:table">
-            <thead>
-                <tr class="bg-pink-50">
-                    <th class="px-4 py-3 border text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Nombre</th>
-                    <th class="px-4 py-3 border text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Apellido</th>
-                    <th class="px-4 py-3 border text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Teléfono</th>
-                    <th class="px-4 py-3 border text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Puesto</th>
-                    <th class="px-4 py-3 border text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Departamento</th>
-                    <th class="px-4 py-3 border text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Estatus</th>
-                    <th class="px-4 py-3 border text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                @forelse($empleados as $empleado)
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-4 py-3 border font-medium text-gray-900">{{ $empleado->nombre }}</td>
-                        <td class="px-4 py-3 border text-gray-700">{{ $empleado->apellido }}</td>
-                        <td class="px-4 py-3 border text-gray-700">{{ $empleado->telefono }}</td>
-                        <td class="px-4 py-3 border text-gray-700">{{ $empleado->puesto }}</td>
-                        <td class="px-4 py-3 border text-gray-700">{{ $empleado->departamento }}</td>
-                        <td class="px-4 py-3 border">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full 
-                                {{ $empleado->estatus == 'activo' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $empleado->estatus == 'inactivo' ? 'bg-red-100 text-red-800' : '' }}
-                                {{ $empleado->estatus == 'vacaciones' ? 'bg-blue-100 text-blue-800' : '' }}">
-                                {{ ucfirst($empleado->estatus) }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 border">
-                            <div class="flex space-x-2">
-                                <a href="{{ route('admin.empleados.edit', $empleado) }}" class="text-gold-500 hover:text-gold-700 p-1 transition-colors" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('admin.empleados.destroy', $empleado) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-400 hover:text-red-600 p-1 transition-colors" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este empleado?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
+    <!-- Tabla (sin líneas divisorias) -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-pink-50">
                     <tr>
-                        <td colspan="7" class="px-4 py-8 border text-center text-gray-500">
-                            <i class="fas fa-users text-2xl text-gray-300 mb-2 block"></i>
-                            No se encontraron empleados.
-                        </td>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Teléfono</th>
+
+                        {{-- Si tienes "puesto" o "rol", descomenta esta columna --}}
+                        {{-- <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Puesto</th> --}}
+
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody class="bg-white">
+                    @forelse($empleados as $empleado)
+                        <tr class="hover:bg-pink-50/40 transition-colors">
+                            <td class="px-4 py-3">
+                                <div class="flex items-start gap-3">
+                                    <span class="mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-pink-100 text-pink-700">
+                                        <!-- icon: user -->
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </span>
+
+                                    <div>
+                                        <div class="text-sm font-semibold text-gray-900">
+                                            {{ $empleado->nombre }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            ID: #{{ $empleado->id }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-4 py-3">
+                                <div class="text-sm text-gray-900">{{ $empleado->email }}</div>
+                            </td>
+
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="text-sm text-gray-700">
+                                    {{ $empleado->telefono ?? 'No especificado' }}
+                                </div>
+                            </td>
+
+                            {{-- Si tienes puesto/rol, descomenta esto --}}
+                            {{--
+                            <td class="px-4 py-3">
+                                <div class="text-sm text-gray-700">{{ $empleado->puesto ?? '—' }}</div>
+                            </td>
+                            --}}
+
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-2">
+                                    <!-- Ver -->
+                                    <a href="{{ route('admin.empleados.show', $empleado->id) }}"
+                                       class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+                                       title="Ver">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </a>
+
+                                    <!-- Editar -->
+                                    <a href="{{ route('admin.empleados.edit', $empleado->id) }}"
+                                       class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-pink-700 hover:bg-pink-50"
+                                       title="Editar">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l9.586-9.586z"/>
+                                        </svg>
+                                    </a>
+
+                                    <!-- Eliminar -->
+                                    <form action="{{ route('admin.empleados.destroy', $empleado->id) }}" method="POST"
+                                          onsubmit="return confirm('¿Eliminar empleado?')" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"
+                                                title="Eliminar">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m2 0V5a2 2 0 012-2h2a2 2 0 012 2v2"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-10 text-center">
+                                <div class="text-gray-500">
+                                    <span class="text-4xl mb-2 block">🧑‍💼</span>
+                                    <p class="font-semibold">No hay empleados registrados</p>
+                                    <p class="text-sm">Crea tu primer empleado para comenzar</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- Paginación -->
-    <div class="mt-4 md:mt-6">
-        {{ $empleados->links() }}
-    </div>
 </div>
-
-<!-- Estilos adicionales -->
-<style>
-    .bg-pink-50 { background-color: #FDF2F8; }
-    .bg-pink-400 { background-color: #F8BBD9; }
-    .hover\:bg-pink-500:hover { background-color: #F8A0C9; }
-    .text-gold-500 { color: #D4AF37; }
-    .text-gold-600 { color: #B8941F; }
-    .hover\:text-gold-700:hover { color: #9C7A1A; }
-    .bg-gold-500 { background-color: #D4AF37; }
-    .hover\:bg-gold-600:hover { background-color: #B8941F; }
-</style>
 @endsection
