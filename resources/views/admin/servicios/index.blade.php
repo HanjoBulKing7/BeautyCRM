@@ -6,22 +6,21 @@
     <!-- Encabezado -->
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-pink-100 text-pink-700">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
+                <span class="bb-icon-pill">
                     <!-- icon: scissors -->
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M14.121 14.121L19 19M5 5l4.879 4.879M15 7a3 3 0 11-6 0 3 3 0 016 0zm0 10a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                 </span>
                 Servicios
             </h1>
-            <p class="text-gray-600 mt-1">Administra los servicios disponibles del salón</p>
+
         </div>
 
         <div class="flex items-center gap-2">
-            <a href="{{ route('admin.servicios.create') }}"
-               class="inline-flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-400">
+            <a href="{{ route('admin.servicios.create') }}" class="bb-btn-gold">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -31,36 +30,36 @@
     </div>
 
     <!-- Tabla -->
-    <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="bb-glass-card">
         <div class="overflow-x-auto">
             <table class="min-w-full">
-                <thead class="bg-pink-50">
+                <thead class="bb-thead">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Servicio</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Precio</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Duración</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Descripción</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Servicio</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Precio</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Duración</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Descripción</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
 
-                <tbody class="bg-white">
+                <tbody>
                     @forelse($servicios as $servicio)
-                        <tr class="hover:bg-pink-50/40 transition-colors">
+                        <tr class="bb-row">
                             <td class="px-4 py-3">
                                 <div class="flex items-start gap-3">
-                                    <span class="mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-pink-100 text-pink-700">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
+                                        <svg class="w-4 h-4 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M14.121 14.121L19 19M5 5l4.879 4.879M15 7a3 3 0 11-6 0 3 3 0 016 0zm0 10a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
                                     </span>
 
                                     <div>
-                                        <div class="text-sm font-semibold text-gray-900">
+                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">
                                             {{ $servicio->nombre_servicio ?? $servicio->nombre ?? 'Servicio' }}
                                         </div>
-                                        <div class="text-xs text-gray-500">
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
                                             ID: #{{ $servicio->id_servicio ?? $servicio->id ?? '-' }}
                                         </div>
                                     </div>
@@ -68,19 +67,21 @@
                             </td>
 
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="text-sm font-bold text-pink-700">
-                                    ${{ number_format($servicio->precio ?? 0, 2) }}
+                                <span class="bb-price">
+                                    <span class="text-sm font-bold bb-gold">
+                                        ${{ number_format($servicio->precio ?? 0, 2) }}
+                                    </span>
                                 </span>
                             </td>
 
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="text-sm text-gray-700">
+                                <span class="text-sm text-gray-700 dark:text-gray-200">
                                     {{ $servicio->duracion ?? 60 }} min
                                 </span>
                             </td>
 
                             <td class="px-4 py-3">
-                                <p class="text-sm text-gray-700 line-clamp-2">
+                                <p class="text-sm text-gray-700 dark:text-gray-200 line-clamp-2">
                                     {{ $servicio->descripcion ?? '—' }}
                                 </p>
                             </td>
@@ -89,7 +90,7 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <!-- Ver -->
                                     <a href="{{ route('admin.servicios.show', $servicio->id_servicio ?? $servicio->id) }}"
-                                       class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+                                       class="bb-action text-gray-700 dark:text-gray-200"
                                        title="Ver">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -101,7 +102,7 @@
 
                                     <!-- Editar -->
                                     <a href="{{ route('admin.servicios.edit', $servicio->id_servicio ?? $servicio->id) }}"
-                                       class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-pink-700 hover:bg-pink-50"
+                                       class="bb-action bb-action-edit"
                                        title="Editar">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -115,7 +116,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                                class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"
+                                                class="bb-action bb-action-del"
                                                 title="Eliminar">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -129,9 +130,11 @@
                     @empty
                         <tr>
                             <td colspan="5" class="px-4 py-10 text-center">
-                                <div class="text-gray-500">
-                                    <span class="text-4xl mb-2 block">💗</span>
-                                    <p class="font-semibold">No hay servicios registrados</p>
+                                <div class="text-gray-500 dark:text-gray-300">
+                                    <div class="mx-auto bb-icon-pill" style="width:56px;height:56px;border-radius:18px;">
+                                        <span class="text-2xl">✨</span>
+                                    </div>
+                                    <p class="font-semibold mt-3 text-gray-800 dark:text-white">No hay servicios registrados</p>
                                     <p class="text-sm">Crea tu primer servicio para comenzar</p>
                                 </div>
                             </td>
@@ -143,7 +146,7 @@
 
         <!-- Paginación -->
         @if(method_exists($servicios, 'hasPages') && $servicios->hasPages())
-            <div class="px-4 py-3 border-t border-gray-100">
+            <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
                 {{ $servicios->links() }}
             </div>
         @endif

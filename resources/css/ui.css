@@ -1,0 +1,127 @@
+:root{
+  --bb-gold: rgba(201,162,74,.95);
+  --bb-gold-soft: rgba(201,162,74,.22);
+  --bb-gold-border: rgba(201,162,74,.25);
+  --bb-glass: rgba(255,255,255,.72);
+  --bb-glass-2: rgba(255,255,255,.55);
+  --bb-ink: rgba(17,24,39,.92);
+  --bb-border: rgba(17,24,39,.08);
+}
+
+/* Contenedor glass */
+.bb-glass-card{
+  background: var(--bb-glass) !important;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(255,255,255,.65) !important;
+  box-shadow: 0 10px 26px rgba(17,24,39,.06);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+/* Ícono pill */
+.bb-icon-pill{
+  width: 40px; height: 40px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(201,162,74,.18);
+  box-shadow: 0 10px 22px rgba(17,24,39,.06);
+}
+
+.bb-gold{ color: var(--bb-gold) !important; }
+.bb-gold-ring{ border: 1px solid var(--bb-gold-border) !important; }
+.bb-gold-soft{ background: var(--bb-gold-soft) !important; }
+
+/* Botón dorado */
+.bb-btn-gold{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.6rem 1rem;
+  border-radius: .95rem;
+  font-weight: 700;
+  color: #111827;
+  background: linear-gradient(135deg, rgba(201,162,74,.95), rgba(231,215,161,.95));
+  border: 1px solid rgba(201,162,74,.35);
+  box-shadow: 0 12px 28px rgba(201,162,74,.18);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.bb-btn-gold:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(17,24,39,.10);
+  filter: brightness(1.02);
+}
+
+/* Tabla */
+.bb-thead{
+  background: rgba(255,255,255,.35);
+  border-bottom: 1px solid var(--bb-border);
+}
+.bb-row{
+  border-bottom: 1px solid rgba(17,24,39,.06);
+  transition: background .2s ease;
+}
+.bb-row:hover{ background: rgba(255,255,255,.45); }
+
+/* Price pill */
+.bb-price{
+  display:inline-flex;
+  align-items:center;
+  padding: .35rem .65rem;
+  border-radius: .75rem;
+  background: rgba(255,255,255,.55);
+  border: 1px solid var(--bb-gold-border);
+}
+
+/* Action buttons */
+.bb-action{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: .55rem .75rem;
+  border-radius: .9rem;
+  background: rgba(255,255,255,.50);
+  border: 1px solid rgba(255,255,255,.55);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.bb-action:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.70);
+  box-shadow: 0 12px 24px rgba(17,24,39,.08);
+}
+.bb-action-edit{ color: var(--bb-gold) !important; border-color: rgba(201,162,74,.18) !important; }
+.bb-action-del{ color: #dc2626 !important; border-color: rgba(220,38,38,.12) !important; }
+
+/* Dark mode (si tu layout usa .dark-mode en body) */
+.dark-mode .bb-glass-card{
+  background: rgba(17,24,39,.55) !important;
+  border-color: rgba(255,255,255,.10) !important;
+}
+.dark-mode .bb-thead{
+  background: rgba(17,24,39,.45) !important;
+  border-bottom-color: rgba(255,255,255,.10) !important;
+}
+.dark-mode .bb-row{
+  border-bottom-color: rgba(255,255,255,.08) !important;
+}
+.dark-mode .bb-row:hover{
+  background: rgba(255,255,255,.06) !important;
+}
+.dark-mode .bb-icon-pill{
+  background: rgba(17,24,39,.45) !important;
+  border-color: rgba(201,162,74,.20) !important;
+}
+.dark-mode .bb-price{
+  background: rgba(17,24,39,.35) !important;
+  border-color: rgba(201,162,74,.25) !important;
+}
+.dark-mode .bb-action{
+  background: rgba(17,24,39,.35) !important;
+  border-color: rgba(255,255,255,.10) !important;
+}
+.dark-mode .bb-action:hover{
+  background: rgba(17,24,39,.55) !important;
+}

@@ -1,51 +1,54 @@
-<ul class="space-y-3">
+<ul class="space-y-2">
+    {{-- ✅ Tip: aquí ya NO usamos bg-blue-500/bg-red-500 etc.
+       Usamos bg-*-100 (para que tu CSS “gold active” lo convierta en dorado elegante)
+       y hover suave (glass) --}}
+    
     <!-- Dashboard Admin -->
     <li>
         <a href="{{ url('/admin/home') }}"
-           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
-                  {{ request()->is('admin/home') ? 'bg-blue-500 bg-opacity-80 font-semibold' : 'hover:bg-blue-400 hover:bg-opacity-30' }}">
-            <i class="fas fa-chart-line mr-4 text-xl transition-transform duration-300"></i>
+           class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+                  {{ request()->is('admin/home') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+            <i class="fas fa-chart-line mr-3 text-lg"></i>
             <span>Dashboard</span>
         </a>
     </li>
 
-    <!-- Servicios -->
-    <li>
-        <a href="{{ url('/admin/servicios') }}"
-           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
-                  {{ request()->is('admin/servicios*') ? 'bg-purple-500 bg-opacity-80 font-semibold' : 'hover:bg-purple-400 hover:bg-opacity-30' }}">
-            <i class="fas fa-scissors mr-4 text-xl transition-transform duration-300"></i>
-            <span>Servicios</span>
-        </a>
-    </li>
-
+    
     <!-- Citas -->
     <li>
         <a href="{{ url('/admin/citas') }}"
-           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
-                  {{ request()->is('admin/citas*') ? 'bg-green-500 bg-opacity-80 font-semibold' : 'hover:bg-green-400 hover:bg-opacity-30' }}">
-            <i class="fas fa-calendar-alt mr-4 text-xl transition-transform duration-300"></i>
-            <span>Citas</span>
-        </a>
-    </li>
+        class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+        {{ request()->is('admin/citas*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+        <i class="fas fa-calendar-alt mr-3 text-lg"></i>
+        <span>Citas</span>
+    </a>
+</li>
 
-    <!-- Ventas -->
-    <li>
-        <a href="{{ url('/admin/ventas') }}"
-           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
-                  {{ request()->is('admin/ventas*') ? 'bg-red-500 bg-opacity-80 font-semibold' : 'hover:bg-red-400 hover:bg-opacity-30' }}">
-            <i class="fas fa-user-check mr-4 text-xl transition-transform duration-300"></i>
-            <span>Ventas</span>
-        </a>
-    </li>
+<!-- Ventas -->
+<li>
+    <a href="{{ url('/admin/ventas') }}"
+    class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+    {{ request()->is('admin/ventas*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+    <i class="fas fa-cash-register mr-3 text-lg"></i>
+    <span>Ventas</span>
+</a>
+</li>
 
-
-    <!-- Clientes -->
-    <li>
+<!-- Servicios -->
+<li>
+    <a href="{{ url('/admin/servicios') }}"
+       class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+              {{ request()->is('admin/servicios*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+        <i class="fas fa-scissors mr-3 text-lg"></i>
+        <span>Servicios</span>
+    </a>
+</li>
+<!-- Clientes -->
+<li>
         <a href="{{ url('/admin/clientes') }}"
-           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
-                  {{ request()->is('admin/clientes*') ? 'bg-orange-500 bg-opacity-80 font-semibold' : 'hover:bg-orange-400 hover:bg-opacity-30' }}">
-            <i class="fas fa-users mr-4 text-xl transition-transform duration-300"></i>
+           class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+                  {{ request()->is('admin/clientes*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+            <i class="fas fa-users mr-3 text-lg"></i>
             <span>Clientes</span>
         </a>
     </li>
@@ -53,9 +56,9 @@
     <!-- Empleados -->
     <li>
         <a href="{{ url('/admin/empleados') }}"
-           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
-                  {{ request()->is('admin/empleados*') ? 'bg-red-500 bg-opacity-80 font-semibold' : 'hover:bg-red-400 hover:bg-opacity-30' }}">
-            <i class="fas fa-user-check mr-4 text-xl transition-transform duration-300"></i>
+           class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+                  {{ request()->is('admin/empleados*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+            <i class="fas fa-user-check mr-3 text-lg"></i>
             <span>Empleados</span>
         </a>
     </li>
@@ -63,9 +66,9 @@
     <!-- Reportes -->
     <li>
         <a href="{{ url('/admin/reportes') }}"
-           class="flex items-center p-3 rounded-lg text-lg transition-all duration-300 ease-in-out
-                  {{ request()->is('admin/reportes*') ? 'bg-red-500 bg-opacity-80 font-semibold' : 'hover:bg-red-400 hover:bg-opacity-30' }}">
-            <i class="fas fa-user-check mr-4 text-xl transition-transform duration-300"></i>
+           class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+                  {{ request()->is('admin/reportes*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+            <i class="fas fa-chart-pie mr-3 text-lg"></i>
             <span>Reportes</span>
         </a>
     </li>

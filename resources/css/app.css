@@ -1,209 +1,38 @@
-@source ".../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
-@source ".../storage/framework/views/*.php";
-@source ".../resources/views/**/*.blade.php";
-@source ".../*.js";
+/* Tailwind CSS */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+/* ✅ Design system (glass + premium) */
+@import './ui.css';
+
+/* Estilos base del sidebar */
+.sidebar {
+  transition: all 0.3s ease;
+  transform: translateX(0);
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* ================================
-   Calendario de Citas - BeautyCRM
-   ================================ */
-@layer components {
-
-  /* Contenedor principal del calendario */
-  .beauty-calendar {
-    max-width: 980px;           /* ✅ más pequeño */
-    margin: 0 auto 1.5rem;      /* centrado + espacio abajo */
-    padding: 1.25rem 1.5rem;
-    background: #ffffff;
-    border-radius: 1.25rem;     /* ✅ esquinas redondeadas */
-    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.10);
-    border: 1px solid rgba(236, 72, 153, 0.08);
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+    z-index: 50;
+    height: 100vh;
   }
-
-  /* Config global de FullCalendar dentro de la tarjeta */
-  .beauty-calendar .fc {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      "Nunito", sans-serif;     /* ✅ tipografía más amigable */
-    font-size: 0.85rem;
-    color: #4b5563;
-    border-radius: 0.9rem;      /* redondear el propio grid */
-    overflow: hidden;           /* que no se “salga” nada de las esquinas */
+  .sidebar.open {
+    transform: translateX(0);
   }
-
-  /* ============================
-     Header (mes, prev/next, today)
-     ============================ */
-
-  /* Barra de arriba */
-  .beauty-calendar .fc-toolbar.fc-header-toolbar {
-    margin-bottom: 0.75rem;
-    align-items: center;
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 40;
   }
-
-  /* Título del mes */
-  .beauty-calendar .fc-toolbar-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #be185d; /* rosa más oscuro */
-    letter-spacing: 0.02em;
-  }
-
-  /* Botones prev / next / today */
-  .beauty-calendar .fc .fc-button {
-    border-radius: 9999px;
-    border: none;
-    padding: 0.25rem 0.8rem;    /* ✅ más pequeños */
-    font-size: 0.75rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #ec4899, #f472b6);
-    color: #ffffff;
-    text-transform: capitalize;
-    box-shadow: 0 6px 16px rgba(236, 72, 153, 0.35);
-    transition: transform 0.12s ease, box-shadow 0.12s ease,
-      background 0.2s ease;
-  }
-
-  .beauty-calendar .fc .fc-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgba(236, 72, 153, 0.45);
-  }
-
-  .beauty-calendar .fc .fc-button:focus,
-  .beauty-calendar .fc .fc-button:active {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.35);
-  }
-
-  /* Botón hoy con estilo un poco más suave */
-  .beauty-calendar .fc-today-button {
-    background: #fdf2f8;
-    color: #be185d;
-    box-shadow: none;
-    border: 1px solid rgba(236, 72, 153, 0.4);
-  }
-
-  .beauty-calendar .fc-today-button:hover:not(:disabled) {
-    background: #fce7f3;
-  }
-
-  .beauty-calendar .fc-today-button:disabled {
-    background: #f5f5f5;
-    color: #9ca3af;
-    border-color: #e5e7eb;
-    box-shadow: none;
-  }
-
-  /* ============================
-     Encabezados y celdas del calendario
-     ============================ */
-
-  /* Días de la semana */
-  .beauty-calendar .fc-col-header {
-    background: #fdf2f8;
-  }
-
-  .beauty-calendar .fc-col-header-cell {
-    padding: 0.35rem 0;
-    border: none;
-  }
-
-  .beauty-calendar .fc-col-header-cell-cushion {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #db2777;
-  }
-
-  /* Celdas de días */
-  .beauty-calendar .fc-daygrid-day {
-    background: #ffffff;
-    border-color: #f3e5f5;
-  }
-
-  /* Número del día */
-  .beauty-calendar .fc-daygrid-day-number {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #4b5563;
-  }
-
-  /* Día de hoy */
-  .beauty-calendar .fc-day-today {
-    background: #fdf2f8;
-  }
-
-  .beauty-calendar .fc-day-today .fc-daygrid-day-number {
-    color: #db2777;
-  }
-
-  /* Hover suave en celdas */
-  .beauty-calendar .fc-daygrid-day-frame {
-    padding: 4px 6px;
-    transition: background 0.15s ease;
-  }
-
-  .beauty-calendar .fc-daygrid-day-frame:hover {
-    background: #fefce8; /* amarillo súper suave */
-  }
-
-  /* ============================
-     Eventos
-     ============================ */
-
-  .beauty-calendar .fc-daygrid-event {
-    margin-top: 4px;
-    border-radius: 9999px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    background: linear-gradient(135deg, #ec4899, #f472b6);
-    border: none;
-    color: #ffffff;
-    box-shadow: 0 6px 16px rgba(236, 72, 153, 0.35);
-    transition: transform 0.12s ease, box-shadow 0.12s ease,
-      filter 0.12s ease;
-  }
-
-  .beauty-calendar .fc-daygrid-event:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.03);
-    box-shadow: 0 10px 24px rgba(236, 72, 153, 0.45);
-  }
-
-  .beauty-calendar .fc-daygrid-event-dot {
-    border-color: #ffffff;
-  }
-
-  /* ============================
-     Responsive pequeño
-     ============================ */
-
-  @media (max-width: 768px) {
-    .beauty-calendar {
-      padding: 0.75rem 0.75rem;
-      border-radius: 1rem;
-    }
-
-    .beauty-calendar .fc-toolbar {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .beauty-calendar .fc-toolbar-title {
-      font-size: 1rem;
-    }
-
-    .beauty-calendar .fc-col-header-cell-cushion {
-      font-size: 0.7rem;
-    }
+  .overlay.open {
+    display: block;
   }
 }

@@ -103,16 +103,7 @@
                                 <span class="text-gray-600">Hora:</span>
                                 <span class="font-medium">{{ $cita->hora_cita }}</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Estado:</span>
-                                <span class="font-medium capitalize 
-                                    @if($cita->estado_cita == 'completada') text-green-600
-                                    @elseif($cita->estado_cita == 'cancelada') text-red-600
-                                    @elseif($cita->estado_cita == 'pendiente') text-yellow-600
-                                    @else text-blue-600 @endif">
-                                    {{ $cita->estado_cita }}
-                                </span>
-                            </div>
+                       
                             @if($cita->google_event_id)
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Evento Google:</span>
@@ -151,7 +142,7 @@
                 
                 <!-- Servicio -->
                 <div class="mt-6 pt-6 border-t border-gray-200">
-                    <h3 class="font-bold text-gray-700 mb-3">💼 Servicio</h3>
+                    <h3 class="font-bold text-gray-700 mb-3">💼 Servicios</h3>
                     <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
                         <div>
                             <p class="font-medium text-lg">{{ $cita->servicio->nombre_servicio }}</p>
@@ -200,28 +191,13 @@
                 </div>
                 @endif
                 
-                <!-- Información del sistema -->
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                        <div>
-                            <p><strong>ID Cita:</strong> #{{ $cita->id_cita }}</p>
-                            <p><strong>Creada el:</strong> {{ $cita->created_at->format('d/m/Y H:i') }}</p>
-                        </div>
-                        <div>
-                            <p><strong>Actualizada el:</strong> {{ $cita->updated_at->format('d/m/Y H:i') }}</p>
-                            @if($cita->synced_with_google)
-                            <p><strong>Sincronizada con Google:</strong> {{ $cita->last_sync_at->format('d/m/Y H:i') }}</p>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+               
             </div>
         </div>
 
         <!-- Acciones -->
         <div class="flex justify-between items-center">
             <div class="text-sm text-gray-600">
-                Para editar esta cita, haz clic en el botón "Editar" arriba
             </div>
             <div class="flex gap-2">
                 @if($cita->estado_cita != 'cancelada')

@@ -1,433 +1,479 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Beauty Bonita')</title>
-    
-    <!-- Tailwind CSS via CDN (como estaba en Beauty Bonita original) -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@yield('title', 'Beauty Bonita')</title>
+
+  <!-- ✅ CSS/JS (build si existe) + fallback -->
+  @php
+      $manifestPath = public_path('build/manifest.json');
+      $manifest = file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : [];
+  @endphp
+
+  {{-- ✅ APP.CSS --}}
+  @if(isset($manifest['resources/css/app.css']))
+    <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/app.css']['file']) }}">
+  @else
+    {{-- Fallback: Tailwind CDN (solo si NO hay build) --}}
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Tailwind CSS via CDN (como estaba en Beauty Bonita original) -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {{-- (Opcional) si copiaste componentes a public/css/components.css --}}
+    @if(file_exists(public_path('css/components.css')))
+      <link rel="stylesheet" href="{{ asset('css/components.css') }}">
+    @endif
 
-    <!-- TODO EL CSS PERSONALIZADO DEL CRM COPIADO DIRECTAMENTE -->
-    <style>
-        ... (estilos inline)
-    </style>
+    {{-- ✅ (Opcional) si copiaste ui.css a public/css/ui.css --}}
+    @if(file_exists(public_path('css/ui.css')))
+      <link rel="stylesheet" href="{{ asset('css/ui.css') }}">
+    @endif
+  @endif
 
-    @stack('styles')
+  {{-- ✅ COMPONENTS.CSS (dark-mode y overrides) --}}
+  @if(isset($manifest['resources/css/components.css']))
+    <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/components.css']['file']) }}">
+  @endif
 
-    <!-- TODO EL CSS PERSONALIZADO DEL CRM COPIADO DIRECTAMENTE -->
-    <style>
-        /* ================== SIDEBAR FIJO Y RESPONSIVO ================== */
-        .sidebar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          height: 100vh;
-          width: 16rem;
-          background-color: #4b5563; /* Gris medio */
-          border-right: 1px solid #6b7280;
-          overflow-y: auto;
-          flex-shrink: 0;
-          transition: all 0.3s ease;
-          z-index: 40;
-        }
+  {{-- ✅ UI.CSS (bb-* design system para tus vistas index) --}}
+  @if(isset($manifest['resources/css/ui.css']))
+    <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/ui.css']['file']) }}">
+  @endif
 
-        .sidebar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-          background-color: rgba(255, 255, 255, 0.2);
-          border-radius: 3px;
-        }
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        /* ===== Overlay para móviles ===== */
-        .overlay {
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: rgba(0, 0, 0, 0.5);
-          z-index: 30;
-        }
+  <!-- 🔹 Permite inyectar estilos desde las vistas -->
+  @stack('styles')
 
-        /* ===== Contenido principal ===== */
-        main {
-          margin-left: 16rem;
-          transition: margin-left 0.3s ease;
-        }
+  <!-- ✅ THEME: Light (Glass blanco + dorado). Dark mode se va a resources/css/components.css -->
+  <style>
+    :root{
+      --bb-gold: #C9A24A;
+      --bb-gold-2: #E7D7A1;
+      --bb-ink: #111827;
+      --bb-muted: #6B7280;
+      --bb-border: rgba(17,24,39,.10);
+      --bb-glass: rgba(255,255,255,.72);
+      --bb-glass-strong: rgba(255,255,255,.85);
+      --bb-shadow: 0 10px 30px rgba(17,24,39,.08);
+    }
 
-        /* ===== Header fijo ===== */
-        header {
-          position: fixed;
-          top: 0;
-          left: 16rem;
-          right: 0;
-          height: 4.5rem;
-          background-color: #fff;
-          z-index: 50;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 2rem;
-          border-bottom: 1px solid #e5e7eb;
-          transition: left 0.3s ease;
-        }
+    body{
+      overflow-x:hidden;
+      color: var(--bb-ink);
+      background:
+        radial-gradient(1200px 600px at 15% 10%, rgba(201,162,74,.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 20%, rgba(231,215,161,.20), transparent 55%),
+        linear-gradient(180deg, #fbfbfb 0%, #f3f4f6 100%);
+    }
 
-        /* ===== Ajuste general del body ===== */
-        body {
-          overflow-x: hidden;
-        }
+    .overlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background: rgba(17,24,39,.45);
+      z-index:30;
+    }
 
-        /* ================== FIX PARA MÓVILES ================== */
-        @media (max-width: 1024px) {
-          .sidebar {
-            transform: translateX(-100%);
-            position: fixed;
-            z-index: 50;
-            height: 100vh;
-            overflow-y: scroll;
-            padding-bottom: 5rem;
-          }
+    .sidebar{
+      position:fixed;
+      top:0; left:0;
+      height:100vh;
+      width:16rem;
+      overflow-y:auto;
+      flex-shrink:0;
+      transition:all .3s ease;
+      z-index:40;
 
-          .sidebar.open {
-            transform: translateX(0);
-          }
+      background: var(--bb-glass-strong);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border-right: 1px solid var(--bb-border);
+      box-shadow: 0 0 25px rgba(17,24,39,.06);
+    }
 
-          .overlay.open {
-            display: block;
-          }
+    .sidebar::-webkit-scrollbar{ width:6px; }
+    .sidebar::-webkit-scrollbar-thumb{
+      background-color: rgba(17,24,39,.18);
+      border-radius: 999px;
+    }
 
-          main {
-            margin-left: 0 !important;
-            padding: 1rem;
-          }
+    main{ margin-left:16rem; transition: margin-left .3s ease; }
 
-          .ml-64 {
-            margin-left: 0 !important;
-          }
+    header{
+      position:fixed;
+      top:0; left:16rem; right:0;
+      height:4.5rem;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 2rem;
+      z-index:50;
+      transition:left .3s ease;
 
-          header {
-            left: 0 !important;
-            width: 100% !important;
-            padding: 0 1rem;
-          }
+      background: rgba(255,255,255,.70);
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      border-bottom: 1px solid var(--bb-border);
+      box-shadow: 0 6px 20px rgba(17,24,39,.06);
+    }
 
-          /* Fija el bloque inferior del sidebar (usuario + salir) */
-          .sidebar .p-4.border-t {
-            position: sticky;
-            bottom: 0;
-            z-index: 60;
-            background-color: #4b5563;
-            border-top: 1px solid #6b7280;
-          }
-        }
+    .sidebar a{
+      display:flex;
+      align-items:center;
+      padding:.75rem 1rem;
+      border-radius: .95rem;
+      margin:.25rem .5rem;
+      text-decoration:none;
+      position:relative;
+      overflow:hidden;
+      transition: all .25s ease;
+      color: var(--bb-ink) !important;
+    }
 
-        /* ===== PEQUEÑO EFECTO AL HOVER EN SIDEBAR ===== */
-        .sidebar a:hover {
-          transform: scale(1.02);
-          transition: transform 0.2s ease;
-        }
+    .sidebar a i{
+      width:1.5rem;
+      text-align:center;
+      margin-right:.75rem;
+      color: rgba(201,162,74,.95) !important;
+      transition: transform .25s ease, opacity .25s ease;
+      opacity:.95;
+    }
 
-        /* Estilos para texto blanco en sidebar */
-        .sidebar,
-        .sidebar * {
-          color: white !important;
-        }
+    .sidebar a::before{
+      content:"";
+      position:absolute;
+      top:0; left:-120%;
+      width:120%;
+      height:100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+      transition: left .6s ease;
+    }
+    .sidebar a:hover::before{ left:120%; }
 
-        .sidebar .text-gray-800,
-        .sidebar .text-gray-700,
-        .sidebar .text-gray-600,
-        .sidebar .text-gray-500 {
-          color: white !important;
-        }
+    .sidebar a:hover{
+      transform: translateX(4px);
+      box-shadow: 0 10px 25px rgba(17,24,39,.08);
+      background: rgba(255,255,255,.55);
+    }
+    .sidebar a:hover i{ transform: scale(1.08); }
 
-        /* Efectos hover para sidebar gris */
-        .sidebar a:hover {
-          background-color: rgba(255, 255, 255, 0.1) !important;
-        }
+    .sidebar a.bg-gray-200,
+    .sidebar a.bg-orange-100,
+    .sidebar a.bg-yellow-100,
+    .sidebar a.bg-blue-100,
+    .sidebar a.bg-purple-100,
+    .sidebar a.bg-red-100,
+    .sidebar a.bg-green-100,
+    .sidebar a.bg-pink-100,
+    .sidebar a.bg-teal-100,
+    .sidebar a.bg-green-50{
+      background: linear-gradient(135deg, rgba(201,162,74,.22), rgba(255,255,255,.60)) !important;
+      color: var(--bb-ink) !important;
+      font-weight: 700;
+      border: 1px solid rgba(201,162,74,.28);
+      box-shadow: 0 12px 28px rgba(201,162,74,.18);
+    }
+    .sidebar a.bg-gray-200::after,
+    .sidebar a.bg-orange-100::after,
+    .sidebar a.bg-yellow-100::after,
+    .sidebar a.bg-blue-100::after,
+    .sidebar a.bg-purple-100::after,
+    .sidebar a.bg-red-100::after,
+    .sidebar a.bg-green-100::after,
+    .sidebar a.bg-pink-100::after,
+    .sidebar a.bg-teal-100::after,
+    .sidebar a.bg-green-50::after{
+      content:"";
+      position:absolute;
+      right:0;
+      top:50%;
+      transform: translateY(-50%);
+      width:4px;
+      height:60%;
+      border-radius:999px;
+      background: var(--bb-gold);
+    }
 
-        /* Estados activos para sidebar gris */
-        .sidebar a.bg-gray-200,
-        .sidebar a.bg-orange-100,
-        .sidebar a.bg-yellow-100,
-        .sidebar a.bg-blue-100,
-        .sidebar a.bg-purple-100,
-        .sidebar a.bg-red-100,
-        .sidebar a.bg-pink-100,
-        .sidebar a.bg-teal-100,
-        .sidebar a.bg-green-50 {
-          background-color: rgba(255, 255, 255, 0.2) !important;
-          color: white !important;
-        }
+    .sidebar .text-gray-300,
+    .sidebar .text-gray-400,
+    .sidebar .text-gray-500,
+    .sidebar .text-gray-600,
+    .sidebar .text-gray-700{
+      color: var(--bb-muted) !important;
+    }
 
-        /* Íconos en sidebar gris */
-        .sidebar .text-orange-500,
-        .sidebar .text-yellow-500,
-        .sidebar .text-blue-500,
-        .sidebar .text-purple-500,
-        .sidebar .text-red-500,
-        .sidebar .text-pink-500,
-        .sidebar .text-teal-500,
-        .sidebar .text-green-500,
-        .sidebar .text-gray-600 {
-          color: #d1d5db !important;
-        }
+    .sidebar .bb-logo-wrap{
+      border-bottom: 1px solid rgba(201,162,74,.18);
+      background: rgba(255,255,255,.35);
+    }
 
-        /* Estilos específicos para el botón de tema */
-        .dark-mode #theme-toggle {
-            background-color: #374151 !important;
-        }
+    .sidebar .rounded-full.bg-orange-500{
+      background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2)) !important;
+      color: #111827 !important;
+      box-shadow: 0 10px 22px rgba(201,162,74,.22);
+    }
 
-        .dark-mode #theme-toggle:hover {
-            background-color: #4b5563 !important;
-        }
+    .bb-icon-btn{
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(255,255,255,.65);
+      border: 1px solid rgba(201,162,74,.22);
+      box-shadow: 0 10px 22px rgba(17,24,39,.07);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .bb-icon-btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.80);
+      box-shadow: 0 16px 30px rgba(17,24,39,.09);
+    }
+    .bb-icon-btn i{ color: rgba(17,24,39,.85); }
 
-        .dark-mode #theme-icon {
-            color: #d1d5db !important;
-        }
+    .bb-notif-btn{
+      background: linear-gradient(135deg, rgba(201,162,74,.95), rgba(231,215,161,.95));
+      border: 1px solid rgba(201,162,74,.35);
+    }
+    .bb-notif-btn i{ color:#111827; }
 
-        /* Asegurar que el sol sea amarillo en ambos temas */
-        #theme-icon.fa-sun {
-            color: #f59e0b !important;
-        }
+    #notifications-panel{
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      border: 1px solid rgba(201,162,74,.20);
+      box-shadow: 0 18px 45px rgba(17,24,39,.12);
+    }
 
-        .dark-mode #theme-icon.fa-sun {
-            color: #f59e0b !important;
-        }
+    .bg-white{
+      background: rgba(255,255,255,.72) !important;
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      border: 1px solid rgba(255,255,255,.65) !important;
+      box-shadow: 0 10px 26px rgba(17,24,39,.06);
+      border-radius: 1rem;
+    }
 
-        /* Asegurar que la luna sea visible en dark mode */
-        .dark-mode #theme-icon.fa-moon {
-            color: #d1d5db !important;
-        }
+    @media (max-width:1024px){
+      .sidebar{
+        transform: translateX(-100%);
+        z-index:50;
+        box-shadow: 0 0 35px rgba(17,24,39,.12);
+        padding-bottom: 5rem;
+      }
+      .sidebar.open{ transform: translateX(0); }
+      .overlay.open{ display:block; }
+      main{ margin-left:0 !important; padding:1rem; }
+      .ml-64{ margin-left:0 !important; }
+      header{ left:0 !important; width:100% !important; padding:0 1rem; }
 
-        /* Estilos para el tema oscuro */
-        .dark-mode {
-            background-color: #1f2937;
-            color: #f9fafb;
-        }
+      .sidebar .p-4.border-t{
+        position: sticky;
+        bottom:0;
+        z-index:60;
+        background: rgba(255,255,255,.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid var(--bb-border);
+      }
+    }
 
-        .dark-mode .bg-white {
-            background-color: #374151 !important;
-        }
-
-        .dark-mode .text-gray-800 {
-            color: #f9fafb !important;
-        }
-
-        .dark-mode .text-gray-700 {
-            color: #e5e7eb !important;
-        }
-
-        .dark-mode .text-gray-500 {
-            color: #9ca3af !important;
-        }
-
-        .dark-mode .border-gray-200 {
-            border-color: #4b5563 !important;
-        }
-    </style>
+    #theme-icon.fa-sun{ color: var(--bb-gold) !important; }
+  </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex transition-colors duration-300">
-<div id="overlay" class="overlay"></div>
+<body class="min-h-screen flex transition-colors duration-300">
+  <div id="overlay" class="overlay"></div>
 
-<!-- Sidebar - CAMBIAR bg-white por bg-gray-600 -->
-<nav id="sidebar" class="sidebar bg-gray-600 shadow w-64 flex-shrink-0 flex flex-col justify-between fixed left-0 top-0 h-screen overflow-y-auto z-40">
+  <!-- ✅ Sidebar -->
+  <nav id="sidebar" class="sidebar w-64 flex-shrink-0 flex flex-col justify-between fixed left-0 top-0 h-screen overflow-y-auto z-40">
     <div>
-        <!-- Logo -->
-        <div class="p-4 border-b border-gray-500 flex items-center justify-center">
-            <img src="{{ asset('iconos/logo blanco.png') }}" alt="Logo" class="h-12">
-        </div>
+      <div class="bb-logo-wrap p-4 flex items-center justify-center">
+        <img src="{{ asset('iconos/logo.png') }}" alt="Logo" class="h-12">
+      </div>
 
-        <!-- Links del Sidebar (Condicional por Rol) -->
-        <div class="p-4">
-            @if(Auth::user()->role_id == 3)
-                @include('components.sidebar-admin')
-            @else
-                @include('components.sidebar-cliente')
-            @endif
-        </div>
+      <div class="p-4">
+        @if(Auth::user()->role_id == 3)
+          @include('components.sidebar-admin')
+        @else
+          @include('components.sidebar-cliente')
+        @endif
+      </div>
     </div>
 
-    <!-- Usuario + Logout -->
-    <div class="p-4 border-t border-gray-500">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-bold text-lg">
-                {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-            </div>
-            <div>
-                <p class="font-semibold text-white">{{ Auth::user()->name }}</p>
-                <p class="text-sm text-gray-300 capitalize">
-                    {{ Auth::user()->role_id == 3 ? 'Administrador' : 'Cliente' }}
-                </p>
-            </div>
+    <div class="p-4 border-t border-gray-200">
+      <div class="flex items-center space-x-3 mb-3">
+        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-bold text-lg">
+          {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
         </div>
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" 
-                    class="w-full flex items-center justify-center p-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition duration-200 hover:scale-105">
-                <i class="fas fa-sign-out-alt mr-2"></i>
-                <span>Salir</span>
-            </button>
-        </form>
-    </div>
-</nav>
+        <div>
+          <p class="font-semibold text-gray-800">{{ Auth::user()->name }}</p>
+          <p class="text-sm text-gray-500 capitalize">
+            {{ Auth::user()->role_id == 3 ? 'Administrador' : 'Cliente' }}
+          </p>
+        </div>
+      </div>
 
-<!-- HEADER ACTUALIZADO CON TEMA OSCURO Y NOTIFICACIONES -->
-<header class="bg-white border border-gray-200 shadow-md flex items-center justify-between px-6 py-4 fixed top-0 left-64 right-0 z-30 transition-all duration-300 dark:bg-gray-800 dark:border-gray-700">
+      <form action="{{ route('logout') }}" method="POST">
+        @csrf
+        <button type="submit"
+                class="w-full flex items-center justify-center p-3 text-white bg-red-500 rounded-xl hover:bg-red-600 transition duration-200 shadow-md">
+          <i class="fas fa-sign-out-alt mr-2"></i>
+          <span>Salir</span>
+        </button>
+      </form>
+    </div>
+  </nav>
+
+  <!-- ✅ Header -->
+  <header class="flex items-center justify-between px-6 py-4 fixed top-0 left-64 right-0 z-30 transition-all duration-300">
     <div class="flex items-center space-x-3">
-        <button id="sidebar-toggle" class="md:hidden p-2 rounded-md bg-gray-200 hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:hover:bg-gray-600">
-            <i class="fas fa-bars text-gray-700 text-lg dark:text-gray-300"></i>
-        </button>
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">@yield('page-title', 'Dashboard')</h2>
+      <button id="sidebar-toggle" class="md:hidden bb-icon-btn" aria-label="Abrir menú">
+        <i class="fas fa-bars text-lg"></i>
+      </button>
+      <h2 class="text-lg font-semibold">@yield('page-title', 'Dashboard')</h2>
     </div>
 
-    <div class="flex items-center space-x-4">
-        <!-- Modo oscuro -->
-        <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:hover:bg-gray-600">
-            <i class="fas fa-moon text-gray-700 dark:text-gray-300" id="theme-icon"></i>
+    <div class="flex items-center space-x-3">
+      <button id="theme-toggle" class="bb-icon-btn" aria-label="Cambiar tema">
+        <i class="fas fa-moon" id="theme-icon"></i>
+      </button>
+
+      <div class="relative">
+        <button id="notifications-toggle" class="bb-icon-btn bb-notif-btn relative" aria-label="Notificaciones">
+          <i class="fas fa-bell"></i>
+          <span id="notification-count"
+                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center hidden">0</span>
         </button>
 
-        <!-- Notificaciones -->
-        <div class="relative">
-            <button id="notifications-toggle"
-                class="p-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 transition-colors text-white relative dark:bg-yellow-600 dark:hover:bg-yellow-700">
-                <i class="fas fa-bell"></i>
-                <span id="notification-count"
-                    class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center hidden">0</span>
-            </button>
-
-            <!-- Panel de notificaciones -->
-            <div id="notifications-panel"
-                class="absolute right-0 mt-2 w-80 bg-white border border-gray-200 shadow-md rounded-xl z-50 hidden max-h-96 overflow-y-auto dark:bg-gray-800 dark:border-gray-700">
-                <div class="p-4 border-b border-gray-200 dark:border-gray-600">
-                    <h3 class="font-semibold text-gray-800 dark:text-white">Notificaciones</h3>
-                </div>
-                <div id="notifications-list" class="p-2">
-                    <div class="text-center py-4 text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-spinner fa-spin mr-2"></i> Cargando notificaciones...
-                    </div>
-                </div>
+        <div id="notifications-panel"
+             class="absolute right-0 mt-3 w-80 rounded-2xl z-50 hidden max-h-96 overflow-y-auto">
+          <div class="p-4 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 dark:text-white">Notificaciones</h3>
+          </div>
+          <div id="notifications-list" class="p-2">
+            <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+              <i class="fas fa-spinner fa-spin mr-2"></i> Cargando notificaciones...
             </div>
+          </div>
         </div>
+      </div>
     </div>
-</header>
+  </header>
 
-<!-- Main content -->
-<main class="flex-1 p-4 ml-64 mt-20 overflow-y-auto">
+  <!-- Main -->
+  <main class="flex-1 p-4 ml-64 mt-20 overflow-y-auto">
     <div class="max-w-6xl mx-auto">
-        @if(session('ok'))
-            <div class="mb-4 p-3 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{{ session('ok') }}</div>
-        @endif
-        @if ($errors->any())
-            <div class="mb-4 p-3 rounded bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                <ul class="list-disc list-inside">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-            </div>
-        @endif
-        @yield('content')
+      @if(session('ok'))
+        <div class="mb-4 p-3 rounded-xl bg-green-100 text-green-800">{{ session('ok') }}</div>
+      @endif
+
+      @if ($errors->any())
+        <div class="mb-4 p-3 rounded-xl bg-red-100 text-red-800">
+          <ul class="list-disc list-inside">
+            @foreach ($errors->all() as $e)
+              <li>{{ $e }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
+      @yield('content')
     </div>
-</main>
+  </main>
 
-<!-- JavaScript para producción -->
-@php
-    $manifestPath = public_path('build/manifest.json');
-    $manifest = file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : [];
-@endphp
+  <!-- ✅ JS build (si existe) -->
+  @if(isset($manifest['resources/js/app.js']))
+    <script src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
+  @endif
 
-@if(isset($manifest['resources/js/app.js']))
-<script src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
-@endif
+  @stack('scripts')
+  @yield('scripts')
 
-<script>
-// ==================== REFERENCIAS GLOBALES ====================
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-const sidebarToggle = document.getElementById('sidebar-toggle');
-const themeToggle = document.getElementById('theme-toggle');
-const themeIcon = document.getElementById('theme-icon');
-const notificationsToggle = document.getElementById('notifications-toggle');
-const notificationsPanel = document.getElementById('notifications-panel');
-const body = document.body;
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const notificationsToggle = document.getElementById('notifications-toggle');
+    const notificationsPanel = document.getElementById('notifications-panel');
+    const body = document.body;
 
-// ==================== TOGGLE SIDEBAR EN PANTALLAS PEQUEÑAS ====================
-sidebarToggle?.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-    overlay.classList.toggle('open');
-});
+    sidebarToggle?.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+    });
+    overlay?.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+    });
 
-overlay?.addEventListener('click', () => {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('open');
-});
+    function toggleTheme() {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
 
-// ==================== TOGGLE TEMA OSCURO ====================
-function toggleTheme() {
-    body.classList.toggle('dark-mode');
-    const isDark = body.classList.contains('dark-mode');
-    
-    if (isDark) {
+      if (isDark) {
         themeIcon.classList.remove('fa-moon');
         themeIcon.classList.add('fa-sun');
-    } else {
+      } else {
         themeIcon.classList.remove('fa-sun');
         themeIcon.classList.add('fa-moon');
+      }
+      localStorage.setItem('darkMode', isDark);
     }
-    
-    localStorage.setItem('darkMode', isDark);
-}
 
-// Inicializar tema
-const savedTheme = localStorage.getItem('darkMode');
-if (savedTheme === 'true') {
-    body.classList.add('dark-mode');
-    themeIcon.classList.remove('fa-moon');
-    themeIcon.classList.add('fa-sun');
-}
+    const savedTheme = localStorage.getItem('darkMode');
+    if (savedTheme === 'true') {
+      body.classList.add('dark-mode');
+      themeIcon.classList.remove('fa-moon');
+      themeIcon.classList.add('fa-sun');
+    }
+    themeToggle?.addEventListener('click', toggleTheme);
 
-themeToggle?.addEventListener('click', toggleTheme);
+    notificationsToggle?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notificationsPanel.classList.toggle('hidden');
+    });
 
-// ==================== NOTIFICACIONES ====================
-notificationsToggle?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    notificationsPanel.classList.toggle('hidden');
-});
-
-// Cerrar notificaciones al hacer clic fuera
-document.addEventListener('click', (e) => {
-    if (!notificationsToggle?.contains(e.target) && !notificationsPanel?.contains(e.target)) {
+    document.addEventListener('click', (e) => {
+      if (!notificationsToggle?.contains(e.target) && !notificationsPanel?.contains(e.target)) {
         notificationsPanel?.classList.add('hidden');
-    }
-});
+      }
+    });
 
-// Función para cargar notificaciones (puedes personalizar esto)
-function loadNotifications() {
-    // Aquí puedes hacer una petición AJAX para cargar notificaciones reales
-    const notificationsList = document.getElementById('notifications-list');
-    if (notificationsList) {
+    function loadNotifications() {
+      const notificationsList = document.getElementById('notifications-list');
+      if (notificationsList) {
         notificationsList.innerHTML = `
-            <div class="p-3 border-b border-gray-200 dark:border-gray-600">
-                <p class="text-sm text-gray-700 dark:text-gray-300">No hay notificaciones nuevas</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Todo está al día</p>
-            </div>
+          <div class="p-3 border-b border-gray-200">
+            <p class="text-sm text-gray-700">No hay notificaciones nuevas</p>
+            <p class="text-xs text-gray-500">Todo está al día</p>
+          </div>
         `;
+      }
     }
-}
+    notificationsToggle?.addEventListener('click', loadNotifications);
 
-// Cargar notificaciones al abrir el panel
-notificationsToggle?.addEventListener('click', loadNotifications);
-</script>
-@stack('scripts')
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('[data-submenu]').forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
+          e.preventDefault();
+          const id = toggle.getAttribute('data-submenu');
+          const menu = document.getElementById(id);
+          if (!menu) return;
 
-@yield('scripts')
+          menu.classList.toggle('hidden');
+          const expanded = !menu.classList.contains('hidden');
+          toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+          const chevron = toggle.querySelector('.nav-chevron');
+          if (chevron) chevron.classList.toggle('open', expanded);
+        });
+      });
+    });
+  </script>
 </body>
 </html>

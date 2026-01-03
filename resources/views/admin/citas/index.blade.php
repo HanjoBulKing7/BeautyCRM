@@ -1,299 +1,288 @@
 @extends('layouts.app')
 
+@section('title', 'Citas')
+@section('page-title', 'Citas')
+
+@push('styles')
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
+
+  <style>
+    /* =========================
+       FullCalendar: evitar botones encimados + spacing responsive
+       (igual que tu ejemplo)
+       ========================= */
+
+    .fc .fc-button-group{
+      display:inline-flex !important;
+      gap:.5rem !important;
+    }
+    .fc .fc-button-group > .fc-button{
+      margin:0 !important;
+    }
+
+    .fc .fc-header-toolbar{
+      flex-wrap:wrap !important;
+      gap:.75rem !important;
+    }
+    .fc .fc-toolbar-chunk{
+      display:flex !important;
+      align-items:center !important;
+      flex-wrap:wrap !important;
+      gap:.5rem !important;
+    }
+
+    @media (max-width:640px){
+      .fc .fc-header-toolbar{
+        flex-direction:column !important;
+        align-items:stretch !important;
+      }
+      .fc .fc-toolbar-chunk{
+        width:100% !important;
+        justify-content:flex-start !important;
+      }
+
+      .fc .fc-toolbar-chunk:nth-child(2){ order:1 !important; }
+      .fc .fc-toolbar-chunk:nth-child(1){ order:2 !important; }
+      .fc .fc-toolbar-chunk:nth-child(3){ order:3 !important; }
+
+      .fc .fc-button{
+        padding:.32rem .55rem !important;
+        font-size:.75rem !important;
+        border-radius:.85rem !important;
+      }
+      .fc .fc-toolbar-title{
+        font-size:1.05rem !important;
+      }
+      .fc .fc-button-group{ gap:.4rem !important; }
+    }
+
+    @media (min-width:768px){
+      .fc .fc-header-toolbar{ gap:1rem !important; }
+      .fc .fc-toolbar-chunk{ gap:.6rem !important; }
+      .fc .fc-button-group{ gap:.55rem !important; }
+    }
+
+    /* =========================
+       FullCalendar: Glass + tu dorado
+       ========================= */
+
+    /* Botones */
+    .fc .fc-button{
+      border-radius: .95rem !important;
+      border: 1px solid rgba(201,162,74,.22) !important;
+      background: rgba(255,255,255,.65) !important;
+      color: rgba(17,24,39,.88) !important;
+      box-shadow: 0 10px 22px rgba(17,24,39,.07) !important;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease !important;
+    }
+    .fc .fc-button:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.80) !important;
+      box-shadow: 0 16px 30px rgba(17,24,39,.09) !important;
+    }
+    .fc .fc-button:focus{
+      box-shadow: 0 0 0 3px rgba(201,162,74,.22) !important;
+      outline: none !important;
+    }
+
+    /* Botón activo */
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button-primary:not(:disabled):active{
+      background: linear-gradient(135deg, rgba(201,162,74,.95), rgba(231,215,161,.95)) !important;
+      color:#111827 !important;
+      border-color: rgba(201,162,74,.35) !important;
+      box-shadow: 0 12px 28px rgba(201,162,74,.18) !important;
+    }
+
+    /* Título */
+    .fc .fc-toolbar-title{
+      font-weight: 800 !important;
+      color: rgba(17,24,39,.88) !important;
+      letter-spacing: .2px;
+    }
+
+    /* Grid */
+    .fc .fc-scrollgrid,
+    .fc .fc-scrollgrid table{
+      border-color: rgba(17,24,39,.08) !important;
+    }
+    .fc .fc-col-header-cell-cushion{
+      color: rgba(17,24,39,.70) !important;
+      font-weight: 700 !important;
+      text-decoration:none !important;
+    }
+    .fc .fc-daygrid-day-number{
+      color: rgba(17,24,39,.70) !important;
+      text-decoration:none !important;
+      font-weight: 600 !important;
+    }
+
+    /* Eventos (marca/etiqueta) */
+    .fc .fc-daygrid-event{
+      border-radius: .8rem !important;
+      border: 1px solid rgba(201,162,74,.20) !important;
+      background: rgba(201,162,74,.12) !important;
+      color: rgba(17,24,39,.88) !important;
+      padding: .15rem .35rem !important;
+    }
+
+    /* “Hoy” */
+    .fc .fc-day-today{
+      background: rgba(201,162,74,.10) !important;
+    }
+
+    /* =========================
+       Dark mode (tu body usa .dark-mode)
+       ========================= */
+    .dark-mode .fc .fc-button{
+      background: rgba(17,24,39,.35) !important;
+      border-color: rgba(255,255,255,.10) !important;
+      color: rgba(249,250,251,.92) !important;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25) !important;
+    }
+    .dark-mode .fc .fc-button:hover{
+      background: rgba(17,24,39,.55) !important;
+    }
+    .dark-mode .fc .fc-toolbar-title{
+      color: rgba(249,250,251,.95) !important;
+    }
+    .dark-mode .fc .fc-scrollgrid,
+    .dark-mode .fc .fc-scrollgrid table{
+      border-color: rgba(255,255,255,.10) !important;
+    }
+    .dark-mode .fc .fc-col-header-cell-cushion,
+    .dark-mode .fc .fc-daygrid-day-number{
+      color: rgba(229,231,235,.85) !important;
+    }
+    .dark-mode .fc .fc-daygrid-event{
+      background: rgba(201,162,74,.14) !important;
+      border-color: rgba(201,162,74,.22) !important;
+      color: rgba(249,250,251,.92) !important;
+    }
+    .dark-mode .fc .fc-day-today{
+      background: rgba(201,162,74,.08) !important;
+    }
+  </style>
+@endpush
+
+
 @section('content')
-<div class="container mx-auto px-4 py-10">
-    <!-- Título centrado -->
-    <div class="text-center mb-10">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Gestión de Citas</h1>
-        <p class="text-gray-600">Administra todas las citas de tu salón de belleza</p>
+<div class="container mx-auto px-4">
+
+  <!-- Card contenedor (glass) -->
+  <div class="bb-glass-card p-4 md:p-6">
+
+    <!-- Encabezado -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fas fa-calendar-days" style="color: rgba(201,162,74,.95)"></i>
+          Calendario de citas
+        </h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Visualiza y administra las citas del salón
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 sm:items-center w-full md:w-auto">
+        {{-- (Opcional) Aquí puedes meter filtros en el futuro (empleado/estado/servicio) --}}
+
+        <a href="{{ route('admin.citas.create') }}"
+           class="bb-btn-gold w-full sm:w-auto inline-flex items-center justify-center gap-2">
+          <i class="fas fa-plus"></i>
+          Nueva cita
+        </a>
+      </div>
     </div>
 
-    {{-- Card del calendario de citas --}}
-<div class="bg-white shadow rounded-lg p-4 mb-6">
-    <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-        <i class="fas fa-calendar-alt text-pink-500"></i>
-        Calendario de Citas
-    </h3>
-
-    <div id="citas-calendar" class="beauty-calendar"></div> {{-- 👈 importante --}}
-</div>
-
-
-    <!-- Contenedor principal centrado con ancho máximo -->
-    <div class="max-w-7xl mx-auto">
-        <!-- Mensajes -->
-        @if(session('success'))
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-green-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-green-700">{{ session('success') }}</p>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-circle text-red-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-red-700">{{ session('error') }}</p>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <!-- Estadísticas de Google Calendar -->
-        @if($isGoogleConnected)
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between mb-6">
-                <div>
-                    <p class="font-semibold text-blue-700 flex items-center gap-2">
-                        <i class="fas fa-link"></i>
-                        Conectado a Google Calendar
-                    </p>
-                    <p class="text-sm text-blue-600">
-                        Las citas nuevas se sincronizan automáticamente con tu calendario.
-                    </p>
-                </div>
-
-                <div class="flex items-center gap-2">
-
-                    {{-- Desconectar: solo borra el token --}}
-                    <form method="POST" action="{{ route('admin.google.disconnect') }}">
-                        @csrf
-                        <button type="submit"
-                            class="px-3 py-2 text-xs font-semibold rounded-md bg-red-100 text-red-700 hover:bg-red-200">
-                            Desconectar
-                        </button>
-                    </form>
-                </div>
-            </div>
-        @else
-            {{-- Estado NO conectado: muestra tu botón de conectar actual --}}
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between mb-6">
-                <div>
-                    <p class="font-semibold text-yellow-800">
-                        No estás conectado a Google Calendar
-                    </p>
-                    <p class="text-sm text-yellow-700">
-                        Conecta tu cuenta para sincronizar automáticamente tus citas.
-                    </p>
-                </div>
-                <a href="{{ route('admin.google.auth')}}"
-                class="px-3 py-2 text-xs font-semibold rounded-md bg-yellow-600 text-white hover:bg-yellow-700">
-                    Conectar con Google
-                </a>
-            </div>
-        @endif
-
-
-        <!-- Tarjeta de acciones -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-4 md:mb-0">
-                    <h2 class="text-lg font-semibold text-gray-800">Citas Programadas</h2>
-                    <p class="text-gray-600 text-sm">Total: {{ $citas->count() }} citas</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    @if($isConnected)
-                        <a href="{{ route('admin.citas.sync-all') }}" 
-                           class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                            <i class="fas fa-sync-alt mr-2"></i>Sincronizar Todas
-                        </a>
-                    @endif
-                    <a href="{{ route('admin.citas.create') }}" 
-                       class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Nueva Cita
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lista de Citas -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Cliente
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Servicio
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Fecha y Hora
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Empleado
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Estado
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Google
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Acciones
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($citas as $cita)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $cita->cliente->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $cita->cliente->email }}</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $cita->servicio->nombre }}</div>
-                                    <div class="text-sm text-gray-500">${{ number_format($cita->servicio->precio, 2) }}</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ $cita->fecha_cita->format('d/m/Y') }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ $cita->hora_cita }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ $cita->empleado ? $cita->empleado->name : 'No asignado' }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        @if($cita->estado_cita == 'confirmada') bg-green-100 text-green-800
-                                        @elseif($cita->estado_cita == 'pendiente') bg-yellow-100 text-yellow-800
-                                        @elseif($cita->estado_cita == 'cancelada') bg-red-100 text-red-800
-                                        @elseif($cita->estado_cita == 'completada') bg-blue-100 text-blue-800
-                                        @else bg-gray-100 text-gray-800 @endif">
-                                        {{ ucfirst($cita->estado_cita) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if($cita->synced_with_google && $cita->google_event_id)
-                                        <span class="text-green-600" title="Sincronizado el {{ $cita->last_sync_at->format('d/m/Y H:i') }}">
-                                            <i class="fas fa-check-circle"></i>
-                                        </span>
-                                    @elseif($isConnected)
-                                        <form action="{{ route('admin.citas.sync', $cita) }}" method="POST" class="inline">
-                                            @csrf
-                                            <button type="submit" class="text-blue-600 hover:text-blue-900 transition-colors" 
-                                                    title="Sincronizar con Google Calendar">
-                                                <i class="fas fa-sync-alt"></i>
-                                            </button>
-                                        </form>
-                                    @else
-                                        <span class="text-gray-400" title="Conectar Google Calendar para sincronizar">
-                                            <i class="fas fa-times-circle"></i>
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center space-x-2">
-                                        <a href="{{ route('admin.citas.show', $cita) }}" 
-                                           class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
-                                           title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('admin.citas.edit', $cita) }}" 
-                                           class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors"
-                                           title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('admin.citas.destroy', $cita) }}" method="POST" 
-                                              onsubmit="return confirm('¿Estás seguro de eliminar esta cita?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
-                                                    title="Eliminar">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        @if($citas->isEmpty())
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center mt-6">
-                <div class="text-gray-400 text-5xl mb-4">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <p class="text-gray-500 text-lg font-medium mb-2">No hay citas programadas</p>
-                <p class="text-gray-400 text-sm mb-4">Comienza creando tu primera cita</p>
-                <a href="{{ route('admin.citas.create') }}" 
-                   class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                    <i class="fas fa-plus mr-2"></i>Crear primera cita
-                </a>
-            </div>
-        @endif
+    <!-- Card calendario -->
+    <div class="bb-glass-card overflow-hidden">
+      <div class="p-2 md:p-3">
+        <div id="citas-calendar"></div>
+      </div>
     </div>
+
+    {{-- Lista/tabla debajo (opcional): si quieres conservar tu tabla, la dejamos separada --}}
+    {{-- Si no la quieres, me dices y la quitamos. --}}
+
+  </div>
 </div>
 @endsection
 
-{{-- Estilos de FullCalendar por CDN --}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
 
-{{-- Script de FullCalendar por CDN --}}
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+@push('scripts')
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales/es.global.min.js"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const calendarEl = document.getElementById('citas-calendar');
-        if (!calendarEl) return;
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const calendarEl = document.getElementById('citas-calendar');
+      if (!calendarEl) return;
 
-        // Eventos que vienen desde el controlador
-        const events = @json($calendarEvents ?? []);
+      // ✅ Mantiene tu implementación actual: eventos ya calculados desde el controller
+      const events = @json($calendarEvents ?? []);
 
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'es',          // Español
-            firstDay: 1,           // Lunes
-            height: 'auto',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: ''          // Puedes poner 'dayGridMonth,listWeek' si quieres más vistas
-            },
-            events: events,
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'es',
+        firstDay: 1,
 
-            // Esto hace que se vean como marcas / tags dentro del día
-            eventDisplay: 'list-item',
+        initialView: 'dayGridMonth',
+        height: 'auto',
+        nowIndicator: true,
+        selectable: true,
 
-            // Opcional: tooltip simple
-            eventMouseEnter(info) {
-                const title = info.event.title;
-                const start = info.event.start;
-                if (!start) return;
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        },
 
-                const fecha = start.toLocaleDateString('es-MX', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-                const hora = start.toLocaleTimeString('es-MX', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+        buttonText: {
+          today: 'Hoy',
+          month: 'Mes',
+          week: 'Semana',
+          day: 'Día',
+          list: 'Agenda'
+        },
 
-                info.el.title = `${title} - ${fecha} ${hora}`;
-            },
-        });
+        events,
 
-        calendar.render();
+        // ✅ click en día: abre create con date preseleccionada
+        dateClick: (info) => {
+          const url = new URL(`{{ route('admin.citas.create') }}`, window.location.origin);
+          url.searchParams.set('date', info.dateStr);
+          window.location.href = url.toString();
+        },
+
+        // ✅ click en evento: manda a editar (o show si prefieres)
+        eventClick: (info) => {
+          // si en tus events mandas "id" como id de cita, esto funciona:
+          window.location.href = `{{ url('/admin/citas') }}/${info.event.id}/edit`;
+        },
+
+        // Tooltip simple
+        eventMouseEnter(info) {
+          const title = info.event.title;
+          const start = info.event.start;
+          if (!start) return;
+
+          const fecha = start.toLocaleDateString('es-MX', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
+
+          const hora = start.toLocaleTimeString('es-MX', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          info.el.title = `${title} - ${fecha} ${hora}`;
+        },
+      });
+
+      calendar.render();
     });
-</script>
+  </script>
+@endpush
