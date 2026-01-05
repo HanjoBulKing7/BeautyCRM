@@ -1,112 +1,410 @@
-@import url('https://fonts.googleapis.com/css2?family=Lobster&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Bentham&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+@import url("https://unpkg.com/boxicons@latest/css/boxicons.min.css");
 
-.hero-wrapper * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* ===========================
+   RESET / BASE
+   =========================== */
+*,
+*::before,
+*::after {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  list-style: none;
+  list-style-type: none;
+  text-decoration: none;
 }
 
-.hero-wrapper {
-    background: #C8B7A6;
-    color: #fff;
-    font-weight: 400;
-    font-style: normal;
-    font-family: "Roboto", system-ui;
+html {
+  box-sizing: inherit;
+  scroll-behavior: smooth;
+  height: -webkit-fill-available;
 }
 
-.hero-wrapper-element,
-.hero-content {
+body {
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  height: -webkit-fill-available;
+  color: #6b7280;
+  background-color: #ffffff;
+}
+
+body.overflow-hidden {
+  overflow: hidden;
+}
+
+main {
+  overflow: hidden;
+}
+
+a,
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  user-select: none;
+  background: none;
+  box-shadow: none;
+  text-decoration: none;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.Normal-title,
+.Normal-subtitle {
+  font-family: "Bentham", serif;
+}
+
+.container {
+  max-width: 1462px;
+  height: auto;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ===========================
+   THEME
+   =========================== */
+:root {
+  --normal-gold: #b8860b;
+  --normal-gray: #6b7280;
+  --normal-ink: #374151;
+}
+
+/* ===========================
+   HEADER (Normal)
+   - shrink 30% (padding)
+   - hide on scroll down / show on scroll up (JS)
+   - ✅ sin sombra debajo
+   =========================== */
+.Normal-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  transition: transform 260ms ease, background 260ms ease, backdrop-filter 260ms ease;
+  will-change: transform;
+  /* ✅ no shadow */
+  box-shadow: none !important;
+}
+
+/* visible/hidden por JS */
+.Normal-header.is-visible {
+  transform: translateY(0);
+}
+.Normal-header.is-hidden {
+  transform: translateY(-110%);
+}
+
+.Normal-header-container {
+  width: 100%;
+  padding: 0 25px;
+}
+
+/* Navbar base (más compacto) */
+.Normal-navbar {
+  width: 100%;
+  padding: 20px 0; /* ✅ reduced base height */
+  transition: padding 260ms ease, background 260ms ease;
+  /* ✅ sin sombra */
+  box-shadow: none !important;
+  border-bottom: none !important;
+}
+
+/* layout interno */
+.Normal-navbar .Normal-header-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Estado al hacer scroll (shrink extra)
+   ✅ sin sombra
+*/
+.Normal-header.on-scroll {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  /* ✅ sin sombra */
+  box-shadow: none !important;
+}
+.Normal-header.on-scroll .Normal-navbar {
+  padding: 14px 0; /* ✅ shrink extra */
+  box-shadow: none !important;
+}
+
+/* Brand */
+.Normal-brand {
+  display: flex;
+  align-items: center;
+}
+.Normal-brand img {
+  max-width: 120px;
+  height: auto;
+}
+
+/* ===========================
+   BURGER (Mobile)
+   =========================== */
+.Normal-burger {
+  position: relative;
+  display: inline-flex; /* ✅ visible in mobile */
+  cursor: pointer;
+  user-select: none;
+  order: -1;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(184, 134, 11, 0.28); /* ✅ dorado suave */
+  background: rgba(255, 255, 255, 0.85);
+  visibility: visible;
+  transform: rotate(0deg);
+  transition: 0.25s ease-in-out;
+  margin-right: 24px;
+}
+
+.Normal-burger-line-wrapper {
+  height: 20px;
+  width: 20px;
+  position: relative;
+}
+
+.Normal-burger-line {
+  position: absolute;
+  display: block;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  opacity: 1;
+  border-radius: 20px;
+  transform: rotate(0deg);
+  transition: 0.25s ease-in-out;
+  /* ✅ dorado */
+  background-color: var(--normal-gold);
+}
+
+.Normal-burger-line:nth-child(1) {
+  top: 0px;
+}
+.Normal-burger-line:nth-child(2) {
+  top: 0.5rem;
+  width: 70%;
+}
+.Normal-burger-line:nth-child(3) {
+  top: 1rem;
+}
+
+.Normal-burger.is-active .Normal-burger-line:nth-child(1) {
+  top: 0.5rem;
+  transform: rotate(135deg);
+}
+.Normal-burger.is-active .Normal-burger-line:nth-child(2) {
+  opacity: 0;
+  visibility: hidden;
+}
+.Normal-burger.is-active .Normal-burger-line:nth-child(3) {
+  top: 0.5rem;
+  transform: rotate(-135deg);
+}
+
+/* Botón cerrar (en header del menú móvil) */
+.Normal-close-menu {
+  background-color: #ffffff;
+  border: 1px solid rgba(184, 134, 11, 0.22);
+}
+
+/* ===========================
+   MENU (Mobile sidebar)
+   =========================== */
+.Normal-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100vh;
+  padding: 0;
+  overflow: hidden;
+  transition: all 0.35s ease-in-out;
+  transform: translateX(-150%);
+  z-index: 10000;
+  background-color: #ffffff;
+}
+
+.Normal-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(184, 134, 11, 0.18); /* ✅ dorado suave */
+}
+
+.Normal-menu-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 22px;
+  row-gap: 18px;
+}
+
+.Normal-menu-link {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--normal-gray);
+  transition: all 0.2s ease;
+}
+.Normal-menu-link:hover {
+  color: var(--normal-gold);
+}
+
+/* Activo (lo pone el JS en .Normal-header) */
+.Normal-menu-is-active .Normal-menu {
+  transform: translateX(0%);
+}
+
+/* ===========================
+   BACKDROP (Mobile)
+   =========================== */
+.Normal-header-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9998;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.35s ease-in-out;
+}
+
+.Normal-menu-is-active .Normal-header-backdrop {
+  visibility: visible;
+  opacity: 0.3;
+}
+
+/* ===========================
+   CTA RIGHT
+   =========================== */
+.Normal-menu-block {
+  display: flex;
+  column-gap: 30px;
+  margin-left: auto;
+  align-items: center;
+}
+
+.Normal-menu-block-link {
+  color: var(--normal-gray);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 500;
+  text-align: center;
+  margin-left: auto;
+  transition: all 0.2s ease-in-out;
+}
+
+.Normal-menu-block-link:hover {
+  color: var(--normal-gold);
+}
+
+.Normal-menu-block-link .bx {
+  font-size: 20px;
+}
+
+/* ===========================
+   DESKTOP (>= 992px)
+   - oculta burger
+   - menú inline
+   =========================== */
+@media (min-width: 992px) {
+  .container {
+    padding: 0 80px;
+  }
+
+  .Normal-header-container {
+    padding: 0 80px;
+  }
+
+  /* ✅ Burger fuera en desktop */
+  .Normal-burger {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* ✅ Menú ya no es sidebar */
+  .Normal-menu {
     position: relative;
-    width: 100%;
-    z-index: 1;
-}
-
-.hero-intro {
-    position: absolute;
-    left: 0%;
-    top: 0%;
-    right: auto;
-    bottom: auto;
-    z-index: 2;
-    display: flex;
-    width: 100%;
-    height: 100vh;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #fff;
-}
-
-.hero-intro h1 {
-    font-size: 2rem;
-    font-family: "Roboto", serif;
-}
-
-.hero-intro p {
-    font-size: 8rem;
-    font-family: "Lobster", system-ui;
-    font-weight: bolder;
-}
-
-.hero-content {
-    overflow-x: hidden;
-}
-
-.hero-content .hero-section {
-    width: 100%;
-    height: 100vh;
-}
-
-.hero-content .hero-main-section {
-    background-image: url('/images/Beige Blogger Moderna Personal Sitio web.png');
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    overflow: hidden;
-}
-
-.hero-image-container {
-    width: 100%;
-    height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 2;
-    perspective: 500px;
-    overflow: hidden;
-}
-
-.hero-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center center;
-    position: relative;
-    z-index: 1;
-}
-
-.hero-about-section {
-    padding: 150px 30px;
+    width: auto;
     height: auto;
-}
+    margin-left: auto;
+    margin-right: auto;
+    background: none;
+    top: unset;
+    left: 0;
+    right: unset;
+    transform: none !important;
+    overflow: visible;
+    transition: none;
+  }
 
-.hero-about-section p {
-    position: relative;
-    color: #fff;
-    max-width: 800px;
+  /* ✅ Header del menú oculto */
+  .Normal-menu-header {
+    display: none !important;
+  }
+
+  /* ✅ Links en fila */
+  .Normal-menu-inner {
+    display: flex;
+    flex-direction: row;
+    column-gap: 50px;
     margin: 0 auto;
-    text-align: center;
-    font-size: 1.5rem;
-    line-height: 2.5rem;
+    padding: 0;
+    row-gap: 0;
+    align-items: center;
+  }
+
+  /* ✅ Backdrop no aplica */
+  .Normal-header-backdrop {
+    display: none !important;
+  }
+
+  /* CTA spacing desktop */
+  .Normal-menu-block {
+    margin-left: 86px;
+    column-gap: 50px;
+  }
+
+  .Normal-menu-block-link:hover,
+  .Normal-menu-link:hover {
+    color: var(--normal-gold);
+  }
 }
 
+/* ===========================
+   MOBILE tweak (muy pequeño)
+   =========================== */
 @media (max-width: 575.98px) {
-    .hero-intro h1 {
-        font-size: 1.5rem;
-    }
-    
-    .hero-intro p {
-        font-size: 4rem;
-    }
+  .Normal-navbar {
+    padding: 16px 0;
+  }
+  .Normal-header.on-scroll .Normal-navbar {
+    padding: 12px 0;
+  }
+
+  .Normal-brand img {
+    max-width: 105px;
+  }
 }

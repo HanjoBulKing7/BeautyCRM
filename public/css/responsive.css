@@ -6,7 +6,7 @@
 
   /* Hero Section Start */
   .Normal-hero-image-wrapper img.sky {
-    margin-top: -25%;
+    margin-top: -30%;
     transform: translateY(10%);
     height: auto;
   }
@@ -47,71 +47,6 @@
   .container {
     padding: 0 80px;
   }
-
-  .Normal-header-container {
-    padding: 0 80px;
-  }
-
-  /* Header Navigation Start */
-  .Normal-navbar {
-    padding: 64px 0;
-    box-shadow: none;
-    background-color: transparent;
-  }
-
-  .on-scroll .Normal-navbar {
-    padding: 24px 0;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-  }
-
-  .Normal-burger {
-    display: none;
-    visibility: hidden;
-  }
-
-  .Normal-brand img {
-    max-width: 150px;
-  }
-
-  .Normal-menu {
-    position: relative;
-    width: auto;
-    height: auto;
-    margin-left: auto;
-    margin-right: auto;
-    background: none;
-    box-shadow: none;
-    top: unset;
-    left: 0;
-    right: unset;
-    transform: unset;
-  }
-
-  .Normal-menu-inner {
-    display: flex;
-    flex-direction: row;
-    column-gap: 50px;
-    margin: 0 auto;
-    padding: 0;
-    row-gap: 0;
-  }
-
-  .Normal-menu-block {
-    margin-left: 86px;
-    column-gap: 50px;
-  }
-
-  .Normal-header-backdrop,
-  .Normal-menu-header {
-    display: none;
-  }
-
-  .Normal-menu-block-link:hover,
-  .Normal-menu-link:hover {
-    color: #b8860b;
-  }
-  /* Header Navigation End */
 
   /* Hero Section Start */
   .Normal-hero-section {
@@ -215,6 +150,7 @@
     transform: translateY(-50%);
   }
 
+  /* (Opcional) footer responsivo lo puedes dejar aquí o moverlo a footer.css */
   .Normal-footer {
     padding-top: 200px;
     padding-bottom: 120px;

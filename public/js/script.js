@@ -1,57 +1,24 @@
-const headerMenu = document.querySelector(".Normal-header");
-const burgerMenu = headerMenu.querySelector(".Normal-burger");
-const headerBackdrop = headerMenu.querySelector(".Normal-header-backdrop");
-const closeMenu = headerMenu.querySelector(".Normal-close-menu");
+// ============================
+// ✅ LENIS + GSAP (Hero Animations Only)
+// ============================
 
-if (headerMenu && burgerMenu) {
-    burgerMenu.addEventListener("click", function () {
-        burgerMenu.classList.toggle("is-active");
-        headerMenu.classList.toggle("Normal-menu-is-active");
-        document.body.classList.toggle("overflow-hidden");
-        document.body.setAttribute("data-lenis-prevent", "");
-    });
-
-    headerBackdrop.addEventListener("click", function () {
-        burgerMenu.classList.remove("is-active");
-        headerMenu.classList.remove("Normal-menu-is-active");
-        document.body.classList.remove("overflow-hidden");
-        document.body.removeAttribute("data-lenis-prevent");
-    });
-
-    closeMenu.addEventListener("click", function () {
-        burgerMenu.classList.remove("is-active");
-        headerMenu.classList.remove("Normal-menu-is-active");
-        document.body.classList.remove("overflow-hidden");
-        document.body.removeAttribute("data-lenis-prevent");
-    });
-}
-
-window.addEventListener("scroll", function () {
-    if (
-        this.scrollY >=
-        document.querySelector(".Normal-hero-section").offsetHeight / 2
-    ) {
-        headerMenu.classList.add("on-scroll");
-    } else {
-        headerMenu.classList.remove("on-scroll");
-    }
-});
-
-// Initialize a new Lenis instance for smooth scrolling
+// Initialize Lenis for smooth scrolling
 const lenis = new Lenis();
 
-// Synchronize Lenis scrolling with GSAP's ScrollTrigger plugin
+// Sync Lenis with ScrollTrigger
 lenis.on("scroll", ScrollTrigger.update);
 
-// Add Lenis's requestAnimationFrame (raf) method to GSAP's ticker
-// This ensures Lenis's smooth scroll animation updates on each GSAP tick
+// Use Lenis RAF in GSAP ticker
 gsap.ticker.add((time) => {
-    lenis.raf(time * 1000); // Convert time from seconds to milliseconds
+  lenis.raf(time * 1000);
 });
 
-// Disable lag smoothing in GSAP to prevent any delay in scroll animations
+// Disable GSAP lag smoothing
 gsap.ticker.lagSmoothing(0);
 
+// ============================
+// ✅ HERO INTRO ANIMATION
+// ============================
 const heroTitle = document.querySelectorAll(".Normal-hero-title span");
 const heroSubtitle = document.querySelector(".Normal-hero-subtitle");
 const heroAction = document.querySelector(".Normal-hero-action");
@@ -59,118 +26,76 @@ const sliderListItem = document.querySelectorAll(".Normal-slider-list-item");
 const sliderProgress = document.querySelector(".Normal-slider-progress");
 
 gsap.fromTo(
-    [heroSubtitle, heroTitle, heroAction, sliderListItem],
-    {
-        autoAlpha: 0,
-        y: 100,
-        stagger: 0.2,
-    },
-    {
-        autoAlpha: 1,
-        y: 0,
-        stagger: 0.2,
-    }
+  [heroSubtitle, heroTitle, heroAction, sliderListItem],
+  { autoAlpha: 0, y: 100, stagger: 0.2 },
+  { autoAlpha: 1, y: 0, stagger: 0.2 }
 );
+
 gsap.fromTo(
-    sliderProgress,
-    {
-        autoAlpha: 0,
-        y: "100",
-    },
-    {
-        autoAlpha: 1,
-        y: "0",
-        delay: 1,
-    }
+  sliderProgress,
+  { autoAlpha: 0, y: "100" },
+  { autoAlpha: 1, y: "0", delay: 1 }
 );
 
+// ============================
+// ✅ HERO PARALLAX ON SCROLL
+// ============================
 gsap
+  .timeline({
+    scrollTrigger: {
+      trigger: ".Normal-hero-section",
+      start: "top top",
+      end: "bottom top",
+      scrub: 0.5,
+      invalidateOnRefresh: true,
+    },
+  })
+  .to(".sky", { y: 1000 }, "0")
+  .to(".mountains", { y: -300 }, "0")
+  .to(".man-standing", { y: -100 }, "0")
+  .to(".Normal-hero-content", { y: 450, autoAlpha: 0 }, "0");
+
+// ============================
+// ✅ CONTENT SECTIONS ANIMATION
+// ============================
+const contentRows = document.querySelectorAll(".Normal-content-row");
+
+contentRows.forEach((row) => {
+  const imageWrapper = row.querySelector(".Normal-content-image");
+  const image = imageWrapper?.querySelector("img");
+
+  const counter = row.querySelector(".counter");
+  const subtitle = row.querySelectorAll(".Normal-content-subtitle");
+  const title = row.querySelectorAll(".Normal-content-title span");
+  const description = row.querySelectorAll(".Normal-content-copy");
+  const action = row.querySelectorAll(".Normal-content-action");
+
+  gsap
     .timeline({
-        scrollTrigger: {
-            trigger: ".Normal-hero-section",
-            start: "top top",
-            end: "bottom top",
-            scrub: 0.5,
-            invalidateOnRefresh: true,
-        },
+      scrollTrigger: {
+        trigger: row,
+        start: "center-=100 center",
+        end: "center top",
+        scrub: 0.2,
+        pin: row,
+        invalidateOnRefresh: true,
+      },
     })
-    .to(".sky", {
-        y: 1000,
-    }, "0")
-    .to(".mountains", {
-        y: -300,
-    }, "0")
-    .to(".man-standing", {
-        y: -100,
-    }, "0")
-    .to(".Normal-hero-content", {
-        y: 450,
-        autoAlpha: 0,
-    }, "0");
-
-const contentWrapper = document.querySelectorAll(".Normal-content-row");
-contentWrapper.forEach((contentWrapper) => {
-    const imageWrapper = contentWrapper.querySelector(".Normal-content-image");
-    const image = imageWrapper.querySelector("img");
-
-    const counter = contentWrapper.querySelector(".counter");
-
-    const subtitle = contentWrapper.querySelectorAll(".Normal-content-subtitle");
-    const title = contentWrapper.querySelectorAll(".Normal-content-title span");
-    const description = contentWrapper.querySelectorAll(".Normal-content-copy");
-    const action = contentWrapper.querySelectorAll(".Normal-content-action");
-
-    gsap
-        .timeline({
-            scrollTrigger: {
-                trigger: contentWrapper,
-                start: "center-=100 center",
-                end: "center top",
-                scrub: 0.2,
-                pin: contentWrapper,
-                invalidateOnRefresh: true,
-            },
-        })
-        .fromTo(
-            [subtitle, title, description, action],
-            {
-                autoAlpha: 0,
-                y: 100,
-                stagger: 0.2,
-            },
-            {
-                autoAlpha: 1,
-                y: 0,
-                stagger: 0.2,
-            },
-            "0"
-        )
-        .fromTo(
-            counter,
-            {
-                autoAlpha: 0,
-            },
-            {
-                autoAlpha: 1,
-            },
-            "0"
-        )
-        .fromTo(
-            image,
-            {
-                autoAlpha: 0,
-                scale: 1.5,
-            },
-            {
-                autoAlpha: 1,
-                scale: 1,
-            },
-            "0"
-        );
+    .fromTo(
+      [subtitle, title, description, action],
+      { autoAlpha: 0, y: 100, stagger: 0.2 },
+      { autoAlpha: 1, y: 0, stagger: 0.2 },
+      "0"
+    )
+    .fromTo(counter, { autoAlpha: 0 }, { autoAlpha: 1 }, "0")
+    .fromTo(image, { autoAlpha: 0, scale: 1.5 }, { autoAlpha: 1, scale: 1 }, "0");
 });
 
+// ============================
+// ✅ SLIDER PROGRESS BAR
+// ============================
 gsap.to(".Normal-slider-progress-bar", {
-    height: "100%",
-    ease: "none",
-    scrollTrigger: { scrub: 0.3 },
+  height: "100%",
+  ease: "none",
+  scrollTrigger: { scrub: 0.3 },
 });
