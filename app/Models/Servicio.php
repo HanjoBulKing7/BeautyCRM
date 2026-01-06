@@ -40,5 +40,15 @@ class Servicio extends Model
         return $this->hasMany(Cita::class, 'id_servicio');
     }
 
-    // ← Se elimina la relación con categoría
+    public function servicios()
+    {
+    return $this->belongsToMany(
+        Servicio::class,
+        'cita_servicio',
+        'id_cita',
+        'id_servicio'
+    )
+    ->withTimestamps()
+    ->withPivot(['precio_snapshot', 'duracion_snapshot']);
+}
 }

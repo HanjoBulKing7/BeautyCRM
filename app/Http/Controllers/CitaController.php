@@ -74,6 +74,8 @@ class CitaController extends Controller
         $validated = $request->validate([
             'id_cliente'    => 'required|exists:users,id',
             'id_servicio'   => 'required|exists:servicios,id_servicio',
+            'id_servicios'  => 'nullable|array',
+            'id_servicios.*'=> 'nullable|distinct|exists:servicios,id_servicio',
             'id_empleado'   => 'nullable|exists:users,id',
             'fecha_cita'    => 'required|date',
             'hora_cita'     => 'required|date_format:H:i',
@@ -85,6 +87,36 @@ class CitaController extends Controller
             // 1) Crear la cita
             $cita = Cita::create($validated);
             Log::info('DEBUG: Cita creada', ['cita_id' => $cita->id_cita ?? null]);
+
+
+            // 1.1) Guardar servicios (multi-servicio) en tabla pivote (sin romper compatibilidad)
+            $extraServicios = (array) $request->input('id_servicios', []);
+            $idsServicios = collect(array_merge([$validated['id_servicio']], $extraServicios))
+                ->filter(fn($v) => !is_null($v) && $v !== '')
+                ->map(fn($v) => (int) $v)
+                ->unique()
+                ->values();
+
+            // Snapshots (precio/duración) para mantener histórico aunque cambie el servicio después
+            $serviciosSeleccionados = Servicio::whereIn('id_servicio', $idsServicios)
+                ->get(['id_servicio', 'precio', 'duracion_minutos']);
+
+            $pivotData = [];
+            foreach ($serviciosSeleccionados as $s) {
+                $pivotData[$s->id_servicio] = [
+                    'precio_snapshot'   => $s->precio,
+                    'duracion_snapshot' => $s->duracion_minutos ?? 60,
+                ];
+            }
+
+            // Guarda el servicio principal + extras
+            $cita->servicios()->sync($pivotData);
+
+            Log::info('DEBUG: Servicios vinculados a cita', [
+                'cita_id'    => $cita->id_cita ?? null,
+                'servicios'  => $idsServicios->all(),
+                'pivot_rows' => count($pivotData),
+            ]);
 
             // 2) Si se crea como completada, crear venta
             if ($cita->estado_cita === 'completada') {
@@ -130,7 +162,7 @@ class CitaController extends Controller
 
             // 4) Enviar correo al cliente
             try {
-                $cita->load(['cliente', 'servicio', 'empleado']);
+                $cita->load(['cliente', 'servicio', 'servicios', 'empleado']);
 
                 $cliente = $cita->cliente;
 
@@ -195,6 +227,8 @@ class CitaController extends Controller
         $validated = $request->validate([
             'id_cliente' => 'required|exists:users,id',
             'id_servicio' => 'required|exists:servicios,id_servicio',
+            'id_servicios'  => 'nullable|array',
+            'id_servicios.*'=> 'nullable|distinct|exists:servicios,id_servicio',
             'id_empleado' => 'nullable|exists:users,id',
             'fecha_cita' => 'required|date',
             'hora_cita' => 'required|date_format:H:i',
@@ -208,6 +242,59 @@ class CitaController extends Controller
             
             $cita->update($validated);
 
+
+
+            // ✅ Multi-servicio: si el form ya manda id_servicios[], sincronizamos pivote.
+            // Si NO lo manda (porque tu edit aún es legacy), NO borramos extras; solo garantizamos que el servicio principal exista en pivote.
+            if ($request->has('id_servicios')) {
+                $extraServicios = (array) $request->input('id_servicios', []);
+                $idsServicios = collect(array_merge([$validated['id_servicio']], $extraServicios))
+                    ->filter(fn($v) => !is_null($v) && $v !== '')
+                    ->map(fn($v) => (int) $v)
+                    ->unique()
+                    ->values();
+
+                $serviciosSeleccionados = Servicio::whereIn('id_servicio', $idsServicios)
+                    ->get(['id_servicio', 'precio', 'duracion_minutos']);
+
+                $pivotData = [];
+                foreach ($serviciosSeleccionados as $s) {
+                    $pivotData[$s->id_servicio] = [
+                        'precio_snapshot'   => $s->precio,
+                        'duracion_snapshot' => $s->duracion_minutos ?? 60,
+                    ];
+                }
+
+                $cita->servicios()->sync($pivotData);
+            } else {
+                // Legacy edit: no tocar extras existentes
+                $primaryId = (int) $validated['id_servicio'];
+
+                // Si la cita no tiene pivote aún, lo creamos con el servicio principal
+                if (!$cita->servicios()->exists()) {
+                    $s = Servicio::where('id_servicio', $primaryId)->first();
+                    if ($s) {
+                        $cita->servicios()->sync([
+                            $primaryId => [
+                                'precio_snapshot'   => $s->precio,
+                                'duracion_snapshot' => $s->duracion_minutos ?? 60,
+                            ]
+                        ]);
+                    }
+                } else {
+                    // Si ya hay pivote, solo aseguramos que el principal esté incluido
+                    $exists = $cita->servicios()->where('servicios.id_servicio', $primaryId)->exists();
+                    if (!$exists) {
+                        $s = Servicio::where('id_servicio', $primaryId)->first();
+                        if ($s) {
+                            $cita->servicios()->attach($primaryId, [
+                                'precio_snapshot'   => $s->precio,
+                                'duracion_snapshot' => $s->duracion_minutos ?? 60,
+                            ]);
+                        }
+                    }
+                }
+            }
             // ✅ NUEVO: Crear venta automática cuando se marca como completada
             if ($oldEstado !== 'completada' && $newEstado === 'completada') {
                 $this->crearVentaDesdeCita($cita);
@@ -255,9 +342,17 @@ class CitaController extends Controller
                 return $cita->venta;
             }
 
-            // Obtener el precio del servicio
-            $servicio = $cita->servicio;
-            $total = $servicio->precio ?? 0;
+            // Calcular total (multi-servicio si existe pivote; fallback a servicio legacy)
+            $cita->loadMissing(['servicios', 'servicio']);
+            $total = 0;
+
+            if ($cita->servicios && $cita->servicios->count() > 0) {
+                $total = $cita->servicios->sum(function ($s) {
+                    return (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0);
+                });
+            } else {
+                $total = (float) ($cita->servicio->precio ?? 0);
+            }
 
             // ✅ Crear la venta SOLO con las columnas que existen en la tabla `ventas`
             $venta = \App\Models\Venta::create([

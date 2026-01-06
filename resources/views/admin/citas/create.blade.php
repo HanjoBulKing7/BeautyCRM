@@ -86,25 +86,88 @@
                                 <label for="id_servicio" class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class="fas fa-spa text-gray-400 mr-1"></i>Servicio <span class="text-red-500">*</span>
                                 </label>
-                                <select name="id_servicio" id="id_servicio" required
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
-                                    <option value="">Seleccionar Servicio</option>
-                                    @foreach($servicios as $servicio)
-                                        <option value="{{ $servicio->id_servicio }}"
-                                                data-duracion="{{ $servicio->duracion_minutos ?? 60 }}"
-                                                data-precio="{{ $servicio->precio }}"
-                                                {{ old('id_servicio') == $servicio->id_servicio ? 'selected' : '' }}>
-                                            {{ $servicio->nombre_servicio }} - ${{ number_format($servicio->precio, 2) }}
-                                            ({{ $servicio->duracion_minutos ?? 60 }} min)
-                                        </option>
+
+                                @php
+                                    // Extra servicios (si el form regresó con errores)
+                                    $oldExtras = array_values(array_filter((array) old('id_servicios', [])));
+                                @endphp
+
+                                <div id="servicios-wrapper" class="space-y-3">
+                                    <!-- Servicio principal (legacy compatible) -->
+                                    <div class="servicio-row flex items-start gap-2" data-row="primary">
+                                        <div class="relative flex-1">
+                                            <select name="id_servicio" id="id_servicio" required
+                                                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors appearance-none servicio-select"
+                                                data-role="servicio">
+                                                <option value="">Seleccionar Servicio</option>
+                                                @foreach($servicios as $servicio)
+                                                    <option value="{{ $servicio->id_servicio }}"
+                                                            data-duracion="{{ $servicio->duracion_minutos ?? 60 }}"
+                                                            data-precio="{{ $servicio->precio }}"
+                                                            {{ old('id_servicio') == $servicio->id_servicio ? 'selected' : '' }}>
+                                                        {{ $servicio->nombre_servicio }} - ${{ number_format($servicio->precio, 2) }}
+                                                        ({{ $servicio->duracion_minutos ?? 60 }} min)
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                <i class="fas fa-chevron-down text-gray-400"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Servicios extra (multi-servicio) -->
+                                    @foreach($oldExtras as $idx => $oldId)
+                                        <div class="servicio-row flex items-start gap-2" data-row="extra">
+                                            <div class="relative flex-1">
+                                                <select name="id_servicios[]" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors appearance-none servicio-select"
+                                                    data-role="servicio">
+                                                    <option value="">Seleccionar Servicio</option>
+                                                    @foreach($servicios as $servicio)
+                                                        <option value="{{ $servicio->id_servicio }}"
+                                                                data-duracion="{{ $servicio->duracion_minutos ?? 60 }}"
+                                                                data-precio="{{ $servicio->precio }}"
+                                                                {{ (string)$oldId === (string)$servicio->id_servicio ? 'selected' : '' }}>
+                                                            {{ $servicio->nombre_servicio }} - ${{ number_format($servicio->precio, 2) }}
+                                                            ({{ $servicio->duracion_minutos ?? 60 }} min)
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                                </div>
+                                            </div>
+
+                                            <button type="button"
+                                                class="remove-servicio inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                                <i class="fas fa-times mr-1"></i>Quitar
+                                            </button>
+                                        </div>
                                     @endforeach
-                                </select>
+                                </div>
+
+                                <button type="button" id="btn-add-servicio"
+                                    class="mt-2 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                                    <i class="fas fa-plus-circle mr-2"></i>Agregar otro servicio
+                                </button>
+
                                 @error('id_servicio')
                                     <p class="text-red-500 text-sm mt-2 flex items-center">
                                         <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
                                     </p>
                                 @enderror
+                                @error('id_servicios')
+                                    <p class="text-red-500 text-sm mt-2 flex items-center">
+                                        <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    </p>
+                                @enderror
+                                @error('id_servicios.*')
+                                    <p class="text-red-500 text-sm mt-2 flex items-center">
+                                        <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
+
 
                             <!-- Empleado -->
                             <div>
@@ -318,45 +381,132 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('id_servicio').addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const duracion = selectedOption.getAttribute('data-duracion') || 60;
+    
+    // ===========================
+    // Multi-servicio (UI)
+    // ===========================
+    const serviciosWrapper = document.getElementById('servicios-wrapper');
+    const btnAddServicio = document.getElementById('btn-add-servicio');
+    const duracionContainer = document.getElementById('duracion-container');
+    const duracionDisplay = document.getElementById('duracion-display');
+    const horaFinDisplay = document.getElementById('hora-fin-display');
+    const horaSelect = document.getElementById('hora_cita');
 
-        const duracionContainer = document.getElementById('duracion-container');
-        const duracionDisplay = document.getElementById('duracion-display');
-        const horaFinDisplay = document.getElementById('hora-fin-display');
+    function getTotalDuracionMin() {
+        const selects = serviciosWrapper.querySelectorAll('select[data-role="servicio"]');
+        let total = 0;
 
-        if (duracion > 0) {
+        selects.forEach(sel => {
+            const opt = sel.options[sel.selectedIndex];
+            const dur = parseInt(opt?.dataset?.duracion || '0', 10);
+            total += isNaN(dur) ? 0 : dur;
+        });
+
+        return total;
+    }
+
+    function updateDuracionUI() {
+        const totalMin = getTotalDuracionMin();
+
+        // Mostrar/ocultar info
+        if (totalMin > 0) {
             duracionContainer.classList.remove('hidden');
-            duracionDisplay.textContent = duracion;
-
-            const horaSelect = document.getElementById('hora_cita');
-            horaSelect.addEventListener('change', function() {
-                if (this.value) {
-                    const horaInicio = this.value;
-                    const [horas, minutos] = horaInicio.split(':').map(Number);
-
-                    const fechaInicio = new Date();
-                    fechaInicio.setHours(horas, minutos, 0, 0);
-
-                    const fechaFin = new Date(fechaInicio.getTime() + duracion * 60000);
-                    const horaFin = fechaFin.toTimeString().substring(0, 5);
-
-                    horaFinDisplay.textContent = horaFin;
-                }
-            });
+            duracionDisplay.textContent = totalMin;
         } else {
             duracionContainer.classList.add('hidden');
+            horaFinDisplay.textContent = '--:--';
+            return;
+        }
+
+        // Calcular hora fin si hay hora seleccionada
+        if (horaSelect && horaSelect.value) {
+            const [horas, minutos] = horaSelect.value.split(':').map(Number);
+
+            const fechaInicio = new Date();
+            fechaInicio.setHours(horas, minutos || 0, 0, 0);
+
+            const fechaFin = new Date(fechaInicio.getTime() + totalMin * 60000);
+            const horaFin = fechaFin.toTimeString().substring(0, 5);
+
+            horaFinDisplay.textContent = horaFin;
+        } else {
+            horaFinDisplay.textContent = '--:--';
+        }
+    }
+
+    // Delegación: cambios en cualquier select de servicio
+    serviciosWrapper.addEventListener('change', function(e) {
+        if (e.target && e.target.matches('select[data-role="servicio"]')) {
+            updateDuracionUI();
         }
     });
 
-    const servicioSelect = document.getElementById('id_servicio');
-    if (servicioSelect.value) servicioSelect.dispatchEvent(new Event('change'));
+    // Cambios en hora
+    if (horaSelect) {
+        horaSelect.addEventListener('change', updateDuracionUI);
+    }
 
-    const horaSelect = document.getElementById('hora_cita');
-    if (horaSelect.value && servicioSelect.value) horaSelect.dispatchEvent(new Event('change'));
+    // Quitar servicio (delegación)
+    serviciosWrapper.addEventListener('click', function(e) {
+        const btn = e.target.closest('.remove-servicio');
+        if (!btn) return;
+
+        const row = btn.closest('.servicio-row');
+        if (row) {
+            row.remove();
+            updateDuracionUI();
+        }
+    });
+
+    // Agregar otro servicio
+    if (btnAddServicio) {
+        btnAddServicio.addEventListener('click', function() {
+            const primaryRow = serviciosWrapper.querySelector('.servicio-row[data-row="primary"]');
+            if (!primaryRow) return;
+
+            const cloneRow = primaryRow.cloneNode(true);
+            cloneRow.setAttribute('data-row', 'extra');
+
+            const cloneSelect = cloneRow.querySelector('select');
+            if (!cloneSelect) return;
+
+            // Extra: name[] para multi-servicio. Sin required y sin id duplicado.
+            cloneSelect.name = 'id_servicios[]';
+            cloneSelect.required = false;
+            cloneSelect.removeAttribute('id');
+            cloneSelect.selectedIndex = 0;
+
+            // Agregar botón quitar
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-servicio inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-lg text-sm font-medium transition-colors';
+            removeBtn.innerHTML = '<i class="fas fa-times mr-1"></i>Quitar';
+
+            // Asegurar layout: row = flex gap-2
+            cloneRow.classList.add('flex', 'items-start', 'gap-2');
+
+            // Si el row trae un botón previo (no debería en primary), lo removemos
+            const oldRemove = cloneRow.querySelector('.remove-servicio');
+            if (oldRemove) oldRemove.remove();
+
+            cloneRow.appendChild(removeBtn);
+
+            serviciosWrapper.appendChild(cloneRow);
+            updateDuracionUI();
+        });
+    }
+
+    // Recalc inicial
+    updateDuracionUI();
+
 
     document.querySelector('form').addEventListener('submit', function(e) {
+        // Deshabilitar selects extra vacíos para no enviar valores "" al backend
+        const extras = document.querySelectorAll('select[name="id_servicios[]"]');
+        extras.forEach(sel => {
+            if (!sel.value) sel.disabled = true;
+        });
+
         const fecha = document.getElementById('fecha_cita').value;
         const hora = document.getElementById('hora_cita').value;
         const cliente = document.getElementById('id_cliente').value;
