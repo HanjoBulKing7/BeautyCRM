@@ -10,5 +10,6 @@
 
     @include('beauty.scrollHorizontal-module')
     @include('beauty.partials.footer')
+    
 
 @endsection

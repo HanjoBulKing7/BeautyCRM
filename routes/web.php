@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Rutas Públicas (Cliente)
 Route::get('/home', [HomeController::class, 'index'])->name('cliente.home');
+Route::view('/galeria', 'galeria')->name('galeria');
 
 Route::get('/anticipo', function () {
     return view('cliente.anticipo');

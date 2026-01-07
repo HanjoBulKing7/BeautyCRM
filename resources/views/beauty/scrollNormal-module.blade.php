@@ -8,8 +8,8 @@
         <main>
             <section class="Normal-hero-section section" id="section-00">
                 <div class="Normal-hero-image-wrapper">
-                    <img src="{{ asset('images/sucursal/6.JPG') }}" class="sky" alt="" />
-                    <img src="{{ asset('images/sucursal/6.JPG') }}" class="mountains" alt="" />
+                    <img src="{{ asset('images/sucursal/01.png') }}" class="sky" alt="" />
+                    <img src="{{ asset('images/sucursal/02.png') }}" class="mountains" alt="" />
                     <img src="{{ asset('images/edited-photo.png') }}" class="man-standing" alt="" />
                 </div>
                 <div class="Normal-hero-content">
