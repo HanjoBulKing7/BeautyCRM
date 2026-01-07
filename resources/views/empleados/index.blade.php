@@ -91,10 +91,8 @@
                   </div>
                 </td>
 
-                <td class="px-4 py-3">
-                  <div class="text-sm text-gray-700 dark:text-gray-200">
-                    {{ $empleado->email ?? '—' }}
-                  </div>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                  {{ $empleado->email ?? '—' }}
                 </td>
 
                 <td class="px-4 py-3 whitespace-nowrap">

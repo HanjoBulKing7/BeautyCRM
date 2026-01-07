@@ -20,7 +20,7 @@
             required placeholder="Apellido del empleado">
     </div>
 
-    <!-- Fila 2: Teléfono y Puesto -->
+    <!-- Fila 2: Teléfono, Puesto & Email -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
             <i class="fas fa-phone text-pink-400 mr-2"></i>Teléfono *
@@ -37,6 +37,21 @@
         <input type="text" name="puesto" value="{{ old('puesto', $empleado->puesto) }}" 
             class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition" 
             placeholder="Puesto del empleado">
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <label class="block text-sm font-medium mb-2 text-gray-700">
+            <i class="fas fa-envelope text-pink-400 mr-2"></i>Email *
+        </label>
+        <input             
+            type="email"
+            name="email"
+            value="{{ old('email', $empleado->email ?? '') }}"
+            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
+            placeholder="Correo del empleado"
+            required>
+        @error('email')
+            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+        @enderror
     </div>
 
     <!-- Fila 3: Departamento y Fecha de Contratación -->

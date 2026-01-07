@@ -11,7 +11,8 @@ class Empleado extends Model
 
     protected $fillable = [
         'nombre',
-        'apellido', 
+        'apellido',
+        'email', // ✅ nuevo
         'telefono',
         'informacion_legal',
         'puesto',
@@ -19,6 +20,7 @@ class Empleado extends Model
         'fecha_contratacion',
         'estatus',
     ];
+
 
     protected $casts = [
         'fecha_contratacion' => 'date',

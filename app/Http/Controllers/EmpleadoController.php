@@ -29,6 +29,7 @@ class EmpleadoController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:100',
             'apellido' => 'required|string|max:100',
+            'email' => 'required|email|max:255|unique:empleados,email',
             'telefono' => 'required|string|max:20',
             'puesto' => 'nullable|string|max:100',
             'departamento' => 'nullable|string|max:100',
@@ -41,6 +42,7 @@ class EmpleadoController extends Controller
         $empleado = Empleado::create([
             'nombre' => $request->nombre,
             'apellido' => $request->apellido,
+            'email' => $request->email,
             'telefono' => $request->telefono,
             'puesto' => $request->puesto,
             'departamento' => $request->departamento,
@@ -73,7 +75,18 @@ class EmpleadoController extends Controller
             'informacion_legal' => 'nullable|string',
         ]);
 
-        $empleado->update($request->all());
+        $empleado->update($request->only([
+            'nombre',
+            'apellido',
+            'email',
+            'telefono',
+            'puesto',
+            'departamento',
+            'fecha_contratacion',
+            'estatus',
+            'informacion_legal',
+        ]));
+
 
         return redirect()->route('admin.empleados.index') // ← CAMBIAR
             ->with('success', 'Empleado actualizado exitosamente.');
