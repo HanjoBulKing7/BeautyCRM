@@ -76,6 +76,7 @@ class CitaController extends Controller
             'id_servicio'   => 'required|exists:servicios,id_servicio',
             'id_servicios'  => 'nullable|array',
             'id_servicios.*'=> 'nullable|distinct|exists:servicios,id_servicio',
+            'duracion_total_minutos' => 'nullable|integer|min:1|max:600',
             'id_empleado'   => 'nullable|exists:users,id',
             'fecha_cita'    => 'required|date',
             'hora_cita'     => 'required|date_format:H:i',
@@ -100,6 +101,24 @@ class CitaController extends Controller
             // Snapshots (precio/duración) para mantener histórico aunque cambie el servicio después
             $serviciosSeleccionados = Servicio::whereIn('id_servicio', $idsServicios)
                 ->get(['id_servicio', 'precio', 'duracion_minutos']);
+
+            // Duración total: por defecto suma de duraciones de servicios seleccionados.
+            // (Usamos duracion_minutos del catálogo; snapshot se guarda en la pivote.)
+            $duracionAuto = (int) $serviciosSeleccionados->sum(function ($s) {
+                return (int) ($s->duracion_minutos ?? 0);
+            });
+
+            // Si el usuario ajustó manualmente la duración en el formulario, respetarla.
+            $duracionManual = $request->input('duracion_total_minutos');
+            $duracionFinal = (!is_null($duracionManual) && $duracionManual !== '')
+                ? (int) $duracionManual
+                : $duracionAuto;
+
+            if ($duracionFinal > 0) {
+                $cita->duracion_total_minutos = $duracionFinal;
+                $cita->save();
+            }
+
 
             $pivotData = [];
             foreach ($serviciosSeleccionados as $s) {
@@ -229,6 +248,7 @@ class CitaController extends Controller
             'id_servicio' => 'required|exists:servicios,id_servicio',
             'id_servicios'  => 'nullable|array',
             'id_servicios.*'=> 'nullable|distinct|exists:servicios,id_servicio',
+            'duracion_total_minutos' => 'nullable|integer|min:1|max:600',
             'id_empleado' => 'nullable|exists:users,id',
             'fecha_cita' => 'required|date',
             'hora_cita' => 'required|date_format:H:i',
@@ -241,6 +261,14 @@ class CitaController extends Controller
             $newEstado = $validated['estado_cita'];
             
             $cita->update($validated);
+
+            // Si llega duración manual, guardarla (si no llega, se conserva la existente)
+            $duracionManual = $request->input('duracion_total_minutos');
+            if (!is_null($duracionManual) && $duracionManual !== '') {
+                $cita->duracion_total_minutos = (int) $duracionManual;
+                $cita->save();
+            }
+
 
 
 

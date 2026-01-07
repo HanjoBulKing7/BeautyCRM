@@ -274,8 +274,19 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="bg-white rounded-lg p-3 text-center">
                                         <p class="text-xs text-gray-500">Duración</p>
-                                        <p class="font-bold text-blue-700">
-                                            <span id="duracion-display">0</span> min
+                                        <p class="font-bold text-blue-700 flex items-center justify-center gap-2">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="600"
+                                                step="1"
+                                                name="duracion_total_minutos"
+                                                id="duracion-input"
+                                                value="{{ old('duracion_total_minutos', 0) }}"
+                                                class="w-20 text-center bg-white border border-blue-200 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                                aria-label="Duración total de la cita en minutos"
+                                            />
+                                            <span>min</span>
                                         </p>
                                     </div>
                                     <div class="bg-white rounded-lg p-3 text-center">
@@ -388,9 +399,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const serviciosWrapper = document.getElementById('servicios-wrapper');
     const btnAddServicio = document.getElementById('btn-add-servicio');
     const duracionContainer = document.getElementById('duracion-container');
-    const duracionDisplay = document.getElementById('duracion-display');
+    const duracionInput = document.getElementById('duracion-input');
     const horaFinDisplay = document.getElementById('hora-fin-display');
     const horaSelect = document.getElementById('hora_cita');
+
+    // Permitir que el usuario ajuste manualmente la duración total.
+    // Si escribe, se respeta y se recalcula la hora fin con ese valor.
+    if (duracionInput) {
+        const oldVal = parseInt(duracionInput.value || '0', 10);
+        if (!isNaN(oldVal) && oldVal > 0) duracionInput.dataset.manual = '1';
+
+        duracionInput.addEventListener('input', () => {
+            duracionInput.dataset.manual = '1';
+            updateDuracionUI();
+        });
+    }
+
 
     function getTotalDuracionMin() {
         const selects = serviciosWrapper.querySelectorAll('select[data-role="servicio"]');
@@ -406,12 +430,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateDuracionUI() {
-        const totalMin = getTotalDuracionMin();
+        const autoMin = getTotalDuracionMin();
+
+        // Duración efectiva: si el usuario escribió una duración, se usa esa; si no, la suma automática
+        let totalMin = autoMin;
+        if (duracionInput) {
+            const typed = parseInt(duracionInput.value || '0', 10);
+            if (!isNaN(typed) && typed > 0) totalMin = typed;
+        }
 
         // Mostrar/ocultar info
         if (totalMin > 0) {
             duracionContainer.classList.remove('hidden');
-            duracionDisplay.textContent = totalMin;
+            if (duracionInput && !duracionInput.dataset.manual) { duracionInput.value = totalMin; }
         } else {
             duracionContainer.classList.add('hidden');
             horaFinDisplay.textContent = '--:--';
