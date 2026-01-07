@@ -234,12 +234,14 @@ class CitaController extends Controller
 
     public function edit(Cita $cita)
     {
-        $clientes = User::where('role_id', 1)->get();
-        $servicios = Servicio::all();
-        $empleados = User::where('role_id', 2)->get();
+        $cita->load('servicios'); // 👈 importante para multi-servicio
 
+        $clientes = User::all();
+        $servicios = Servicio::all();
+        $empleados = User::all();
         return view('admin.citas.edit', compact('cita', 'clientes', 'servicios', 'empleados'));
     }
+
 
     public function update(Request $request, Cita $cita)
     {
