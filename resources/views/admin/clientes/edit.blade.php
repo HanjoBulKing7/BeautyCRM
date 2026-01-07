@@ -35,8 +35,7 @@
                 @csrf
                 @method('PUT')
 
-                @include('clientes._form', ['cliente' => $cliente])
-
+                @include('admin.clientes._form', ['cliente' => $cliente])
                 <div class="flex flex-col sm:flex-row gap-3 pt-2">
                     <button type="submit"
                             class="inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-400">
