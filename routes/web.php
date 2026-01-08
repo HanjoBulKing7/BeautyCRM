@@ -40,7 +40,14 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Registro de clientes
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register.form');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
+//Login with Google 
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])
+    ->name('google.redirect')
+    ->middleware('guest');
 
+Route::get('/auth/google/login/callback', [AuthController::class, 'handleGoogleCallback'])
+    ->name('google.callback')
+    ->middleware('guest');
 //Redirection URI for Google Client Route 
 
 Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback']);

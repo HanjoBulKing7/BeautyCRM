@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User; // <-- IMPORTANTE
 use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -25,18 +27,8 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Redirigir según el role_id
-            switch ($user->role_id) {
-                case 3: // ADMIN
-                    return redirect()->intended('/admin/home');
-                case 2: // EMPLEADO
-                    return redirect()->intended('/employee/dashboard');
-                case 1: // CLIENTE
-                    return redirect()->intended('/home');
-                default:
-                    Auth::logout();
-                    return back()->with('error', 'Rol no válido. Contacta al administrador.');
-            }
+            return $this->redirectByRole($user);
+
         }
 
         return back()->with('error', 'Correo o contraseña incorrectos');
@@ -50,25 +42,25 @@ class AuthController extends Controller
 
     // Registrar cliente
 // Registrar usuario
-public function register(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|string|confirmed|min:6',
-        'role_id' => 'required|in:1,2,3', // Validar que sea uno de estos valores
-    ]);
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|confirmed|min:6',
+            'role_id' => 'required|in:1,2,3', // Validar que sea uno de estos valores
+        ]);
 
-    // Crear el usuario con el role_id seleccionado
-    User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'role_id' => $request->role_id,
-    ]);
+        // Crear el usuario con el role_id seleccionado
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role_id' => $request->role_id,
+        ]);
 
-    return redirect()->route('login.form')->with('success', 'Cuenta creada correctamente. Ingresa con tus datos.');
-}
+        return redirect()->route('login.form')->with('success', 'Cuenta creada correctamente. Ingresa con tus datos.');
+    }
     // Logout
     public function logout(Request $request)
     {
@@ -76,5 +68,74 @@ public function register(Request $request)
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/login');
+    }
+        // Redirección a Google (Login)
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')
+            ->scopes(['openid', 'profile', 'email'])
+            ->redirect();
+    }
+
+    // Callback de Google (Login)
+    public function handleGoogleCallback(Request $request)
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (\Throwable $e) {
+            return redirect()->route('login.form')
+                ->with('error', 'No se pudo iniciar sesión con Google. Intenta de nuevo.');
+        }
+
+        $email = $googleUser->getEmail();
+
+        // Buscar por google_id o por email (para vincular si ya existía)
+        $user = User::where('google_id', $googleUser->getId())
+            ->orWhere('email', $email)
+            ->first();
+
+        if (!$user) {
+            // Crear nuevo usuario (default: cliente)
+            $user = new User();
+            $user->name = $googleUser->getName() ?? 'Usuario';
+            $user->email = $email;
+            $user->password = Hash::make(Str::random(32));
+            $user->role_id = 1; // 👈 cliente por defecto (ajústalo si quieres otra regla)
+            $user->google_id = $googleUser->getId();
+            $user->email_verified_at = now();
+            $user->save();
+        } else {
+            // Vincular google_id si existía por email
+            if (empty($user->google_id)) {
+                $user->google_id = $googleUser->getId();
+            }
+
+            // Solo llenar name si está vacío (para no pisar tu nombre interno)
+            if (empty($user->name) && $googleUser->getName()) {
+                $user->name = $googleUser->getName();
+            }
+
+            $user->save();
+        }
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+
+        // Reusar tu redirección por role_id
+        return $this->redirectByRole($user);
+    }
+
+    // Método privado para no duplicar lógica
+    private function redirectByRole(User $user)
+    {
+        switch ($user->role_id) {
+            case 3: return redirect()->intended('/admin/home');
+            case 2: return redirect()->intended('/employee/dashboard');
+            case 1: return redirect()->intended('/home');
+            default:
+                Auth::logout();
+                return redirect()->route('login.form')
+                    ->with('error', 'Rol no válido. Contacta al administrador.');
+        }
     }
 }
