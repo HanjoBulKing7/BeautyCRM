@@ -11,36 +11,18 @@ use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\ReporteController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 
-
-// Rutas Públicas (Cliente)
-Route::get('/home', [HomeController::class, 'index'])->name('cliente.home');
-Route::view('/galeria', 'galeria')->name('galeria');
-
-Route::get('/anticipo', function () {
-    return view('cliente.anticipo');
-})->name('cliente.anticipo');
-
-Route::get('/reserva', function () {
-    return view('cliente.reserva');
-})->name('cliente.reserva');
-
-Route::get('/sucursal', function () {
-    return view('cliente.sucursal');
-})->name('cliente.sucursal');
-
-// Rutas de Autenticación
-Route::get('/login', function () {
-    return view('login');
-})->name('login.form');
-
+// Login normal
+Route::get('/login', fn () => view('login'))->name('login.form');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Registro de clientes
+// Register (público, clientes)
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register.form');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
-//Login with Google 
+
+// Google Login (clientes / general)
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])
     ->name('google.redirect')
     ->middleware('guest');
@@ -48,9 +30,32 @@ Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])
 Route::get('/auth/google/login/callback', [AuthController::class, 'handleGoogleCallback'])
     ->name('google.callback')
     ->middleware('guest');
-//Redirection URI for Google Client Route 
 
-Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback']);
+
+// ✅ Invitación empleado (link firmado expirable)
+Route::get('/invitation/employee/{user}', [AuthController::class, 'acceptEmployeeInvitation'])
+    ->name('invitation.employee')
+    ->middleware('signed'); // important: valida firma + expiración
+
+
+// ✅ Google OAuth para empleados (incluye Calendar + offline)
+Route::get('/auth/google/employee', [AuthController::class, 'redirectEmployeeToGoogle'])
+    ->name('google.employee.redirect')
+    ->middleware('guest');
+
+Route::get('/auth/google/employee/callback', [AuthController::class, 'handleEmployeeGoogleCallback'])
+    ->name('google.employee.callback')
+    ->middleware('guest');
+
+
+// (Opcional) mantiene tu flujo existente de GoogleCalendarController si lo sigues usando
+Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'])
+    ->name('google.calendar.callback');
+
+// ✅ Link de invitación (firmado + expira)
+Route::get('/invitation/employee/{user}', [AuthController::class, 'acceptEmployeeInvitation'])
+    ->name('invitation.employee')
+    ->middleware('signed');
 // Rutas de Administración
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/home', function () {

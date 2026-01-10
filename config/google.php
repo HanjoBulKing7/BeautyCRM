@@ -11,5 +11,5 @@ return [
     ],
 
     'access_type' => 'offline',
-    'approval_prompt' => 'auto',
+    'approval_prompt' => 'consent',
 ];

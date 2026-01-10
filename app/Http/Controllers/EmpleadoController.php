@@ -6,6 +6,11 @@ use App\Models\Empleado;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
+use App\Notifications\EmployeeInvitationNotification;
+use Illuminate\Support\Str;
+
+
 
 class EmpleadoController extends Controller
 {
@@ -38,8 +43,15 @@ class EmpleadoController extends Controller
             'informacion_legal' => 'nullable|string',
         ]);
 
-        // CREAR CON user_id EXPLÍCITO
+        $user = User::create([
+            'role_id' => 2,
+            'name' => $request->nombre . ' ' . $request->apellido,
+            'email' => $request->email,
+            'password' => Hash::make(Str::random(32)), // no la usará si solo entra con Google
+        ]);
+
         $empleado = Empleado::create([
+            'user_id' => $user->id,
             'nombre' => $request->nombre,
             'apellido' => $request->apellido,
             'email' => $request->email,
@@ -50,6 +62,14 @@ class EmpleadoController extends Controller
             'estatus' => $request->estatus,
             'informacion_legal' => $request->informacion_legal,
         ]);
+
+        $inviteUrl = URL::temporarySignedRoute(
+            'invitation.employee',
+            now()->addDays(2),
+            ['user' => $user->id] // ✅ ahora sí, USER
+        );
+
+        $user->notify(new EmployeeInvitationNotification($inviteUrl));
 
         return redirect()->route('admin.empleados.index')
             ->with('success', 'Empleado creado exitosamente.');

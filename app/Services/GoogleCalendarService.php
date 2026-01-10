@@ -27,7 +27,7 @@ class GoogleCalendarService
         $this->client->setRedirectUri(config('google.redirect_uri'));
         $this->client->setScopes(config('google.scopes'));
         $this->client->setAccessType(config('google.access_type'));
-        $this->client->setApprovalPrompt(config('google.approval_prompt'));
+        $this->client->setPrompt(config('google.prompt'));
         $this->client->setIncludeGrantedScopes(true);
     }
 
@@ -36,30 +36,33 @@ class GoogleCalendarService
         return $this->client->createAuthUrl();
     }
 
-    public function handleCallback($code)
+    public function handleCallback(string $code, ?int $userId = null): bool
     {
-        try {
-            $token = $this->client->fetchAccessTokenWithAuthCode($code);
+        $userId = $userId ?? Auth::id();
 
-            if (isset($token['error'])) {
-                throw new \Exception($token['error_description'] ?? 'Error en la autenticación');
-            }
-
-            GoogleToken::updateOrCreate(
-                ['user_id' => Auth::id()],
-                [
-                    'access_token'      => $token['access_token'],
-                    'refresh_token'     => $token['refresh_token'] ?? null,
-                    'expires_in'        => $token['expires_in'],
-                    'token_created_at'  => now(),
-                ]
-            );
-
-            return true;
-        } catch (\Exception $e) {
-            throw $e;
+        if (!$userId) {
+            throw new \Exception('No hay usuario para guardar tokens.');
         }
+
+        $token = $this->client->fetchAccessTokenWithAuthCode($code);
+
+        if (isset($token['error'])) {
+            throw new \Exception($token['error_description'] ?? 'Error en la autenticación');
+        }
+
+        GoogleToken::updateOrCreate(
+            ['user_id' => $userId],
+            [
+                'access_token'     => $token['access_token'] ?? null,
+                'refresh_token'    => $token['refresh_token'] ?? null, // solo viene con offline+consent (a veces)
+                'expires_in'       => $token['expires_in'] ?? null,
+                'token_created_at' => now(),
+            ]
+        );
+
+        return true;
     }
+
 
     public function getClient()
     {
@@ -78,6 +81,27 @@ class GoogleCalendarService
 
         return $this->calendar;
     }
+
+
+
+    public function getClientForUser(int $userId): Calendar
+    {
+        $token = GoogleToken::where('user_id', $userId)->first();
+
+        if (!$token) {
+            throw new \Exception("El usuario {$userId} no tiene token de Google configurado");
+        }
+
+        if ($token->isExpired() && $token->refresh_token) {
+            $this->refreshToken($token);
+        }
+
+        $this->client->setAccessToken($token->access_token);
+        $this->calendar = new Calendar($this->client);
+
+        return $this->calendar;
+    }
+
 
     protected function refreshToken(GoogleToken $token)
     {
@@ -143,21 +167,20 @@ class GoogleCalendarService
     public function createEventFromCita(Cita $cita)
     {
         try {
-            $calendar = $this->getClient();
+            if (!$cita->id_empleado) {
+                throw new \Exception("La cita {$cita->id_cita} no tiene empleado asignado.");
+            }
 
-            $cita->load(['servicio', 'cliente', 'empleado']);
+            $calendar = $this->getClientForUser((int)$cita->id_empleado);
+
+            $cita->loadMissing(['servicio', 'cliente', 'empleado']);
 
             $dt = $this->buildLocalStartEnd($cita, 'America/Mexico_City');
 
-            Log::info('Creando evento Google Calendar (LOCAL MX)', [
-                'cita_id' => $cita->id_cita,
-                'fecha_cita' => $cita->fecha_cita,
-                'hora_cita' => $cita->hora_cita,
-                'start_sent' => $dt['start'],
-                'end_sent' => $dt['end'],
-                'tz_sent' => $dt['tz'],
-                'debug' => $dt['debug'],
-            ]);
+            $attendees = [];
+            if ($cita->cliente && $cita->cliente->email) {
+                $attendees[] = ['email' => $cita->cliente->email]; // ✅ correo automático al cliente
+            }
 
             $event = new Event([
                 'summary'     => 'Cita: ' . ($cita->servicio->nombre_servicio ?? 'Sin servicio'),
@@ -171,9 +194,20 @@ class GoogleCalendarService
                     'timeZone' => $dt['tz'],
                 ]),
                 'location'    => 'Salón de Belleza',
+                'attendees' => $this->buildAttendees($cita),
             ]);
 
-            $createdEvent = $calendar->events->insert('primary', $event);
+            // ✅ sendUpdates=all manda el correo de Google Calendar al attendee
+            $createdEvent = $calendar->events->insert('primary', $event, [
+                'sendUpdates' => 'all',
+            ]);
+
+            // ✅ Persistir en DB
+            $cita->update([
+                'google_event_id'    => $createdEvent->getId(),
+                'synced_with_google' => true,
+                'last_sync_at'       => now(),
+            ]);
 
             Log::info('✅ Evento creado exitosamente en Google Calendar', [
                 'cita_id'  => $cita->id_cita,
@@ -181,6 +215,7 @@ class GoogleCalendarService
             ]);
 
             return $createdEvent;
+
         } catch (\Exception $e) {
             Log::error('❌ Error al crear evento Google Calendar', [
                 'cita_id' => $cita->id_cita,
@@ -190,26 +225,24 @@ class GoogleCalendarService
         }
     }
 
+
     public function updateEventFromCita(Cita $cita)
     {
         try {
+            if (!$cita->id_empleado) {
+                throw new \Exception("La cita {$cita->id_cita} no tiene empleado asignado.");
+            }
+
             if (!$cita->google_event_id) {
                 return $this->createEventFromCita($cita);
             }
 
-            $calendar = $this->getClient();
+            // ✅ IMPORTANTE: editar en el calendario del empleado
+            $calendar = $this->getClientForUser((int)$cita->id_empleado);
 
             $cita->loadMissing(['servicio', 'cliente', 'empleado']);
 
             $dt = $this->buildLocalStartEnd($cita, 'America/Mexico_City');
-
-            Log::info('Actualizando evento Google Calendar (LOCAL MX)', [
-                'cita_id' => $cita->id_cita,
-                'event_id' => $cita->google_event_id,
-                'start_sent' => $dt['start'],
-                'end_sent' => $dt['end'],
-                'tz_sent' => $dt['tz'],
-            ]);
 
             $event = $calendar->events->get('primary', $cita->google_event_id);
 
@@ -226,19 +259,33 @@ class GoogleCalendarService
                 'timeZone' => $dt['tz'],
             ]));
 
+            // ✅ decide si quieres solo cliente o también empleado
             $event->setAttendees($this->buildAttendees($cita));
 
-            return $calendar->events->update('primary', $cita->google_event_id, $event);
+            $updated = $calendar->events->update('primary', $cita->google_event_id, $event, [
+                'sendUpdates' => 'all',
+            ]);
+
+            $cita->update([
+                'synced_with_google' => true,
+                'last_sync_at'       => now(),
+            ]);
+
+            return $updated;
 
         } catch (\Exception $e) {
             if ($e->getCode() == 404) {
-                $cita->google_event_id = null;
-                $cita->save();
+                $cita->update([
+                    'google_event_id'    => null,
+                    'synced_with_google' => false,
+                    'last_sync_at'       => now(),
+                ]);
                 return $this->createEventFromCita($cita);
             }
             throw $e;
         }
     }
+
 
     public function deleteEventFromCita(Cita $cita)
     {
@@ -247,17 +294,40 @@ class GoogleCalendarService
                 return true;
             }
 
-            $calendar = $this->getClient();
+            if (!$cita->id_empleado) {
+                // si no hay empleado, al menos limpia el estado local
+                $cita->update([
+                    'google_event_id'    => null,
+                    'synced_with_google' => false,
+                    'last_sync_at'       => now(),
+                ]);
+                return true;
+            }
+
+            $calendar = $this->getClientForUser((int)$cita->id_empleado);
             $calendar->events->delete('primary', $cita->google_event_id);
 
+            $cita->update([
+                'google_event_id'    => null,
+                'synced_with_google' => false,
+                'last_sync_at'       => now(),
+            ]);
+
             return true;
+
         } catch (\Exception $e) {
             if ($e->getCode() == 404) {
+                $cita->update([
+                    'google_event_id'    => null,
+                    'synced_with_google' => false,
+                    'last_sync_at'       => now(),
+                ]);
                 return true;
             }
             throw $e;
         }
     }
+
 
     protected function buildEventDescription(Cita $cita)
     {
@@ -276,16 +346,12 @@ class GoogleCalendarService
         return $description;
     }
 
-    protected function buildAttendees(Cita $cita)
+    protected function buildAttendees(Cita $cita): array
     {
         $attendees = [];
 
         if ($cita->cliente && $cita->cliente->email) {
             $attendees[] = ['email' => $cita->cliente->email];
-        }
-
-        if ($cita->empleado && $cita->empleado->email) {
-            $attendees[] = ['email' => $cita->empleado->email];
         }
 
         return $attendees;

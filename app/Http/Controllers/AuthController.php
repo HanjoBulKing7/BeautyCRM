@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User; // <-- IMPORTANTE
+use App\Models\User;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+
 
 class AuthController extends Controller
 {
@@ -124,6 +126,21 @@ class AuthController extends Controller
         // Reusar tu redirección por role_id
         return $this->redirectByRole($user);
     }
+
+    public function acceptEmployeeInvitation(User $user, \Illuminate\Http\Request $request)
+    {
+        // Solo empleados
+        if ((int)$user->role_id !== 2) {
+            return redirect()->route('login.form')->with('error', 'Invitación inválida.');
+        }
+
+        // Guardamos qué empleado está conectando su Calendar
+        $request->session()->put('invited_user_id', $user->id);
+
+        // Mandamos al flujo de Google Calendar (tu connect actual)
+        return redirect()->route('admin.google.connect');
+    }
+
 
     // Método privado para no duplicar lógica
     private function redirectByRole(User $user)

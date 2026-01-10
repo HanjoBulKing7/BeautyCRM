@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\GoogleCalendarService;
 use App\Models\GoogleToken;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 
 class GoogleCalendarController extends Controller
@@ -27,19 +28,40 @@ class GoogleCalendarController extends Controller
     {
         try {
             $code = $request->get('code');
-            
+
             if (!$code) {
-                return redirect('/admin/citas')->with('error', 'Error en la autenticación con Google');
+                return redirect('/login')->with('error', 'Error en la autenticación con Google');
             }
 
+            // ✅ Si viene desde invitación (guardado en sesión)
+            $invitedUserId = $request->session()->pull('invited_user_id');
+
+            if ($invitedUserId) {
+                $user = User::find($invitedUserId);
+
+                if (!$user || (int)$user->role_id !== 2) {
+                    return redirect('/login')->with('error', 'Invitación inválida o expirada.');
+                }
+
+                // Guardar tokens para el empleado invitado
+                $this->googleCalendar->handleCallback($code, (int)$user->id);
+
+                // Loguearlo
+                Auth::login($user, true);
+                $request->session()->regenerate();
+
+                return redirect('/employee/dashboard')->with('success', 'Google Calendar conectado. ¡Listo!');
+            }
+
+            // ✅ Flujo normal (admin ya logueado)
             $this->googleCalendar->handleCallback($code);
 
             return redirect('/admin/citas')->with('success', 'Cuenta de Google Calendar conectada exitosamente');
+
         } catch (\Exception $e) {
-            return redirect('/admin/citas')->with('error', 'Error: ' . $e->getMessage());
+            return redirect('/login')->with('error', 'Error: ' . $e->getMessage());
         }
     }
-
 
     public function status()
     {
