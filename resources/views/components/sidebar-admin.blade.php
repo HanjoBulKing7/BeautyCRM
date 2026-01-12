@@ -30,7 +30,7 @@
     class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
     {{ request()->is('admin/ventas*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
     <i class="fas fa-cash-register mr-3 text-lg"></i>
-    <span>Ventas</span>
+    <span>Citas Completadas</span>
 </a>
 </li>
 

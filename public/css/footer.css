@@ -4,7 +4,7 @@
    =========================== */
 
 .Normal-footer {
-  padding-top: 100px;
+  padding-top: 50px;
   padding-bottom: 50px;
   background-color: #ffffff;
 }
@@ -26,6 +26,7 @@
 
 .Normal-footer-logo {
   margin-bottom: 19px;
+  width: 60%;
 }
 
 .Normal-footer-copy {
@@ -72,6 +73,19 @@
 .Normal-footer-links-item a:hover {
   color: #b8860b;
 }
+
+/* Línea superior divisora del footer */
+.Normal-footer-section {
+  border-top: 1px solid #E8DCCB; /* beige */
+}
+
+/* (Opcional) si quieres que sea todavía más sutil */
+@supports (border-top: 0.5px solid #000) {
+  .Normal-footer-section {
+    border-top: 0.5px solid #E8DCCB;
+  }
+}
+
 
 /* ===========================
    Responsive (footer)

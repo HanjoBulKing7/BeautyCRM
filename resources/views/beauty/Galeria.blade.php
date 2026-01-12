@@ -7,12 +7,20 @@
         <div class="horizontal-container-medium">
           <div class="horizontal-padding-vertical">
             <div class="horizontal-max-width-large">
+              <h1 class="horizontal-heading"></h1>
+            </div>
+          </div>
+        </div>
+      </div>
+     <div class="horizontal-section">
+        <div class="horizontal-container-medium">
+          <div class="horizontal-padding-vertical">
+            <div class="horizontal-max-width-large">
               <h1 class="horizontal-heading">Beauty Bonita Salon De Belleza</h1>
             </div>
           </div>
         </div>
       </div>
-
       
 
       <div class="horizontal-scroll-section horizontal-horizontal-section horizontal-section">
@@ -99,17 +107,7 @@
         </div>
       </div>
 
-      <div class="horizontal-section">
-        <div class="horizontal-padding-global">
-          <div class="horizontal-container-medium">
-            <div class="horizontal-padding-vertical">
-              <div class="horizontal-max-width-large">
-                <h1 class="horizontal-heading">Salon de Belleza Beauty Bonita!!</h1>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+     
     </section>
     
 @push('scripts')
