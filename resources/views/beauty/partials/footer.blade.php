@@ -8,8 +8,8 @@
                 <div class="Normal-footer-row">
                     <div class="Normal-footer-column Normal-footer-column-logo">
                         <div class="Normal-footer-logo">
-                            <a href="#">
-                                <img src="imagenes/logo.png" alt="Beauty Bonita Logo">
+                            <a href="#section-00">
+                                <img src="{{ asset('iconos/logo.png') }}" alt="Beauty Bonita Logo">
                             </a>
                         </div>
                         <div class="Normal-footer-copy">

@@ -6,6 +6,8 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/beauty/servicios-page.css') }}">
     <link rel="stylesheet" href="{{ asset('css/beauty/servicios.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/beauty/menu-servicios.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/beauty/nuevo-servicio.css') }}">
 @endpush
 
 @section('content')
@@ -13,7 +15,9 @@
     @include('beauty.partials.header')
     @include('beauty.scrollGaleriaHero-module')
 
+    @include('beauty.servicios.menu-servicios')
     @include('beauty.servicios.mas-solicitados')
+    @include('beauty.servicios.nuevo-servicio')
     @include('beauty.servicios.categorias')
 
 

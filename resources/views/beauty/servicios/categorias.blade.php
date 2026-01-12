@@ -3,7 +3,7 @@
         <h2 class="bb-cats__mainTitle">Nuestros servicios</h2>
 
         {{-- ===================== MAQUILLAJE ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="maquillaje">
             <h3 class="bb-cat__title">Maquillaje</h3>
 
             <div class="bb-cat__grid">
@@ -25,7 +25,7 @@
         </div>
 
         {{-- ===================== PEINADO ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="peinado">
             <h3 class="bb-cat__title">Peinado</h3>
 
             <div class="bb-cat__grid">
@@ -47,7 +47,7 @@
         </div>
 
         {{-- ===================== COLOR ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="color">
             <h3 class="bb-cat__title">Color</h3>
 
             <div class="bb-cat__grid">
@@ -69,7 +69,7 @@
         </div>
 
         {{-- ===================== CORTE ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="corte">
             <h3 class="bb-cat__title">Corte</h3>
 
             <div class="bb-cat__grid">
@@ -91,7 +91,7 @@
         </div>
 
         {{-- ===================== MANICURA ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="manicura">
             <h3 class="bb-cat__title">Manicura</h3>
 
             <div class="bb-cat__grid">
@@ -113,7 +113,7 @@
         </div>
 
         {{-- ===================== TRATAMIENTOS CAPILARES ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="tratamientos-capilares">
             <h3 class="bb-cat__title">Tratamientos capilares</h3>
 
             <div class="bb-cat__grid">
@@ -135,7 +135,7 @@
         </div>
 
         {{-- ===================== PESTAÑAS (por tamaño) ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="pestañas">
             <h3 class="bb-cat__title">Pestañas</h3>
 
             <div class="bb-cat__grid">
@@ -157,7 +157,7 @@
         </div>
 
         {{-- ===================== PESTAÑAS 1x1 ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="pestanas-1x1">
             <h3 class="bb-cat__title">Pestañas 1x1</h3>
 
             <div class="bb-cat__grid">
@@ -179,7 +179,7 @@
         </div>
 
         {{-- ===================== PEDICURA ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="pedicura">
             <h3 class="bb-cat__title">Pedicura</h3>
 
             <div class="bb-cat__grid">
@@ -201,7 +201,7 @@
         </div>
 
         {{-- ===================== FACIALES ===================== --}}
-        <div class="bb-cat">
+        <div class="bb-cat" id="faciales">
             <h3 class="bb-cat__title">Faciales</h3>
 
             <div class="bb-cat__grid">

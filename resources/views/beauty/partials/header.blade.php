@@ -52,7 +52,7 @@
                 <div class="Normal-menu-block">
                     <a href="admin/home" class="Normal-menu-block-link" data-scroll>
                         <i class="bx bx-user-circle"></i>
-                        Reservar Cita
+                        Iniciar Sesion
                     </a>
                 </div>
             </div>
