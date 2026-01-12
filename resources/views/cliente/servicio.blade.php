@@ -11,7 +11,7 @@
     <section class="sticky-cards">
         <div class="card">
     <div class="card-img">
-        <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Maquillaje">
+        <img src="{{ asset('images/cejas.png') }}" alt="Maquillaje">
     </div>
     <div class="card-content">
         <h5>Maquillaje</h5>
@@ -21,7 +21,7 @@
 
 <div class="card">
     <div class="card-img">
-        <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Peinado">
+        <img src="{{ asset('images/cejas.png') }}" alt="Peinado">
     </div>
     <div class="card-content">
         <h5>Peinado</h5>
@@ -31,7 +31,7 @@
 
 <div class="card">
     <div class="card-img">
-        <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Cabello">
+        <img src="{{ asset('images/cejas.png') }}" alt="Cabello">
     </div>
     <div class="card-content">
         <h5>Cabello</h5>
@@ -46,7 +46,7 @@
 
 <div class="card">
     <div class="card-img">
-        <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Manicura">
+        <img src="{{ asset('images/cejas.png') }}" alt="Manicura">
     </div>
     <div class="card-content">
         <h5>Manicura</h5>
@@ -56,7 +56,7 @@
 
 <div class="card">
     <div class="card-img">
-        <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Tratamientos capilares">
+        <img src="{{ asset('images/cejas.png') }}" alt="Tratamientos capilares">
     </div>
     <div class="card-content">
         <h5>Tratamientos capilares</h5>
@@ -66,7 +66,7 @@
 
 <div class="card">
     <div class="card-img">
-        <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Pestañas">
+        <img src="{{ asset('images/cejas.png') }}" alt="Pestañas">
     </div>
     <div class="card-content">
         <h5>Pestañas</h5>
@@ -76,7 +76,7 @@
 
 <div class="card">
     <div class="card-img">
-        <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Pedicura">
+        <img src="{{ asset('images/cejas.png') }}" alt="Pedicura">
     </div>
     <div class="card-content">
         <h5>Pedicura</h5>
@@ -86,7 +86,7 @@
 
 <div class="card">
     <div class="card-img">
-        <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Faciales">
+        <img src="{{ asset('images/cejas.png') }}" alt="Faciales">
     </div>
     <div class="card-content">
         <h5>Faciales</h5>
