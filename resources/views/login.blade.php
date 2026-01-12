@@ -106,7 +106,7 @@
 <body>
     <div class="login-box text-center">
         <!-- Logo -->
-        <img src="{{ asset('iconos/logo blanco.png') }}" alt="Logo Beauty Bonita" class="login-logo">
+        <img src="{{ asset('iconos/logo.png') }}" alt="Logo Beauty Bonita" class="login-logo">
 
         <h2>Iniciar Sesión</h2>
         <p class="text-muted">Ingresa con tu correo y contraseña</p>

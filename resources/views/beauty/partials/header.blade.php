@@ -50,7 +50,7 @@
                 <div class="Normal-menu-block">
                     <a href="admin/home" class="Normal-menu-block-link" data-scroll>
                         <i class="bx bx-user-circle"></i>
-                        Iniciar Sesion
+                        Reservar Ahora
                     </a>
                 </div>
             </div>
