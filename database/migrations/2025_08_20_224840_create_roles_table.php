@@ -6,25 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
-            $table->enum('nombrerol', ['CLIENTE', 'EMPLEADO', 'ADMIN']); // Tipos de roles
+            $table->enum('nombre_rol', ['CLIENTE', 'EMPLEADO', 'ADMINISTRADOR']);
             $table->timestamps();
         });
 
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('role_id')->after('id')->constrained('roles')->onDelete('cascade');
+            $table->foreignId('role_id')
+                ->after('id')
+                ->constrained('roles')
+                ->onDelete('restrict'); // 👈 mejor que cascade
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
@@ -34,5 +31,4 @@ return new class extends Migration
 
         Schema::dropIfExists('roles');
     }
-
 };
