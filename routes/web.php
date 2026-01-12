@@ -39,13 +39,44 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Registro de clientes
+// Register (público, clientes)
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register.form');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 
-//Redirection URI for Google Client Route 
+// Google Login (clientes / general)
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])
+    ->name('google.redirect')
+    ->middleware('guest');
 
-Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback']);
+Route::get('/auth/google/login/callback', [AuthController::class, 'handleGoogleCallback'])
+    ->name('google.callback')
+    ->middleware('guest');
+
+
+// ✅ Invitación empleado (link firmado expirable)
+Route::get('/invitation/employee/{user}', [AuthController::class, 'acceptEmployeeInvitation'])
+    ->name('invitation.employee')
+    ->middleware('signed'); // important: valida firma + expiración
+
+
+// ✅ Google OAuth para empleados (incluye Calendar + offline)
+Route::get('/auth/google/employee', [AuthController::class, 'redirectEmployeeToGoogle'])
+    ->name('google.employee.redirect')
+    ->middleware('guest');
+
+Route::get('/auth/google/employee/callback', [AuthController::class, 'handleEmployeeGoogleCallback'])
+    ->name('google.employee.callback')
+    ->middleware('guest');
+
+
+// (Opcional) mantiene tu flujo existente de GoogleCalendarController si lo sigues usando
+Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'])
+    ->name('google.calendar.callback');
+
+// ✅ Link de invitación (firmado + expira)
+Route::get('/invitation/employee/{user}', [AuthController::class, 'acceptEmployeeInvitation'])
+    ->name('invitation.employee')
+    ->middleware('signed');
 // Rutas de Administración
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/home', function () {

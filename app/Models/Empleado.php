@@ -10,15 +10,16 @@ class Empleado extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'nombre',
         'apellido',
-        'email', // ✅ nuevo
+        'email',
         'telefono',
-        'informacion_legal',
         'puesto',
         'departamento',
         'fecha_contratacion',
         'estatus',
+        'informacion_legal',
     ];
 
 

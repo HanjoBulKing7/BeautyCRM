@@ -134,6 +134,17 @@
                 {{ session('success') }}
             </div>
         @endif
+        <div class="d-grid gap-2 mb-3">
+            <a href="{{ route('google.redirect') }}" class="btn btn-outline-secondary"
+            style="border-radius:12px;padding:12px;font-weight:600;">
+                <i class="fa-brands fa-google me-2"></i>
+                Continuar con Google
+            </a>
+        </div>
+
+        <div class="text-center text-muted mb-3" style="font-size:.9rem;">
+            — o —
+        </div>
 
         <!-- Formulario -->
         <form id="loginForm" method="POST" action="{{ route('login') }}" autocomplete="off" class="mt-3">
