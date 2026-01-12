@@ -1,5 +1,5 @@
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/horizontal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/galeriahorizontal.css') }}">
 @endpush
 
     <section class="horizontal-main-wrapper">
@@ -116,5 +116,5 @@
     {{-- GSAP CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-    <script src="{{ asset('js/horizontal.js') }}"></script>
+    <script src="{{ asset('js/galeriahorizontal.js') }}"></script>
 @endpush

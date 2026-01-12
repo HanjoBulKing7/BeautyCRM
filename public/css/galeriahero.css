@@ -14,8 +14,15 @@ body {
   font-family: "Roboto", system-ui;
 }
 
+/* ✅ Importante: el hero debe quedar arriba de cualquier pin/absolute posterior */
+.hero-wrapper {
+  position: relative;
+  width: 100%;
+  z-index: 999;       /* <- clave para que NO se vean los videos encima */
+  isolation: isolate; /* crea stacking context limpio */
+}
+
 /* Contenedores */
-.hero-wrapper,
 .hero-content {
   position: relative;
   width: 100%;
@@ -26,7 +33,9 @@ body {
 .hero-wrapper-element {
   position: relative;
   width: 100%;
+  height: 100vh;      /* ✅ asegura cubrir pantalla durante el pin */
   min-height: 100vh;
+  overflow: hidden;   /* ✅ evita “asomar” contenido de abajo durante escalados */
 }
 
 /* Intro */
@@ -45,7 +54,7 @@ body {
   padding: 0 20px;
 }
 
-/* ✅ Ahora el título es el grande */
+/* Título */
 .hero-intro h1 {
   font-family: "Lobster", system-ui;
   font-weight: 700;
@@ -53,7 +62,7 @@ body {
   font-size: clamp(2.8rem, 7vw, 6rem);
 }
 
-/* ✅ Subtítulo pequeño (ya no gigante) */
+/* Subtítulo */
 .hero-intro p {
   margin-top: 12px;
   font-family: "Roboto", system-ui;
@@ -76,10 +85,11 @@ body {
 }
 
 .hero-content .hero-section.hero-main-section {
-background-image: url("/images/Beige%20Blogger%20Moderna%20Personal%20Sitio%20web.png");
+  background-image: url("/images/Beige%20Blogger%20Moderna%20Personal%20Sitio%20web.png");
   background-position: center center;
   background-repeat: no-repeat;
   background-size: cover;
+  background-color: #000; /* ✅ evita ver “abajo” mientras carga la img */
   overflow: hidden;
 }
 

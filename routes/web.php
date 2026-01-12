@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Auth;
 Route::get('/home', [HomeController::class, 'index'])->name('cliente.home');
 Route::view('/galeria', 'galeria')->name('galeria');
 
+Route::view('/servicio', 'servicio')->name('servicio');
+
 Route::get('/anticipo', function () {
     return view('cliente.anticipo');
 })->name('cliente.anticipo');
