@@ -18,6 +18,7 @@ Route::get('/home', [HomeController::class, 'index'])->name('cliente.home');
 Route::view('/galeria', 'galeria')->name('galeria');
 
 Route::view('/servicio', 'servicio')->name('servicio');
+Route::view('/agendarcita', 'agendarcita')->name('agendarcita');
 
 Route::get('/anticipo', function () {
     return view('cliente.anticipo');
