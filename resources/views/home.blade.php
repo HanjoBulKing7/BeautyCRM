@@ -4,11 +4,14 @@
 @section('title', 'Beauty Bonita - Salon de Belleza')
 
 @section('content')
+    @include('beauty.partials.whatsApp-icon')
     @include('beauty.partials.header')
     @include('beauty.scrollNormal-module')
     @include('beauty.principal')
+    @include('beauty.about-salon')
+    @include('cliente.servicio')
+    @include('beauty.donde-encontrarnos')
 
-    @include('beauty.scrollHorizontal-module')
     @include('beauty.partials.footer')
     
 

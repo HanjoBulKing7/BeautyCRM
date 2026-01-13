@@ -11,10 +11,32 @@ use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\ReporteController;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\URL;
 
-// Login normal
-Route::get('/login', fn () => view('login'))->name('login.form');
+
+// Rutas Públicas (Cliente)
+Route::get('/home', [HomeController::class, 'index'])->name('cliente.home');
+Route::view('/galeria', 'galeria')->name('galeria');
+
+Route::view('/servicio', 'servicio')->name('servicio');
+Route::view('/agendarcita', 'agendarcita')->name('agendarcita');
+
+Route::get('/anticipo', function () {
+    return view('cliente.anticipo');
+})->name('cliente.anticipo');
+
+Route::get('/reserva', function () {
+    return view('cliente.reserva');
+})->name('cliente.reserva');
+
+Route::get('/sucursal', function () {
+    return view('cliente.sucursal');
+})->name('cliente.sucursal');
+
+// Rutas de Autenticación
+Route::get('/login', function () {
+    return view('login');
+})->name('login.form');
+
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

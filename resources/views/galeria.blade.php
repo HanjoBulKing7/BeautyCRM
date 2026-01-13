@@ -2,6 +2,9 @@
 @extends('layouts.website')
 
 @section('title', 'Beauty Bonita - Galeria')
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/galeria-pages.css') }}">
+@endpush
 
 @section('content')
     @include('beauty.partials.header')
@@ -12,3 +15,6 @@
     
 
 @endsection
+@push('scripts')
+  <script src="{{ asset('js/galeria-pages.js') }}" defer></script>
+@endpush

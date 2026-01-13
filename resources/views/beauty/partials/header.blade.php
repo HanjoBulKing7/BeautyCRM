@@ -6,7 +6,7 @@
     <header class="Normal-header is-visible" id="NormalHeader">
         <nav class="Normal-navbar">
             <div class="Normal-header-container">
-                <a href="#" class="Normal-brand" aria-label="Beauty Bonita - Inicio">
+                <a href="home" class="Normal-brand" aria-label="Beauty Bonita - Inicio">
                     <img src="{{ asset('iconos/logo.png') }}" alt="Beauty Bonita Logo">
                 </a>
 
@@ -35,24 +35,22 @@
 
                     <ul class="Normal-menu-inner">
                         <li class="Normal-menu-item">
-                            <a href="#section-01" class="Normal-menu-link">Servicios</a>
+                            <a href="servicio" class="Normal-menu-link">Servicios</a>
                         </li>
                         <li class="Normal-menu-item">
                             <a href="#section-02" class="Normal-menu-link">Nosotros</a>
                         </li>
                         <li class="Normal-menu-item">
-                            <a href="#section-03" class="Normal-menu-link">Galería</a>
+                            <a href="galeria" class="Normal-menu-link">Galería</a>
                         </li>
-                        <li class="Normal-menu-item">
-                            <a href="#contacto" class="Normal-menu-link">Contacto</a>
-                        </li>
+                        
                     </ul>
                 </div>
 
                 <div class="Normal-menu-block">
                     <a href="admin/home" class="Normal-menu-block-link" data-scroll>
                         <i class="bx bx-user-circle"></i>
-                        Reservar Cita
+                        Iniciar Sesion
                     </a>
                 </div>
             </div>

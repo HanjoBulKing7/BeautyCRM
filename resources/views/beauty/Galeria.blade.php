@@ -1,9 +1,18 @@
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/horizontal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/galeriahorizontal.css') }}">
 @endpush
 
     <section class="horizontal-main-wrapper">
       <div class="horizontal-section">
+        <div class="horizontal-container-medium">
+          <div class="horizontal-padding-vertical">
+            <div class="horizontal-max-width-large">
+              <h1 class="horizontal-heading"></h1>
+            </div>
+          </div>
+        </div>
+      </div>
+     <div class="horizontal-section">
         <div class="horizontal-container-medium">
           <div class="horizontal-padding-vertical">
             <div class="horizontal-max-width-large">
@@ -12,7 +21,6 @@
           </div>
         </div>
       </div>
-
       
 
       <div class="horizontal-scroll-section horizontal-horizontal-section horizontal-section">
@@ -99,22 +107,12 @@
         </div>
       </div>
 
-      <div class="horizontal-section">
-        <div class="horizontal-padding-global">
-          <div class="horizontal-container-medium">
-            <div class="horizontal-padding-vertical">
-              <div class="horizontal-max-width-large">
-                <h1 class="horizontal-heading">Salon de Belleza Beauty Bonita!!</h1>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+     
     </section>
     
 @push('scripts')
     {{-- GSAP CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-    <script src="{{ asset('js/horizontal.js') }}"></script>
+    <script src="{{ asset('js/galeriahorizontal.js') }}"></script>
 @endpush

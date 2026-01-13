@@ -1,4 +1,27 @@
 
+            <style>
+           /* ✅ SOLO LO NECESARIO: que el slider NO bloquee clicks del footer */
+.Normal-slider {
+  pointer-events: none; /* el nav no captura clicks */
+}
+
+/* ✅ pero los links y la barrita SÍ sean clickeables */
+.Normal-slider a,
+.Normal-slider .Normal-slider-progress,
+.Normal-slider .Normal-slider-progress-bar,
+.Normal-slider .Normal-slider-list,
+.Normal-slider .Normal-slider-list * {
+  pointer-events: auto;
+}
+
+/* (Opcional mínimo) si quieres asegurar que quede encima pero sin bloquear */
+.Normal-slider {
+  z-index: 50;
+}
+
+
+
+            </style>
             <section class="Normal-content-section section mb-4">
                 <div class="container">
                     <div class="Normal-content-wrapper" id="section-01">
