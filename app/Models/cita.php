@@ -23,6 +23,7 @@ class Cita extends Model
         'hora_cita',
         'descuento',
         'estado_cita',
+        'metodo_pago',
         'observaciones',
         'google_event_id',
         'synced_with_google',

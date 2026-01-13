@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\GoogleToken;
 use App\Models\Cliente;
 use App\Models\Empleado;
+use Illuminate\Validation\Rule;
+
 
 class CitaController extends Controller
 {
@@ -65,11 +67,23 @@ class CitaController extends Controller
         $clientes = Cliente::select('id', 'nombre', 'email')->get();
         $servicios = Servicio::all();
 
-        // ✅ OJO: esto SÍ trae "departamento"
-        $empleados = User::where('role_id', 2)
-        ->select('id', 'name', 'email')
-        ->orderBy('name')
-        ->get();
+        // ✅ Empleados = users(role_id=2) + join a empleados para traer "departamento"
+        $empleados = User::query()
+            ->where('users.role_id', 2)
+            ->leftJoin('empleados', 'empleados.user_id', '=', 'users.id')
+            ->select([
+                'users.id',
+                'users.name',
+                'users.email',
+                'empleados.departamento',
+                'empleados.puesto',
+            ])
+            ->orderByRaw('COALESCE(empleados.departamento, "") ASC')
+            ->orderBy('users.name')
+            ->get();
+
+        // ✅ si quieres ya mandarlo agrupado por departamento:
+        $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
         
         $clientesForJs = $clientes->map(function ($c) {
         return [
@@ -79,8 +93,14 @@ class CitaController extends Controller
             'email' => $c->email ?? '',
         ];
         })->values();
+        $categorias = Servicio::query()
+            ->whereNotNull('categoria')
+            ->where('categoria', '!=', '')
+            ->distinct()
+            ->orderBy('categoria')
+            ->pluck('categoria');
 
-        return view('admin.citas.create', compact('clientes', 'servicios', 'empleados','clientesForJs'));
+        return view('admin.citas.create', compact('empleadosPorDepto', 'clientes', 'servicios', 'empleados','clientesForJs', 'categorias'));
     }
 
     // En el método store, después de $cita = Cita::create($validated);
@@ -92,16 +112,21 @@ class CitaController extends Controller
             'id_servicios' => 'nullable|array',
             'id_servicios.*' => 'nullable|distinct|exists:servicios,id_servicio',
             'id_empleado' => 'nullable|exists:users,id',
-            // si id_empleado en realidad apunta a users, entonces: exists:users,id
             'fecha_cita' => 'required|date',
             'hora_cita' => 'required|date_format:H:i',
             'estado_cita' => 'required|in:pendiente,confirmada,cancelada,completada',
+            'metodo_pago' => [
+                Rule::requiredIf(fn() => $request->estado_cita === 'completada'),
+                Rule::in(['efectivo', 'transferencia', 'tarjeta']),
+                'nullable',
+            ],
             'observaciones' => 'nullable|string|max:500',
-            // ✅ descuento nuevo
             'descuento' => 'nullable|numeric|min:0|max:999999.99',
         ]);
 
-
+        if (($validated['estado_cita'] ?? null) !== 'completada') {
+            $validated['metodo_pago'] = null;
+        }
 
         try {
             // 1) Crear la cita
@@ -245,7 +270,6 @@ class CitaController extends Controller
     }
 
 
-
     // En CitaController.php - método show
     public function show(Cita $cita)
     {
@@ -259,10 +283,33 @@ class CitaController extends Controller
     {
         $cita->load('servicios'); // 👈 importante para multi-servicio
 
-        $clientes = User::all();
-        $servicios = Servicio::all();
-        $empleados = User::all();
-        return view('admin.citas.edit', compact('cita', 'clientes', 'servicios', 'empleados'));
+        // ✅ Empleados = users(role_id=2) + join a empleados para traer "departamento"
+        $empleados = User::query()
+            ->where('users.role_id', 2)
+            ->leftJoin('empleados', 'empleados.user_id', '=', 'users.id')
+            ->select([
+                'users.id',
+                'users.name',
+                'users.email',
+                'empleados.departamento',
+                'empleados.puesto',
+            ])
+            ->orderByRaw('COALESCE(empleados.departamento, "") ASC')
+            ->orderBy('users.name')
+            ->get();
+
+            $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
+
+            $clientes = Cliente::select('id', 'nombre', 'email')->get();
+            $servicios = Servicio::all();
+            $categorias = Servicio::query()
+            ->whereNotNull('categoria')
+            ->where('categoria', '!=', '')
+            ->distinct()
+            ->orderBy('categoria')
+            ->pluck('categoria');
+
+        return view('admin.citas.edit', compact('empleadosPorDepto', 'cita', 'clientes', 'servicios', 'empleados', 'categorias'));
     }
 
 
@@ -270,27 +317,28 @@ class CitaController extends Controller
     {
             $validated = $request->validate([
                 'id_cliente' => 'required|exists:clientes,id',
-
-                // ✅ servicio principal (tu tabla servicios usa id_servicio)
                 'id_servicio' => 'required|exists:servicios,id_servicio',
-
-                // ✅ extras (multi-servicio)
                 'id_servicios'   => 'nullable|array',
                 'id_servicios.*' => 'nullable|distinct|exists:servicios,id_servicio',
-
-                // ✅ empleado (si guardas id_empleado y viene de tabla empleados)
                 'id_empleado' => 'nullable|exists:users,id',
                 'fecha_cita' => 'required|date',
                 'hora_cita'  => 'required|date_format:H:i',
                 'estado_cita'=> 'required|in:pendiente,confirmada,cancelada,completada',
+                'metodo_pago' => [
+                    Rule::requiredIf(fn() => $request->estado_cita === 'completada'),
+                    Rule::in(['efectivo', 'transferencia', 'tarjeta']),
+                    'nullable',
+                ],
                 'observaciones' => 'nullable|string|max:500',
-
-                // ✅ descuento
                 'descuento' => 'nullable|numeric|min:0|max:100000',
             ]);
 
-
+            if (($validated['estado_cita'] ?? null) !== 'completada') {
+                $validated['metodo_pago'] = null;
+            }
+ 
         try {
+
             $oldEstado = $cita->estado_cita;
             $newEstado = $validated['estado_cita'];
             
@@ -306,10 +354,6 @@ class CitaController extends Controller
                 $cita->duracion_total_minutos = (int) $duracionManual;
                 $cita->save();
             }
-
-
-
-
             // ✅ Multi-servicio: si el form ya manda id_servicios[], sincronizamos pivote.
             // Si NO lo manda (porque tu edit aún es legacy), NO borramos extras; solo garantizamos que el servicio principal exista en pivote.
             if ($request->has('id_servicios')) {
