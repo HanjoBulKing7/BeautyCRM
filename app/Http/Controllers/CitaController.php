@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\CitaConfirmadaMail;
 use Illuminate\Support\Facades\Log;
 use App\Models\GoogleToken;
-
+use App\Models\Cliente;
 
 class CitaController extends Controller
 {
@@ -61,7 +61,7 @@ class CitaController extends Controller
 
     public function create()
     {
-        $clientes = User::all();
+        $clientes = Cliente::all();
         $servicios = Servicio::all();
         $empleados = User::all();
 

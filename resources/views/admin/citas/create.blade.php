@@ -70,7 +70,7 @@
                                     <option value="">Seleccionar Cliente</option>
                                     @foreach($clientes as $cliente)
                                         <option value="{{ $cliente->id }}" {{ old('id_cliente') == $cliente->id ? 'selected' : '' }}>
-                                            {{ $cliente->name }} - {{ $cliente->email }}
+                                            {{ $cliente->nombre }} - {{ $cliente->email }}
                                         </option>
                                     @endforeach
                                 </select>

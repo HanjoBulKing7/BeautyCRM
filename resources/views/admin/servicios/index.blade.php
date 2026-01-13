@@ -47,23 +47,33 @@
                     @forelse($servicios as $servicio)
                         <tr class="bb-row">
                             <td class="px-4 py-3">
-                                <div class="flex items-start gap-3">
-                                    <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
-                                        <svg class="w-4 h-4 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M14.121 14.121L19 19M5 5l4.879 4.879M15 7a3 3 0 11-6 0 3 3 0 016 0zm0 10a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </span>
+                                <div class="flex items-center gap-3">
+                                    @if(!empty($servicio->imagen))
+                                        <div class="w-30 h-20 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm shrink-0">
+                                            <img
+                                                src="{{ asset('storage/' . $servicio->imagen) }}"
+                                                alt="Foto del servicio"
+                                                class="w-full h-full object-cover"
+                                                loading="lazy"
+                                            >
+                                        </div>
+                                    @else
+                                        <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
+                                            <svg class="w-4 h-4 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M14.121 14.121L19 19M5 5l4.879 4.879M15 7a3 3 0 11-6 0 3 3 0 016 0zm0 10a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        </span>
+                                    @endif
 
                                     <div>
                                         <div class="text-sm font-semibold text-gray-900 dark:text-white">
                                             {{ $servicio->nombre_servicio ?? $servicio->nombre ?? 'Servicio' }}
                                         </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            ID: #{{ $servicio->id_servicio ?? $servicio->id ?? '-' }}
-                                        </div>
+                                        <div class="text-xs text-gray-500">ID: #{{ $servicio->id }}</div>
                                     </div>
                                 </div>
+
                             </td>
 
                             <td class="px-4 py-3 whitespace-nowrap">

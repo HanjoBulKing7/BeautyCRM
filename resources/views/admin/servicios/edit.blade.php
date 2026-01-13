@@ -17,7 +17,10 @@
     <form method="POST" action="{{ route('admin.servicios.update', $servicio->id_servicio) }}" class="space-y-6">
         @method('PUT')
         @csrf
-        @include('admin.servicios._form', ['servicio' => $servicio])
+        @include('admin.servicios._form', [
+            'servicio' => $servicio,
+            'showEstado' => true
+        ])
 
         <!-- Botones de acción -->
         <div class="flex gap-3 pt-6 border-t border-gray-200">

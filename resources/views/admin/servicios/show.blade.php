@@ -13,6 +13,20 @@
         </div>
     </div>
 
+    {{-- Imagen del servicio --}}
+    @if(!empty($servicio->imagen))
+        <div class="mb-6 flex justify-center">
+            <div class="w-[320px] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
+                <img
+                    src="{{ asset('storage/' . $servicio->imagen) }}"
+                    alt="Foto del servicio {{ $servicio->nombre_servicio }}"
+                    class="w-full h-[180px] object-cover"
+                    loading="lazy"
+                >
+            </div>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Información principal -->
         <div class="space-y-4">
