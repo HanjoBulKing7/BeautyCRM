@@ -12,6 +12,7 @@ use App\Mail\CitaConfirmadaMail;
 use Illuminate\Support\Facades\Log;
 use App\Models\GoogleToken;
 use App\Models\Cliente;
+use App\Models\Empleado;
 
 class CitaController extends Controller
 {
@@ -61,32 +62,54 @@ class CitaController extends Controller
 
     public function create()
     {
-        $clientes = Cliente::all();
+        $clientes = Cliente::select('id', 'nombre', 'email')->get();
         $servicios = Servicio::all();
-        $empleados = User::all();
 
-        return view('admin.citas.create', compact('clientes', 'servicios', 'empleados'));
+        // ✅ OJO: esto SÍ trae "departamento"
+        $empleados = User::where('role_id', 2)
+        ->select('id', 'name', 'email')
+        ->orderBy('name')
+        ->get();
+        
+        $clientesForJs = $clientes->map(function ($c) {
+        return [
+            'id' => $c->id,
+            'label' => trim(($c->nombre ?? '') . ' - ' . ($c->email ?? '')),
+            'nombre' => $c->nombre ?? '',
+            'email' => $c->email ?? '',
+        ];
+        })->values();
+
+        return view('admin.citas.create', compact('clientes', 'servicios', 'empleados','clientesForJs'));
     }
 
     // En el método store, después de $cita = Cita::create($validated);
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_cliente'    => 'required|exists:users,id',
-            'id_servicio'   => 'required|exists:servicios,id_servicio',
-            'id_servicios'  => 'nullable|array',
-            'id_servicios.*'=> 'nullable|distinct|exists:servicios,id_servicio',
-            'duracion_total_minutos' => 'nullable|integer|min:1|max:600',
-            'id_empleado'   => 'nullable|exists:users,id',
-            'fecha_cita'    => 'required|date',
-            'hora_cita'     => 'required|date_format:H:i',
-            'estado_cita'   => 'required|in:pendiente,confirmada,cancelada,completada',
+            'id_cliente' => 'required|exists:clientes,id',
+            'id_servicio' => 'required|exists:servicios,id_servicio',
+            'id_servicios' => 'nullable|array',
+            'id_servicios.*' => 'nullable|distinct|exists:servicios,id_servicio',
+            'id_empleado' => 'nullable|exists:users,id',
+            // si id_empleado en realidad apunta a users, entonces: exists:users,id
+            'fecha_cita' => 'required|date',
+            'hora_cita' => 'required|date_format:H:i',
+            'estado_cita' => 'required|in:pendiente,confirmada,cancelada,completada',
             'observaciones' => 'nullable|string|max:500',
+            // ✅ descuento nuevo
+            'descuento' => 'nullable|numeric|min:0|max:999999.99',
         ]);
+
+
 
         try {
             // 1) Crear la cita
-            $cita = Cita::create($validated);
+            $cita = Cita::create([
+            ...$validated,
+            'descuento' => $validated['descuento'] ?? 0,
+        ]);
+
             Log::info('DEBUG: Cita creada', ['cita_id' => $cita->id_cita ?? null]);
 
 
@@ -245,24 +268,37 @@ class CitaController extends Controller
 
     public function update(Request $request, Cita $cita)
     {
-        $validated = $request->validate([
-            'id_cliente' => 'required|exists:users,id',
-            'id_servicio' => 'required|exists:servicios,id_servicio',
-            'id_servicios'  => 'nullable|array',
-            'id_servicios.*'=> 'nullable|distinct|exists:servicios,id_servicio',
-            'duracion_total_minutos' => 'nullable|integer|min:1|max:600',
-            'id_empleado' => 'nullable|exists:users,id',
-            'fecha_cita' => 'required|date',
-            'hora_cita' => 'required|date_format:H:i',
-            'estado_cita' => 'required|in:pendiente,confirmada,cancelada,completada',
-            'observaciones' => 'nullable|string|max:500',
-        ]);
+            $validated = $request->validate([
+                'id_cliente' => 'required|exists:clientes,id',
+
+                // ✅ servicio principal (tu tabla servicios usa id_servicio)
+                'id_servicio' => 'required|exists:servicios,id_servicio',
+
+                // ✅ extras (multi-servicio)
+                'id_servicios'   => 'nullable|array',
+                'id_servicios.*' => 'nullable|distinct|exists:servicios,id_servicio',
+
+                // ✅ empleado (si guardas id_empleado y viene de tabla empleados)
+                'id_empleado' => 'nullable|exists:users,id',
+                'fecha_cita' => 'required|date',
+                'hora_cita'  => 'required|date_format:H:i',
+                'estado_cita'=> 'required|in:pendiente,confirmada,cancelada,completada',
+                'observaciones' => 'nullable|string|max:500',
+
+                // ✅ descuento
+                'descuento' => 'nullable|numeric|min:0|max:100000',
+            ]);
+
 
         try {
             $oldEstado = $cita->estado_cita;
             $newEstado = $validated['estado_cita'];
             
             $cita->update($validated);
+
+            
+            $cita->descuento = $validated['descuento'] ?? 0;
+            $cita->save();
 
             // Si llega duración manual, guardarla (si no llega, se conserva la existente)
             $duracionManual = $request->input('duracion_total_minutos');

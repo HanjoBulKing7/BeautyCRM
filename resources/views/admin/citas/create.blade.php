@@ -62,18 +62,45 @@
                         <div class="space-y-6">
                             <!-- Cliente -->
                             <div>
-                                <label for="id_cliente" class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fas fa-user text-gray-400 mr-1"></i>Cliente <span class="text-red-500">*</span>
-                                </label>
-                                <select name="id_cliente" id="id_cliente" required
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
-                                    <option value="">Seleccionar Cliente</option>
-                                    @foreach($clientes as $cliente)
-                                        <option value="{{ $cliente->id }}" {{ old('id_cliente') == $cliente->id ? 'selected' : '' }}>
-                                            {{ $cliente->nombre }} - {{ $cliente->email }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                    <!-- Cliente (buscador) -->
+                                    <div class="relative">
+                                        <label for="cliente_search" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-user text-gray-400 mr-1"></i>Cliente <span class="text-red-500">*</span>
+                                        </label>
+
+                                        {{-- Este es el valor real que se envía al backend --}}
+                                        <input type="hidden" name="id_cliente" id="id_cliente" value="{{ old('id_cliente') }}" required>
+
+                                        {{-- Input visible para buscar --}}
+                                        <div class="relative">
+                                            <input
+                                                type="text"
+                                                id="cliente_search"
+                                                autocomplete="off"
+                                                placeholder="Escribe para buscar… (ej. Juan)"
+                                                class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                            />
+
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                                <i class="fas fa-search"></i>
+                                            </div>
+                                        </div>
+
+                                        {{-- Dropdown resultados --}}
+                                        <div
+                                            id="cliente_dropdown"
+                                            class="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden hidden"
+                                        >
+                                            <div id="cliente_results" class="max-h-60 overflow-auto"></div>
+                                        </div>
+
+                                        @error('id_cliente')
+                                            <p class="text-red-500 text-sm mt-2 flex items-center">
+                                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                            </p>
+                                        @enderror
+                                    </div>
+
                                 @error('id_cliente')
                                     <p class="text-red-500 text-sm mt-2 flex items-center">
                                         <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
@@ -170,22 +197,32 @@
 
 
                             <!-- Empleado -->
+                            {{-- Empleado --}}
                             <div>
                                 <label for="id_empleado" class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class="fas fa-user-tie text-gray-400 mr-1"></i>Empleado
                                 </label>
-                                <select name="id_empleado" id="id_empleado"
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
-                                    <option value="">No asignado</option>
-                                    @foreach($empleados as $empleado)
+                                @php
+                                $empleadosAgrupados = $empleados->groupBy(function ($e) {
+                                    return $e->departamento ?: 'Sin departamento';
+                                });
+                                @endphp
+                                <select name="id_empleado" id="id_empleado" class="w-full border border-gray-300 rounded-lg px-4 py-3">
+                                <option value="">No asignado</option>
+                                @foreach($empleadosAgrupados as $departamento => $grupo)
+                                    <optgroup label="{{ $departamento }}">
+                                    @foreach($grupo as $empleado)
                                         <option value="{{ $empleado->id }}" {{ old('id_empleado') == $empleado->id ? 'selected' : '' }}>
-                                            {{ $empleado->name }}
+                                        {{ trim(($empleado->nombre ?? '').' '.($empleado->apellido ?? '')) }}
+                                        {{ $empleado->email ? ' - '.$empleado->email : '' }}
                                         </option>
                                     @endforeach
+                                    </optgroup>
+                                @endforeach
                                 </select>
                                 @error('id_empleado')
                                     <p class="text-red-500 text-sm mt-2 flex items-center">
-                                        <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                        <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
                                     </p>
                                 @enderror
                             </div>
@@ -312,9 +349,37 @@
                                     </p>
                                 @enderror
                             </div>
+
+                            <!-- Descuento -->
+                                <div>
+                                <label for="descuento" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-tag text-gray-400 mr-1"></i>Descuento
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="descuento"
+                                    id="descuento"
+                                    min="0"
+                                    step="0.01"
+                                    value="{{ old('descuento', $cita->descuento ?? 0) }}"
+                                    placeholder="0.00"
+                                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Monto en pesos (ej. 50.00). Si no aplica, deja en 0.
+                                </p>
+
+                                @error('descuento')
+                                    <p class="text-red-500 text-sm mt-2 flex items-center">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
+                                    </p>
+                                @enderror
+                                </div>
+
                         </div>
                     </div>
-
                     <!-- Botones -->
                     <div class="mt-10 pt-6 border-t border-gray-200">
                         <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
@@ -373,6 +438,16 @@
 
     </div>
 </div>
+@php
+    $clientesForJs = $clientes->map(function ($c) {
+        return [
+            'id' => $c->id,
+            'label' => trim((($c->nombre ?? $c->name ?? '') . ' - ' . ($c->email ?? ''))),
+            'nombre' => ($c->nombre ?? $c->name ?? ''),
+            'email' => ($c->email ?? ''),
+        ];
+    })->values();
+@endphp
 
 <!-- Añadir los scripts de Flatpickr al final del layout -->
 @section('scripts')
@@ -530,6 +605,100 @@ document.addEventListener('DOMContentLoaded', function() {
     // Recalc inicial
     updateDuracionUI();
 
+    // Lista de clientes desde Blade → JS
+    const CLIENTES = @json($clientesForJs);
+
+const input    = document.getElementById('cliente_search');
+  const dropdown = document.getElementById('cliente_dropdown');
+  const results  = document.getElementById('cliente_results');
+  const hidden   = document.getElementById('id_cliente');
+
+  if (!input || !dropdown || !results || !hidden) return;
+
+  function hideDropdown() {
+    dropdown.classList.add('hidden');
+    results.innerHTML = '';
+  }
+
+  function showDropdown(items) {
+    if (!items.length) {
+      results.innerHTML = `
+        <div class="px-4 py-3 text-sm text-gray-500">
+          Sin resultados
+        </div>
+      `;
+      dropdown.classList.remove('hidden');
+      return;
+    }
+
+    results.innerHTML = items.map(c => `
+      <button type="button"
+        class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm"
+        data-id="${c.id}"
+        data-label="${escapeHtml(c.label || '')}"
+      >
+        <div class="font-medium text-gray-800">${escapeHtml(c.nombre || 'Sin nombre')}</div>
+        ${c.email ? `<div class="text-gray-500">${escapeHtml(c.email)}</div>` : ''}
+      </button>
+    `).join('');
+
+    dropdown.classList.remove('hidden');
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  // Buscar mientras escribe
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+
+    // Si cambia el texto, invalida selección previa
+    hidden.value = '';
+
+    if (!q) {
+      hideDropdown();
+      return;
+    }
+
+    const filtered = (window.CLIENTES || CLIENTES || [])
+      .filter(c =>
+        (c.nombre || '').toLowerCase().includes(q) ||
+        (c.email  || '').toLowerCase().includes(q)
+      )
+      .slice(0, 10);
+
+    showDropdown(filtered);
+  });
+
+  // Seleccionar cliente
+  results.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-id]');
+    if (!btn) return;
+
+    hidden.value = btn.dataset.id;
+    input.value  = btn.dataset.label || '';
+    hideDropdown();
+  });
+
+  // Cerrar al hacer click fuera
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#cliente_search') && !e.target.closest('#cliente_dropdown')) {
+      hideDropdown();
+    }
+  });
+
+  // Si vienes con old('id_cliente'), pre-llenar el input visible
+  if (hidden.value) {
+    const found = (window.CLIENTES || CLIENTES || []).find(c => String(c.id) === String(hidden.value));
+    if (found) input.value = found.label || (found.nombre || '');
+  }
+    //Finaliza busqudea de clientes SCRIPT
 
     document.querySelector('form').addEventListener('submit', function(e) {
         // Deshabilitar selects extra vacíos para no enviar valores "" al backend

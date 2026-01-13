@@ -21,6 +21,7 @@ class Cita extends Model
         'id_empleado',
         'fecha_cita',
         'hora_cita',
+        'descuento',
         'estado_cita',
         'observaciones',
         'google_event_id',
