@@ -14,12 +14,16 @@ class Venta extends Model
     
     protected $fillable = [
         'id_cita',
+        'id_cliente',
+        'id_empleado',
+        'id_servicio',
+        'fecha_venta',
+        'subtotal',
+        'descuento',
         'total',
         'forma_pago',
-        'metodo_pago_especifico',
-        'referencia_pago',
-        'notas',
-        'comision_empleado'
+        'estado_venta',
+        'observaciones',
     ];
     
     protected $casts = [

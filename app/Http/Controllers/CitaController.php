@@ -443,48 +443,69 @@ class CitaController extends Controller
         }
     }
 
-
-    function crearVentaDesdeCita(Cita $cita)
+    //=======================================================================
+    //CREAR VENTA DESDE CITA FUNCIÓN ========================================
+    private function crearVentaDesdeCita(Cita $cita): void
     {
-        try {
-            // Verificar si ya existe una venta para esta cita
-            if ($cita->venta) {
-                return $cita->venta;
-            }
+        // Cargar relaciones necesarias (multi-servicio o servicio principal)
+        $cita->loadMissing(['servicios', 'servicio']);
 
-            // Calcular total (multi-servicio si existe pivote; fallback a servicio legacy)
-            $cita->loadMissing(['servicios', 'servicio']);
-            $total = 0;
-
-            if ($cita->servicios && $cita->servicios->count() > 0) {
-                $total = $cita->servicios->sum(function ($s) {
-                    return (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0);
-                });
-            } else {
-                $total = (float) ($cita->servicio->precio ?? 0);
-            }
-
-            // ✅ Crear la venta SOLO con las columnas que existen en la tabla `ventas`
-            $venta = \App\Models\Venta::create([
-                'id_cita'    => $cita->id_cita,
-                'total'      => $total,
-                'forma_pago' => 'efectivo', // Valor por defecto
-                // No guardamos comisión ni notas en la BD por ahora
+        // Si falta empleado o cliente, no podemos crear venta (ventas los requiere)
+        if (empty($cita->id_cliente) || empty($cita->id_empleado)) {
+            \Log::warning('Cita completada sin cliente/empleado, no se creó venta', [
+                'id_cita' => $cita->id_cita,
+                'id_cliente' => $cita->id_cliente,
+                'id_empleado' => $cita->id_empleado,
             ]);
-
-            \Log::info(
-                'Venta creada automáticamente para cita #' . $cita->id_cita . ', Venta #' . $venta->id_venta
-            );
-
-            return $venta;
-
-        } catch (\Exception $e) {
-            \Log::error('Error al crear venta desde cita: ' . $e->getMessage(), [
-                'cita_id' => $cita->id_cita ?? null,
-            ]);
-
-            return null;
+            return;
         }
+
+        // 1) Subtotal: suma snapshots del pivot (si existen) o fallback al servicio principal
+        $subtotal = $cita->servicios->isNotEmpty()
+            ? (float) $cita->servicios->sum(fn ($s) => (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0))
+            : (float) ($cita->servicio->precio ?? 0);
+
+        // 2) Descuento y total
+        $descuento = (float) ($cita->descuento ?? 0);
+        $total = max($subtotal - $descuento, 0);
+
+        // 3) Fecha venta = fecha_cita + hora_cita
+        $fecha = $cita->fecha_cita instanceof \Carbon\Carbon
+            ? $cita->fecha_cita->format('Y-m-d')
+            : (string) $cita->fecha_cita;
+
+        $fechaVenta = Carbon::parse($fecha . ' ' . $cita->hora_cita);
+
+        // 4) Método de pago de CITA -> ENUM de VENTAS
+        // En citas: efectivo | transferencia | tarjeta
+        // En ventas: efectivo | tarjeta_credito | tarjeta_debito
+        $metodo = strtolower((string) ($cita->metodo_pago ?? ''));
+
+        $formaPago = match ($metodo) {
+            'efectivo' => 'efectivo',
+            'tarjeta' => 'tarjeta_credito',         // si no distingues, mándalo a crédito
+            'tarjeta_credito' => 'tarjeta_credito',
+            'tarjeta_debito' => 'tarjeta_debito',
+            'transferencia' => 'efectivo',          // ventas no acepta transferencia (lo reportamos desde citas)
+            default => 'efectivo',
+        };
+
+        // 5) Crear o actualizar venta (evita duplicados por id_cita)
+        Venta::updateOrCreate(
+            ['id_cita' => $cita->id_cita],
+            [
+                'id_cliente' => $cita->id_cliente,      // ✅ OJO: debe apuntar a clientes.id (ver migración abajo)
+                'id_empleado' => $cita->id_empleado,    // ✅ users.id (role=2)
+                'id_servicio' => $cita->id_servicio,
+                'fecha_venta' => $fechaVenta,
+                'subtotal' => $subtotal,
+                'descuento' => $descuento,
+                'total' => $total,
+                'forma_pago' => $formaPago,
+                'estado_venta' => 'pagada',             // ✅ válido: pendiente|pagada|cancelada
+                'observaciones' => $cita->observaciones,
+            ]
+        );
     }
 
     public function destroy(Cita $cita)
