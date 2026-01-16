@@ -14,7 +14,8 @@ use App\Models\GoogleToken;
 use App\Models\Cliente;
 use App\Models\Empleado;
 use Illuminate\Validation\Rule;
-
+use Carbon\Carbon;
+use App\Models\Venta;
 
 class CitaController extends Controller
 {

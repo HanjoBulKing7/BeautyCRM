@@ -65,7 +65,7 @@ class ReporteController extends Controller
         $endDate   = $fin->toDateString();
 
         // ✅ Validación mínima
-        if (!Schema::hasTable('citas')) {
+        if (!Schema::hasTable('ventas')) {
             return ['ok' => false, 'mensaje' => 'No existe la tabla "citas".'];
         }
 
@@ -156,24 +156,24 @@ class ReporteController extends Controller
             ")
             ->first();
 
-        $montoTotal     = (float) ($agg->monto_total ?? 0);
-        $totalVentas    = (int) ($agg->total_ventas ?? 0);
-        $ticketPromedio = (float) ($agg->ticket_promedio ?? 0);
+            $montoTotal     = (float) ($agg->monto_total ?? 0);
+            $totalVentas    = (int) ($agg->total_ventas ?? 0);
+            $ticketPromedio = (float) ($agg->ticket_promedio ?? 0);
 
-        // ==========================
+        // ========================== 
         // 4) Métodos de pago (desde citas)
         // ==========================
         $metodosPago = DB::table('ventas as v')
-            ->leftJoin('citas as c', 'c.id_cita', '=', 'v.id_cita')
             ->whereBetween('v.fecha_venta', [$inicio, $fin])
             ->selectRaw("
-                COALESCE(c.metodo_pago, 'sin_definir') as metodo,
-                COUNT(*) as ventas,
-                COALESCE(SUM(v.total),0) as monto
+                COALESCE(v.forma_pago, 'sin_definir') as metodo,
+                COUNT(*) as cantidad,
+                COALESCE(SUM(v.total), 0) as monto
             ")
-            ->groupBy('metodo')
-            ->orderByDesc('ventas')
+            ->groupBy('v.forma_pago')
+            ->orderByDesc('cantidad')
             ->get();
+
 
 
         // ==========================
@@ -198,21 +198,22 @@ class ReporteController extends Controller
             // ==========================
             // 6) Top servicios (desde pivot)
             // ==========================
-            $topServicios = DB::table('ventas as v')
-                ->join('citas as c', 'c.id_cita', '=', 'v.id_cita')
-                ->join('cita_servicio as cs', 'cs.id_cita', '=', 'c.id_cita')
+            $topServicios = DB::table('cita_servicio as cs')
+                ->join('citas as c', 'c.id_cita', '=', 'cs.id_cita')
+                ->join('ventas as v', 'v.id_cita', '=', 'c.id_cita')
                 ->join('servicios as s', 's.id_servicio', '=', 'cs.id_servicio')
                 ->whereBetween('v.fecha_venta', [$inicio, $fin])
                 ->selectRaw("
                     s.id_servicio,
                     s.nombre_servicio as servicio,
-                    COUNT(*) as veces,
-                    COALESCE(SUM(cs.precio_snapshot),0) as ingresos
+                    COUNT(cs.id_servicio) as veces,
+                    COALESCE(SUM(cs.precio_snapshot), 0) as ingresos_estimados
                 ")
                 ->groupBy('s.id_servicio', 's.nombre_servicio')
-                ->orderByDesc('ingresos')
+                ->orderByDesc('ingresos_estimados')
                 ->limit(10)
                 ->get();
+
 
 
         // ==========================

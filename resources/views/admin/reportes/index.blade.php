@@ -42,7 +42,6 @@
         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Módulo en construcción</h2>
         <p class="text-gray-500 dark:text-gray-400 mt-2">
           Por ahora implementamos el reporte de <b>Ventas</b> (Diario/Semanal/Mensual).  
-          Cuando me pases tus modelos/migraciones de asistencia/productividad, armamos los demás.
         </p>
         <a href="{{ route('admin.reportes.index', ['tab' => 'ventas', 'tipo' => 'diario', 'fecha' => $fecha]) }}"
            class="inline-flex mt-6 px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600">
@@ -72,7 +71,7 @@
           @endif
 
           <button onclick="actualizarReporte()"
-                  class="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600">
+                  class="px-4 py-2 rounded-lg bg-amber-500 text-black border-b-2 hover:bg-amber-600">
             Actualizar
           </button>
         </div>
