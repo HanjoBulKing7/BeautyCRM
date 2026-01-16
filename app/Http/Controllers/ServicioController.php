@@ -28,10 +28,10 @@ class ServicioController extends Controller
             'precio' => 'required|numeric|min:0',
             'duracion_minutos' => 'required|integer|min:1',
             'categoria' => 'nullable|string|max:50',
-            'estado' => 'required|in:activo,inactivo',
+            'estado' => 'nullable|in:activo,inactivo',
             'descuento' => 'nullable|numeric|min:0',
             'caracteristicas' => 'nullable|string',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $data = $request->all();

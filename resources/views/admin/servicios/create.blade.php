@@ -14,9 +14,13 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.servicios.store') }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.servicios.store') }}" class="space-y-6" enctype="multipart/form-data" >
         @csrf
-        @include('admin.servicios._form', ['servicio' => new App\Models\Servicio()])
+        @include('admin.servicios._form', [
+        'servicio' => new App\Models\Servicio(),
+        'showEstado' => false
+        ])
+
 
         <!-- Botones de acción -->
         <div class="flex gap-3 pt-6 border-t border-gray-200">

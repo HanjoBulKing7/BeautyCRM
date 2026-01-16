@@ -11,7 +11,11 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\CitaConfirmadaMail;
 use Illuminate\Support\Facades\Log;
 use App\Models\GoogleToken;
-
+use App\Models\Cliente;
+use App\Models\Empleado;
+use Illuminate\Validation\Rule;
+use Carbon\Carbon;
+use App\Models\Venta;
 
 class CitaController extends Controller
 {
@@ -61,32 +65,77 @@ class CitaController extends Controller
 
     public function create()
     {
-        $clientes = User::all();
+        $clientes = Cliente::select('id', 'nombre', 'email')->get();
         $servicios = Servicio::all();
-        $empleados = User::all();
 
-        return view('admin.citas.create', compact('clientes', 'servicios', 'empleados'));
+        // ✅ Empleados = users(role_id=2) + join a empleados para traer "departamento"
+        $empleados = User::query()
+            ->where('users.role_id', 2)
+            ->leftJoin('empleados', 'empleados.user_id', '=', 'users.id')
+            ->select([
+                'users.id',
+                'users.name',
+                'users.email',
+                'empleados.departamento',
+                'empleados.puesto',
+            ])
+            ->orderByRaw('COALESCE(empleados.departamento, "") ASC')
+            ->orderBy('users.name')
+            ->get();
+
+        // ✅ si quieres ya mandarlo agrupado por departamento:
+        $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
+        
+        $clientesForJs = $clientes->map(function ($c) {
+        return [
+            'id' => $c->id,
+            'label' => trim(($c->nombre ?? '') . ' - ' . ($c->email ?? '')),
+            'nombre' => $c->nombre ?? '',
+            'email' => $c->email ?? '',
+        ];
+        })->values();
+        $categorias = Servicio::query()
+            ->whereNotNull('categoria')
+            ->where('categoria', '!=', '')
+            ->distinct()
+            ->orderBy('categoria')
+            ->pluck('categoria');
+
+        return view('admin.citas.create', compact('empleadosPorDepto', 'clientes', 'servicios', 'empleados','clientesForJs', 'categorias'));
     }
 
     // En el método store, después de $cita = Cita::create($validated);
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_cliente'    => 'required|exists:users,id',
-            'id_servicio'   => 'required|exists:servicios,id_servicio',
-            'id_servicios'  => 'nullable|array',
-            'id_servicios.*'=> 'nullable|distinct|exists:servicios,id_servicio',
-            'duracion_total_minutos' => 'nullable|integer|min:1|max:600',
-            'id_empleado'   => 'nullable|exists:users,id',
-            'fecha_cita'    => 'required|date',
-            'hora_cita'     => 'required|date_format:H:i',
-            'estado_cita'   => 'required|in:pendiente,confirmada,cancelada,completada',
+            'id_cliente' => 'required|exists:clientes,id',
+            'id_servicio' => 'required|exists:servicios,id_servicio',
+            'id_servicios' => 'nullable|array',
+            'id_servicios.*' => 'nullable|distinct|exists:servicios,id_servicio',
+            'id_empleado' => 'nullable|exists:users,id',
+            'fecha_cita' => 'required|date',
+            'hora_cita' => 'required|date_format:H:i',
+            'estado_cita' => 'required|in:pendiente,confirmada,cancelada,completada',
+            'metodo_pago' => [
+                Rule::requiredIf(fn() => $request->estado_cita === 'completada'),
+                Rule::in(['efectivo', 'transferencia', 'tarjeta']),
+                'nullable',
+            ],
             'observaciones' => 'nullable|string|max:500',
+            'descuento' => 'nullable|numeric|min:0|max:999999.99',
         ]);
+
+        if (($validated['estado_cita'] ?? null) !== 'completada') {
+            $validated['metodo_pago'] = null;
+        }
 
         try {
             // 1) Crear la cita
-            $cita = Cita::create($validated);
+            $cita = Cita::create([
+            ...$validated,
+            'descuento' => $validated['descuento'] ?? 0,
+        ]);
+
             Log::info('DEBUG: Cita creada', ['cita_id' => $cita->id_cita ?? null]);
 
 
@@ -222,7 +271,6 @@ class CitaController extends Controller
     }
 
 
-
     // En CitaController.php - método show
     public function show(Cita $cita)
     {
@@ -236,33 +284,70 @@ class CitaController extends Controller
     {
         $cita->load('servicios'); // 👈 importante para multi-servicio
 
-        $clientes = User::all();
-        $servicios = Servicio::all();
-        $empleados = User::all();
-        return view('admin.citas.edit', compact('cita', 'clientes', 'servicios', 'empleados'));
+        // ✅ Empleados = users(role_id=2) + join a empleados para traer "departamento"
+        $empleados = User::query()
+            ->where('users.role_id', 2)
+            ->leftJoin('empleados', 'empleados.user_id', '=', 'users.id')
+            ->select([
+                'users.id',
+                'users.name',
+                'users.email',
+                'empleados.departamento',
+                'empleados.puesto',
+            ])
+            ->orderByRaw('COALESCE(empleados.departamento, "") ASC')
+            ->orderBy('users.name')
+            ->get();
+
+            $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
+
+            $clientes = Cliente::select('id', 'nombre', 'email')->get();
+            $servicios = Servicio::all();
+            $categorias = Servicio::query()
+            ->whereNotNull('categoria')
+            ->where('categoria', '!=', '')
+            ->distinct()
+            ->orderBy('categoria')
+            ->pluck('categoria');
+
+        return view('admin.citas.edit', compact('empleadosPorDepto', 'cita', 'clientes', 'servicios', 'empleados', 'categorias'));
     }
 
 
     public function update(Request $request, Cita $cita)
     {
-        $validated = $request->validate([
-            'id_cliente' => 'required|exists:users,id',
-            'id_servicio' => 'required|exists:servicios,id_servicio',
-            'id_servicios'  => 'nullable|array',
-            'id_servicios.*'=> 'nullable|distinct|exists:servicios,id_servicio',
-            'duracion_total_minutos' => 'nullable|integer|min:1|max:600',
-            'id_empleado' => 'nullable|exists:users,id',
-            'fecha_cita' => 'required|date',
-            'hora_cita' => 'required|date_format:H:i',
-            'estado_cita' => 'required|in:pendiente,confirmada,cancelada,completada',
-            'observaciones' => 'nullable|string|max:500',
-        ]);
+            $validated = $request->validate([
+                'id_cliente' => 'required|exists:clientes,id',
+                'id_servicio' => 'required|exists:servicios,id_servicio',
+                'id_servicios'   => 'nullable|array',
+                'id_servicios.*' => 'nullable|distinct|exists:servicios,id_servicio',
+                'id_empleado' => 'nullable|exists:users,id',
+                'fecha_cita' => 'required|date',
+                'hora_cita'  => 'required|date_format:H:i',
+                'estado_cita'=> 'required|in:pendiente,confirmada,cancelada,completada',
+                'metodo_pago' => [
+                    Rule::requiredIf(fn() => $request->estado_cita === 'completada'),
+                    Rule::in(['efectivo', 'transferencia', 'tarjeta']),
+                    'nullable',
+                ],
+                'observaciones' => 'nullable|string|max:500',
+                'descuento' => 'nullable|numeric|min:0|max:100000',
+            ]);
 
+            if (($validated['estado_cita'] ?? null) !== 'completada') {
+                $validated['metodo_pago'] = null;
+            }
+ 
         try {
+
             $oldEstado = $cita->estado_cita;
             $newEstado = $validated['estado_cita'];
             
             $cita->update($validated);
+
+            
+            $cita->descuento = $validated['descuento'] ?? 0;
+            $cita->save();
 
             // Si llega duración manual, guardarla (si no llega, se conserva la existente)
             $duracionManual = $request->input('duracion_total_minutos');
@@ -270,10 +355,6 @@ class CitaController extends Controller
                 $cita->duracion_total_minutos = (int) $duracionManual;
                 $cita->save();
             }
-
-
-
-
             // ✅ Multi-servicio: si el form ya manda id_servicios[], sincronizamos pivote.
             // Si NO lo manda (porque tu edit aún es legacy), NO borramos extras; solo garantizamos que el servicio principal exista en pivote.
             if ($request->has('id_servicios')) {
@@ -363,48 +444,69 @@ class CitaController extends Controller
         }
     }
 
-
-    function crearVentaDesdeCita(Cita $cita)
+    //=======================================================================
+    //CREAR VENTA DESDE CITA FUNCIÓN ========================================
+    private function crearVentaDesdeCita(Cita $cita): void
     {
-        try {
-            // Verificar si ya existe una venta para esta cita
-            if ($cita->venta) {
-                return $cita->venta;
-            }
+        // Cargar relaciones necesarias (multi-servicio o servicio principal)
+        $cita->loadMissing(['servicios', 'servicio']);
 
-            // Calcular total (multi-servicio si existe pivote; fallback a servicio legacy)
-            $cita->loadMissing(['servicios', 'servicio']);
-            $total = 0;
-
-            if ($cita->servicios && $cita->servicios->count() > 0) {
-                $total = $cita->servicios->sum(function ($s) {
-                    return (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0);
-                });
-            } else {
-                $total = (float) ($cita->servicio->precio ?? 0);
-            }
-
-            // ✅ Crear la venta SOLO con las columnas que existen en la tabla `ventas`
-            $venta = \App\Models\Venta::create([
-                'id_cita'    => $cita->id_cita,
-                'total'      => $total,
-                'forma_pago' => 'efectivo', // Valor por defecto
-                // No guardamos comisión ni notas en la BD por ahora
+        // Si falta empleado o cliente, no podemos crear venta (ventas los requiere)
+        if (empty($cita->id_cliente) || empty($cita->id_empleado)) {
+            \Log::warning('Cita completada sin cliente/empleado, no se creó venta', [
+                'id_cita' => $cita->id_cita,
+                'id_cliente' => $cita->id_cliente,
+                'id_empleado' => $cita->id_empleado,
             ]);
-
-            \Log::info(
-                'Venta creada automáticamente para cita #' . $cita->id_cita . ', Venta #' . $venta->id_venta
-            );
-
-            return $venta;
-
-        } catch (\Exception $e) {
-            \Log::error('Error al crear venta desde cita: ' . $e->getMessage(), [
-                'cita_id' => $cita->id_cita ?? null,
-            ]);
-
-            return null;
+            return;
         }
+
+        // 1) Subtotal: suma snapshots del pivot (si existen) o fallback al servicio principal
+        $subtotal = $cita->servicios->isNotEmpty()
+            ? (float) $cita->servicios->sum(fn ($s) => (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0))
+            : (float) ($cita->servicio->precio ?? 0);
+
+        // 2) Descuento y total
+        $descuento = (float) ($cita->descuento ?? 0);
+        $total = max($subtotal - $descuento, 0);
+
+        // 3) Fecha venta = fecha_cita + hora_cita
+        $fecha = $cita->fecha_cita instanceof \Carbon\Carbon
+            ? $cita->fecha_cita->format('Y-m-d')
+            : (string) $cita->fecha_cita;
+
+        $fechaVenta = Carbon::parse($fecha . ' ' . $cita->hora_cita);
+
+        // 4) Método de pago de CITA -> ENUM de VENTAS
+        // En citas: efectivo | transferencia | tarjeta
+        // En ventas: efectivo | tarjeta_credito | tarjeta_debito
+        $metodo = strtolower((string) ($cita->metodo_pago ?? ''));
+
+        $formaPago = match ($metodo) {
+            'efectivo' => 'efectivo',
+            'tarjeta' => 'tarjeta_credito',         // si no distingues, mándalo a crédito
+            'tarjeta_credito' => 'tarjeta_credito',
+            'tarjeta_debito' => 'tarjeta_debito',
+            'transferencia' => 'efectivo',          // ventas no acepta transferencia (lo reportamos desde citas)
+            default => 'efectivo',
+        };
+
+        // 5) Crear o actualizar venta (evita duplicados por id_cita)
+        Venta::updateOrCreate(
+            ['id_cita' => $cita->id_cita],
+            [
+                'id_cliente' => $cita->id_cliente,      // ✅ OJO: debe apuntar a clientes.id (ver migración abajo)
+                'id_empleado' => $cita->id_empleado,    // ✅ users.id (role=2)
+                'id_servicio' => $cita->id_servicio,
+                'fecha_venta' => $fechaVenta,
+                'subtotal' => $subtotal,
+                'descuento' => $descuento,
+                'total' => $total,
+                'forma_pago' => $formaPago,
+                'estado_venta' => 'pagada',             // ✅ válido: pendiente|pagada|cancelada
+                'observaciones' => $cita->observaciones,
+            ]
+        );
     }
 
     public function destroy(Cita $cita)
