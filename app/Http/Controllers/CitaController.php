@@ -63,12 +63,11 @@ class CitaController extends Controller
         return view('admin.citas.index', compact('citas', 'clientes', 'servicios', 'empleados', 'isConnected','isGoogleConnected', 'calendarEvents'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $clientes = Cliente::select('id', 'nombre', 'email')->get();
         $servicios = Servicio::all();
 
-        // ✅ Empleados = users(role_id=2) + join a empleados para traer "departamento"
         $empleados = User::query()
             ->where('users.role_id', 2)
             ->leftJoin('empleados', 'empleados.user_id', '=', 'users.id')
@@ -83,17 +82,17 @@ class CitaController extends Controller
             ->orderBy('users.name')
             ->get();
 
-        // ✅ si quieres ya mandarlo agrupado por departamento:
         $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
-        
+
         $clientesForJs = $clientes->map(function ($c) {
-        return [
-            'id' => $c->id,
-            'label' => trim(($c->nombre ?? '') . ' - ' . ($c->email ?? '')),
-            'nombre' => $c->nombre ?? '',
-            'email' => $c->email ?? '',
-        ];
+            return [
+                'id' => $c->id,
+                'label' => trim(($c->nombre ?? '') . ' - ' . ($c->email ?? '')),
+                'nombre' => $c->nombre ?? '',
+                'email' => $c->email ?? '',
+            ];
         })->values();
+
         $categorias = Servicio::query()
             ->whereNotNull('categoria')
             ->where('categoria', '!=', '')
@@ -101,174 +100,159 @@ class CitaController extends Controller
             ->orderBy('categoria')
             ->pluck('categoria');
 
-        return view('admin.citas.create', compact('empleadosPorDepto', 'clientes', 'servicios', 'empleados','clientesForJs', 'categorias'));
+        // ✅ NUEVO: leer date del querystring y normalizarlo a Y-m-d
+        $fechaPrefill = null;
+        if ($request->filled('date')) {
+            try {
+                $fechaPrefill = Carbon::parse($request->query('date'))->format('Y-m-d');
+            } catch (\Exception $e) {
+                $fechaPrefill = null; // si viene algo raro, lo ignoramos
+            }
+        }
+
+        $serviciosForJs = Servicio::query()
+        ->selectRaw('
+            id_servicio as id,
+            nombre_servicio as nombre,
+            categoria as categoria,
+            precio as precio,
+            duracion_minutos as duracion
+        ')
+        ->orderBy('categoria')
+        ->orderBy('nombre_servicio')
+        ->get();
+
+
+        return view('admin.citas.create', compact(
+            'empleadosPorDepto',
+            'clientes',
+            'servicios',
+            'empleados',
+            'clientesForJs',
+            'categorias',
+            'fechaPrefill',
+            'serviciosForJs'
+        ));
     }
+
 
     // En el método store, después de $cita = Cita::create($validated);
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'id_cliente' => 'required|exists:clientes,id',
-            'id_servicio' => 'required|exists:servicios,id_servicio',
-            'id_servicios' => 'nullable|array',
-            'id_servicios.*' => 'nullable|distinct|exists:servicios,id_servicio',
-            'id_empleado' => 'nullable|exists:users,id',
-            'fecha_cita' => 'required|date',
-            'hora_cita' => 'required|date_format:H:i',
-            'estado_cita' => 'required|in:pendiente,confirmada,cancelada,completada',
-            'metodo_pago' => [
-                Rule::requiredIf(fn() => $request->estado_cita === 'completada'),
-                Rule::in(['efectivo', 'transferencia', 'tarjeta']),
-                'nullable',
-            ],
-            'observaciones' => 'nullable|string|max:500',
-            'descuento' => 'nullable|numeric|min:0|max:999999.99',
-        ]);
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'id_cliente'   => ['required', 'exists:clientes,id'],
+        'fecha_cita'   => ['required', 'date'],
+        'hora_cita'    => ['required'],
+        'id_empleado'  => ['nullable', 'exists:empleados,id_empleado'],
+        'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
+        'observaciones'=> ['nullable', 'string'],
+        'descuento'    => ['nullable', 'numeric', 'min:0'],
+        'metodo_pago'  => ['nullable', Rule::in(['efectivo','transferencia','tarjeta'])],
 
-        if (($validated['estado_cita'] ?? null) !== 'completada') {
-            $validated['metodo_pago'] = null;
-        }
+        // ✅ NUEVO: servicios dinámicos
+        'servicios'                     => ['required', 'array', 'min:1'],
+        'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
+        'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
+        'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
+    ]);
 
+    // Traer servicios para fallback (evitar confiar en front)
+    $ids = collect($validated['servicios'])->pluck('id_servicio')->map(fn($v)=>(int)$v)->unique()->values();
+    $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
+
+    $pivotData = [];
+    $totalDuracion = 0;
+    $totalMonto = 0;
+
+    foreach ($validated['servicios'] as $item) {
+        $id = (int)$item['id_servicio'];
+        $srv = $serviciosDb->get($id);
+
+        $precio = (isset($item['precio_snapshot']) && $item['precio_snapshot'] !== '')
+            ? (float)$item['precio_snapshot']
+            : (float)($srv->precio ?? 0);
+
+        $duracion = (isset($item['duracion_snapshot']) && $item['duracion_snapshot'] !== '')
+            ? (int)$item['duracion_snapshot']
+            : (int)($srv->duracion_minutos ?? 0);
+
+        $pivotData[$id] = [
+            'precio_snapshot'   => $precio,
+            'duracion_snapshot' => $duracion,
+        ];
+
+        $totalMonto += $precio;
+        $totalDuracion += $duracion;
+    }
+
+    // ✅ Para cumplir tu schema actual: id_servicio NO NULL
+    $primaryServiceId = array_key_first($pivotData);
+
+    $cita = Cita::create([
+        'id_cliente'            => $validated['id_cliente'],
+        'id_servicio'           => $primaryServiceId,
+        'id_empleado'           => $validated['id_empleado'] ?? null,
+        'fecha_cita'            => $validated['fecha_cita'],
+        'hora_cita'             => $validated['hora_cita'],
+        'duracion_total_minutos'=> $totalDuracion,
+        // Si agregas columna total_servicios en DB, activa esta línea:
+        // 'total_servicios'     => $totalMonto,
+        'descuento'             => $validated['descuento'] ?? 0,
+        'estado_cita'           => $validated['estado_cita'],
+        'metodo_pago'           => $validated['metodo_pago'] ?? null,
+        'observaciones'         => $validated['observaciones'] ?? null,
+        'synced_with_google'    => false,
+    ]);
+
+    // ✅ sync pivot con snapshots
+    $cita->servicios()->sync($pivotData);
+
+    // Enviar correo si está confirmada
+    if ($cita->estado_cita === 'confirmada') {
         try {
-            // 1) Crear la cita
-            $cita = Cita::create([
-            ...$validated,
-            'descuento' => $validated['descuento'] ?? 0,
-        ]);
-
-            Log::info('DEBUG: Cita creada', ['cita_id' => $cita->id_cita ?? null]);
-
-
-            // 1.1) Guardar servicios (multi-servicio) en tabla pivote (sin romper compatibilidad)
-            $extraServicios = (array) $request->input('id_servicios', []);
-            $idsServicios = collect(array_merge([$validated['id_servicio']], $extraServicios))
-                ->filter(fn($v) => !is_null($v) && $v !== '')
-                ->map(fn($v) => (int) $v)
-                ->unique()
-                ->values();
-
-            // Snapshots (precio/duración) para mantener histórico aunque cambie el servicio después
-            $serviciosSeleccionados = Servicio::whereIn('id_servicio', $idsServicios)
-                ->get(['id_servicio', 'precio', 'duracion_minutos']);
-
-            // Duración total: por defecto suma de duraciones de servicios seleccionados.
-            // (Usamos duracion_minutos del catálogo; snapshot se guarda en la pivote.)
-            $duracionAuto = (int) $serviciosSeleccionados->sum(function ($s) {
-                return (int) ($s->duracion_minutos ?? 0);
-            });
-
-            // Si el usuario ajustó manualmente la duración en el formulario, respetarla.
-            $duracionManual = $request->input('duracion_total_minutos');
-            $duracionFinal = (!is_null($duracionManual) && $duracionManual !== '')
-                ? (int) $duracionManual
-                : $duracionAuto;
-
-            if ($duracionFinal > 0) {
-                $cita->duracion_total_minutos = $duracionFinal;
-                $cita->save();
-            }
-
-
-            $pivotData = [];
-            foreach ($serviciosSeleccionados as $s) {
-                $pivotData[$s->id_servicio] = [
-                    'precio_snapshot'   => $s->precio,
-                    'duracion_snapshot' => $s->duracion_minutos ?? 60,
-                ];
-            }
-
-            // Guarda el servicio principal + extras
-            $cita->servicios()->sync($pivotData);
-
-            Log::info('DEBUG: Servicios vinculados a cita', [
-                'cita_id'    => $cita->id_cita ?? null,
-                'servicios'  => $idsServicios->all(),
-                'pivot_rows' => count($pivotData),
-            ]);
-
-            // 2) Si se crea como completada, crear venta
-            if ($cita->estado_cita === 'completada') {
-                $this->crearVentaDesdeCita($cita);
-                Log::info('DEBUG: Venta creada desde cita', ['cita_id' => $cita->id_cita ?? null]);
-            }
-
-            // 3) Sincronizar con Google Calendar (si hay token)
-            $googleEventLink = null;
-
-            try {
-                $tokenExists = GoogleToken::where('user_id', auth()->id())->exists();
-
-                if ($tokenExists) {
-                    $event = $this->googleCalendar->createEventFromCita($cita);
-
-                    $cita->update([
-                        'google_event_id'    => $event->getId(),
-                        'synced_with_google' => true,
-                        'last_sync_at'       => now(),
-                    ]);
-
-                    // htmlLink del evento
-                    if (method_exists($event, 'getHtmlLink')) {
-                        $googleEventLink = $event->getHtmlLink();
-                    } elseif (property_exists($event, 'htmlLink')) {
-                        $googleEventLink = $event->htmlLink;
-                    }
-
-                    Log::info('DEBUG: Evento Google creado', [
-                        'cita_id' => $cita->id_cita ?? null,
-                        'event_id' => $event->getId(),
-                        'html_link' => $googleEventLink,
-                    ]);
-                } else {
-                    Log::info('DEBUG: Usuario sin GoogleToken, no se sincroniza con Google', [
-                        'user_id' => auth()->id(),
-                    ]);
-                }
-            } catch (\Exception $e) {
-                Log::error('Error syncing cita with Google Calendar: ' . $e->getMessage());
-            }
-
-            // 4) Enviar correo al cliente
-            try {
-                $cita->load(['cliente', 'servicio', 'servicios', 'empleado']);
-
-                $cliente = $cita->cliente;
-
-                Log::info('DEBUG: Datos de cliente para correo', [
-                    'cliente_id'    => optional($cliente)->id,
-                    'cliente_email' => optional($cliente)->email,
-                ]);
-
-                if ($cliente && !empty($cliente->email)) {
-                    Mail::to($cliente->email)->send(
-                        new CitaConfirmadaMail($cita, $googleEventLink)
-                    );
-
-                    Log::info('DEBUG: Correo de cita enviado sin excepción', [
-                        'cita_id' => $cita->id_cita ?? null,
-                        'email'   => $cliente->email,
-                    ]);
-                } else {
-                    Log::warning('DEBUG: No se envió correo: cliente sin email', [
-                        'cita_id' => $cita->id_cita ?? null,
-                    ]);
-                }
-            } catch (\Exception $e) {
-                Log::error('Error sending cita confirmation email: ' . $e->getMessage());
-            }
-
-            // 5) Redirección normal
-            return redirect()->route('admin.citas.index')
-                ->with('success', 'Cita creada exitosamente.');
-
+            Mail::to($cita->cliente->email)->send(new CitaConfirmadaMail($cita));
         } catch (\Exception $e) {
-            Log::error('Error general al crear cita: ' . $e->getMessage());
-
-            return redirect()->back()
-                ->with('error', 'Error al crear la cita: ' . $e->getMessage())
-                ->withInput();
+            Log::error('Error enviando correo de confirmación: '.$e->getMessage());
         }
     }
+
+    // Google Calendar
+    $token = GoogleToken::first();
+    if ($token) {
+        try {
+            $user = User::where('google_account_id', $token->google_account_id)->first();
+
+            if ($user) {
+                $startTime = $cita->fecha_cita . 'T' . $cita->hora_cita;
+                $endTime = Carbon::parse($startTime)->addMinutes(max(1, (int)$totalDuracion))->toIso8601String();
+
+                $eventData = [
+                    'summary' => 'Cita con ' . $cita->cliente->nombre,
+                    'description' => $cita->observaciones ?? '',
+                    'start' => ['dateTime' => $startTime, 'timeZone' => config('app.timezone')],
+                    'end'   => ['dateTime' => $endTime,   'timeZone' => config('app.timezone')],
+                ];
+
+                $event = $this->googleCalendar->createEvent($user, $eventData);
+
+                $cita->update([
+                    'google_event_id'      => $event->id,
+                    'synced_with_google'   => true,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sincronizando con Google Calendar: '.$e->getMessage());
+        }
+    }
+
+    // Si entra como completada, crea la venta
+    if ($cita->estado_cita === 'completada') {
+        $this->crearVentaDesdeCita($cita);
+    }
+
+    return redirect()->route('admin.citas.index')->with('success', 'Cita creada correctamente.');
+}
+
 
 
     // En CitaController.php - método show
@@ -310,139 +294,123 @@ class CitaController extends Controller
             ->orderBy('categoria')
             ->pluck('categoria');
 
-        return view('admin.citas.edit', compact('empleadosPorDepto', 'cita', 'clientes', 'servicios', 'empleados', 'categorias'));
+            $serviciosForJs = Servicio::query()
+                ->selectRaw('
+                    id_servicio as id,
+                    nombre_servicio as nombre,
+                    categoria as categoria,
+                    precio as precio,
+                    duracion_minutos as duracion
+                ')
+                ->orderBy('categoria')
+                ->orderBy('nombre_servicio')
+                ->get();
+
+
+        return view('admin.citas.edit', compact('empleadosPorDepto', 'cita', 'clientes', 'servicios', 'empleados', 'categorias', 'serviciosForJs'));
     }
 
 
-    public function update(Request $request, Cita $cita)
-    {
-            $validated = $request->validate([
-                'id_cliente' => 'required|exists:clientes,id',
-                'id_servicio' => 'required|exists:servicios,id_servicio',
-                'id_servicios'   => 'nullable|array',
-                'id_servicios.*' => 'nullable|distinct|exists:servicios,id_servicio',
-                'id_empleado' => 'nullable|exists:users,id',
-                'fecha_cita' => 'required|date',
-                'hora_cita'  => 'required|date_format:H:i',
-                'estado_cita'=> 'required|in:pendiente,confirmada,cancelada,completada',
-                'metodo_pago' => [
-                    Rule::requiredIf(fn() => $request->estado_cita === 'completada'),
-                    Rule::in(['efectivo', 'transferencia', 'tarjeta']),
-                    'nullable',
-                ],
-                'observaciones' => 'nullable|string|max:500',
-                'descuento' => 'nullable|numeric|min:0|max:100000',
-            ]);
+public function update(Request $request, $id)
+{
+    $cita = Cita::findOrFail($id);
+    $oldEstado = $cita->estado_cita;
 
-            if (($validated['estado_cita'] ?? null) !== 'completada') {
-                $validated['metodo_pago'] = null;
-            }
- 
+    $validated = $request->validate([
+        'id_cliente'   => ['required', 'exists:clientes,id'],
+        'fecha_cita'   => ['required', 'date'],
+        'hora_cita'    => ['required'],
+        'id_empleado'  => ['nullable', 'exists:empleados,id_empleado'],
+        'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
+        'observaciones'=> ['nullable', 'string'],
+        'descuento'    => ['nullable', 'numeric', 'min:0'],
+        'metodo_pago'  => ['nullable', Rule::in(['efectivo','transferencia','tarjeta'])],
+
+        'servicios'                     => ['required', 'array', 'min:1'],
+        'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
+        'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
+        'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
+    ]);
+
+    $ids = collect($validated['servicios'])->pluck('id_servicio')->map(fn($v)=>(int)$v)->unique()->values();
+    $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
+
+    $pivotData = [];
+    $totalDuracion = 0;
+    $totalMonto = 0;
+
+    foreach ($validated['servicios'] as $item) {
+        $idSrv = (int)$item['id_servicio'];
+        $srv = $serviciosDb->get($idSrv);
+
+        $precio = (isset($item['precio_snapshot']) && $item['precio_snapshot'] !== '')
+            ? (float)$item['precio_snapshot']
+            : (float)($srv->precio ?? 0);
+
+        $duracion = (isset($item['duracion_snapshot']) && $item['duracion_snapshot'] !== '')
+            ? (int)$item['duracion_snapshot']
+            : (int)($srv->duracion_minutos ?? 0);
+
+        $pivotData[$idSrv] = [
+            'precio_snapshot'   => $precio,
+            'duracion_snapshot' => $duracion,
+        ];
+
+        $totalMonto += $precio;
+        $totalDuracion += $duracion;
+    }
+
+    $primaryServiceId = array_key_first($pivotData);
+
+    $cita->update([
+        'id_cliente'             => $validated['id_cliente'],
+        'id_servicio'            => $primaryServiceId,
+        'id_empleado'            => $validated['id_empleado'] ?? null,
+        'fecha_cita'             => $validated['fecha_cita'],
+        'hora_cita'              => $validated['hora_cita'],
+        'duracion_total_minutos' => $totalDuracion,
+        // Si agregas columna total_servicios en DB:
+        // 'total_servicios'      => $totalMonto,
+        'descuento'              => $validated['descuento'] ?? 0,
+        'estado_cita'            => $validated['estado_cita'],
+        'metodo_pago'            => $validated['metodo_pago'] ?? null,
+        'observaciones'          => $validated['observaciones'] ?? null,
+    ]);
+
+    // sync pivot
+    $cita->servicios()->sync($pivotData);
+
+    // Google Calendar update (tu lógica actual, pero usa duración total)
+    $token = GoogleToken::first();
+    if ($token && $cita->google_event_id) {
         try {
+            $user = User::where('google_account_id', $token->google_account_id)->first();
+            if ($user) {
+                $startTime = $cita->fecha_cita . 'T' . $cita->hora_cita;
+                $endTime = Carbon::parse($startTime)->addMinutes(max(1, (int)$totalDuracion))->toIso8601String();
 
-            $oldEstado = $cita->estado_cita;
-            $newEstado = $validated['estado_cita'];
-            
-            $cita->update($validated);
+                $eventData = [
+                    'summary' => 'Cita con ' . $cita->cliente->nombre,
+                    'description' => $cita->observaciones ?? '',
+                    'start' => ['dateTime' => $startTime, 'timeZone' => config('app.timezone')],
+                    'end'   => ['dateTime' => $endTime,   'timeZone' => config('app.timezone')],
+                ];
 
-            
-            $cita->descuento = $validated['descuento'] ?? 0;
-            $cita->save();
-
-            // Si llega duración manual, guardarla (si no llega, se conserva la existente)
-            $duracionManual = $request->input('duracion_total_minutos');
-            if (!is_null($duracionManual) && $duracionManual !== '') {
-                $cita->duracion_total_minutos = (int) $duracionManual;
-                $cita->save();
+                $this->googleCalendar->updateEvent($user, $cita->google_event_id, $eventData);
             }
-            // ✅ Multi-servicio: si el form ya manda id_servicios[], sincronizamos pivote.
-            // Si NO lo manda (porque tu edit aún es legacy), NO borramos extras; solo garantizamos que el servicio principal exista en pivote.
-            if ($request->has('id_servicios')) {
-                $extraServicios = (array) $request->input('id_servicios', []);
-                $idsServicios = collect(array_merge([$validated['id_servicio']], $extraServicios))
-                    ->filter(fn($v) => !is_null($v) && $v !== '')
-                    ->map(fn($v) => (int) $v)
-                    ->unique()
-                    ->values();
-
-                $serviciosSeleccionados = Servicio::whereIn('id_servicio', $idsServicios)
-                    ->get(['id_servicio', 'precio', 'duracion_minutos']);
-
-                $pivotData = [];
-                foreach ($serviciosSeleccionados as $s) {
-                    $pivotData[$s->id_servicio] = [
-                        'precio_snapshot'   => $s->precio,
-                        'duracion_snapshot' => $s->duracion_minutos ?? 60,
-                    ];
-                }
-
-                $cita->servicios()->sync($pivotData);
-            } else {
-                // Legacy edit: no tocar extras existentes
-                $primaryId = (int) $validated['id_servicio'];
-
-                // Si la cita no tiene pivote aún, lo creamos con el servicio principal
-                if (!$cita->servicios()->exists()) {
-                    $s = Servicio::where('id_servicio', $primaryId)->first();
-                    if ($s) {
-                        $cita->servicios()->sync([
-                            $primaryId => [
-                                'precio_snapshot'   => $s->precio,
-                                'duracion_snapshot' => $s->duracion_minutos ?? 60,
-                            ]
-                        ]);
-                    }
-                } else {
-                    // Si ya hay pivote, solo aseguramos que el principal esté incluido
-                    $exists = $cita->servicios()->where('servicios.id_servicio', $primaryId)->exists();
-                    if (!$exists) {
-                        $s = Servicio::where('id_servicio', $primaryId)->first();
-                        if ($s) {
-                            $cita->servicios()->attach($primaryId, [
-                                'precio_snapshot'   => $s->precio,
-                                'duracion_snapshot' => $s->duracion_minutos ?? 60,
-                            ]);
-                        }
-                    }
-                }
-            }
-            // ✅ NUEVO: Crear venta automática cuando se marca como completada
-            if ($oldEstado !== 'completada' && $newEstado === 'completada') {
-                $this->crearVentaDesdeCita($cita);
-            }
-
-            // Sincronizar con Google Calendar si está conectado
-            try {
-                $tokenExists = \App\Models\GoogleToken::where('user_id', auth()->id())->exists();
-                if ($tokenExists) {
-                    if ($cita->estado_cita === 'cancelada') {
-                        $this->googleCalendar->deleteEventFromCita($cita);
-                        $cita->update([
-                            'synced_with_google' => false,
-                            'google_event_id' => null,
-                        ]);
-                    } else {
-                        $event = $this->googleCalendar->updateEventFromCita($cita);
-                        $cita->update([
-                            'google_event_id' => $event->getId(),
-                            'synced_with_google' => true,
-                            'last_sync_at' => now(),
-                        ]);
-                    }
-                }
-            } catch (\Exception $e) {
-                \Log::error('Error syncing cita update with Google Calendar: ' . $e->getMessage());
-            }
-
-            return redirect()->route('admin.citas.index')
-                ->with('success', 'Cita actualizada exitosamente.');
-
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Error al actualizar la cita: ' . $e->getMessage())
-                ->withInput();
+            Log::error('Error actualizando evento Google: '.$e->getMessage());
         }
     }
+
+    // Si pasa a completada, crea la venta (si no existía)
+    if ($oldEstado !== 'completada' && $cita->estado_cita === 'completada') {
+        $this->crearVentaDesdeCita($cita);
+    }
+
+    return redirect()->route('admin.citas.index')->with('success', 'Cita actualizada correctamente.');
+}
+
 
     //=======================================================================
     //CREAR VENTA DESDE CITA FUNCIÓN ========================================

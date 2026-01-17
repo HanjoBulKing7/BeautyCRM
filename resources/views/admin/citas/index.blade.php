@@ -183,7 +183,7 @@
           Visualiza y administra las citas del salón
         </p>
       </div>
-
+  
       <div class="flex flex-col sm:flex-row gap-2 sm:items-center w-full md:w-auto">
         {{-- (Opcional) Aquí puedes meter filtros en el futuro (empleado/estado/servicio) --}}
 

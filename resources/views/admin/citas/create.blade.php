@@ -10,6 +10,8 @@
             'clientes' => $clientes,
             'servicios' => $servicios,
             'empleados' => $empleados,
+            'fechaPrefill' => $fechaPrefill, 
+            'serviciosForJs' => $serviciosForJs, 
         ])
     </div>
 @endsection

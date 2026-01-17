@@ -77,7 +77,7 @@
                 type="text"
                 id="fecha_cita"
                 name="fecha_cita"
-                value="{{ old('fecha_cita', $cita->fecha_cita ?? '') }}"
+                value="{{ old('fecha_cita', $cita->fecha_cita ?? ($fechaPrefill ?? '')) }}"
                 class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 required
             />
@@ -87,62 +87,128 @@
             @enderror
         </div>
 
-        {{-- SERVICIO PRINCIPAL --}}
-        <div>
-            <label for="id_servicio" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-scissors text-gray-400 mr-1"></i>Servicio <span class="text-red-500">*</span>
-            </label>
+                {{-- SERVICIOS (dinámicos) --}}
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-scissors text-gray-400 mr-1"></i>Servicios <span class="text-red-500">*</span>
+                    </label>
 
-            <div id="servicios-wrapper" class="space-y-3">
-                <div class="servicio-row" data-row="primary">
-                    {{-- CATEGORÍA (filtro) --}}
-                        <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Categoría
-                        </label>
-                        <select id="categoria_main" class="w-full border border-gray-300 rounded-lg px-4 py-3 rounded-lg">
-                            <option value="">Seleccionar categoría</option>
-                            @foreach($categorias as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                            @endforeach
-                        </select>
+                    <div id="servicios-wrapper" class="space-y-3">
+                        {{-- Si vienes de old() por validación, podrías reconstruirlo en backend; por ahora 1 row inicial --}}
+                    <div class="servicio-row bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center" data-index="0">
+
+                        {{-- CATEGORÍA (filtro) --}}
+                        <div class="md:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                            <select id="categoria_main"
+                                    class="categoria-select w-full border border-gray-300 rounded-lg px-4 py-3"
+                                    data-role="categoria">
+                                <option value="">Seleccionar categoría</option>
+                                @foreach($categorias as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                    {{-- SELECT DE SERVICIO --}}
-                    <select
-                        id="servicio_main"
-                        name="id_servicio"
-                        data-role="servicio"
-                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                        required
+
+                        {{-- SELECT DE SERVICIO --}}
+                        <div class="md:col-span-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Servicio <span class="text-red-500">*</span>
+                            </label>
+
+                            <select id="servicio_main"
+                                    name="servicios[0][id_servicio]"
+                                    data-role="servicio"
+                                    class="servicio-select w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                    required>
+                                <option value="">Selecciona primero una categoría</option>
+                            </select>
+                        </div>
+
+                        {{-- PRECIO (editable) --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-0 bottom-0 flex items-center text-gray-500">$</span>
+                                <input type="number"
+                                    step="1"
+                                    min="0"
+                                    name="servicios[0][precio_snapshot]"
+                                    class="precio-input w-full border border-gray-300 rounded-lg px-4 py-3 pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                    placeholder="0.00"
+                                    data-role="precio_snapshot">
+                            </div>
+                        </div>
+
+                        {{-- DURACIÓN (editable) --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duración</label>
+                            <input type="number"
+                                step="1"
+                                min="0"
+                                name="servicios[0][duracion_snapshot]"
+                                class="duracion-input w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="min"
+                                data-role="duracion_snapshot">
+                        </div>
+                        {{-- QUITAR --}}
+                        <div class="md:col-span-1 flex items-center justify-center mt-7">
+                            <button type="button"
+                                    class="btn-remove-servicio remove-servicio w-12 h-12 inline-flex items-center justify-center leading-none rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+                                    title="Quitar servicio">
+                                <i class="fas fa-times text-lg leading-none"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="btn-add-servicio"
+                        class="mt-2 inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
                     >
-                        <option value="">Seleccionar Servicio</option>
-                        @foreach($servicios as $s)
-                            <option
-                                value="{{ $s->id_servicio }}"
-                                data-duracion="{{ (int)($s->duracion_minutos ?? 0) }}"
-                                @selected(old('id_servicio', $cita->id_servicio ?? '') == $s->id_servicio)
-                            >
-                                {{ $s->nombre_servicio }} - ${{ number_format($s->precio, 2) }} ({{ (int)($s->duracion_minutos ?? 0) }} min)
-                            </option>
-                        @endforeach
-                    </select>
+                        <i class="fas fa-plus-circle mr-2"></i>Agregar otro servicio
+                    </button>
+
+
+
+                    {{-- Si quieres validar array: servicios.*.id_servicio (te paso reglas luego) --}}
+                    @error('servicios')
+                        <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                {{-- Extras (si vienes de edit y ya tienes servicios en pivote, puedes precargarlos si quieres) --}}
-            </div>
+                    {{-- TOTAL DURACIÓN --}}
+                    <div class="mt-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Duración total (min)
+                        </label>
+                        <input
+                            id="duracion_total"
+                            type="number"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50"
+                            readonly
+                            value="0"
+                        >
+                    </div>
+                    {{--TOTAL PRECIO--}}
+                    <div class="mt-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Total servicios (MXN)
+                        </label>
 
-            <button
-                type="button"
-                id="btn-add-servicio"
-                class="mt-2 inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-                <i class="fas fa-plus-circle mr-2"></i>Agregar otro servicio
-            </button>
-
-            @error('id_servicio')
-                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-            @enderror
-        </div>
+                        <div class="relative">
+                            <span class="absolute left-3 top-0 bottom-0 flex items-center text-gray-500">$</span>
+                            <input
+                            id="total_servicios"
+                            name="total_servicios"
+                            type="number"
+                            step="0.01"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 pl-9 bg-gray-50"
+                            readonly
+                            value="0"
+                            >
+                        </div>
+                    </div>
 
         {{-- HORA --}}
         <div>
@@ -348,7 +414,7 @@
     })->values();
 
 @endphp
-    <script>
+<script>
         document.addEventListener('DOMContentLoaded', function () {
 
             // Flatpickr: create = minDate today, edit = permitir fechas pasadas y set defaultDate
@@ -363,150 +429,228 @@
             // ===========================
             // Multi-servicio (UI)
             // ===========================
-            const serviciosWrapper = document.getElementById('servicios-wrapper');
-            const btnAddServicio = document.getElementById('btn-add-servicio');
-            const horaSelect = document.getElementById('hora_cita');
+// ===========================
+// Multi-servicio (UI) + snapshots (precio/duracion editables)
+// ===========================
+// ===========================
+// Multi-servicio (UI) + snapshots (precio/duracion editables)
+// ===========================
+const serviciosWrapper = document.getElementById('servicios-wrapper');
+const btnAddServicio   = document.getElementById('btn-add-servicio');
 
-            function getTotalDuracionMin() {
-                const selects = serviciosWrapper.querySelectorAll('select[data-role="servicio"]');
-                let total = 0;
+// Si por alguna razón no existe el wrapper, salimos para no romper el resto del script
+if (serviciosWrapper) {
 
-                selects.forEach(sel => {
-                    const opt = sel.options[sel.selectedIndex];
-                    const dur = parseInt(opt?.dataset?.duracion || '0', 10);
-                    total += isNaN(dur) ? 0 : dur;
-                });
+  // ✅ usa tu PHP mapping
+  const serviciosAll = @json($serviciosForJs);
 
-                return total;
-            }
+  const norm = (v) => (v ?? '').toString().trim().toLowerCase();
 
-            function updateDuracionUI() {
-                // aquí puedes seguir usando tu UI de duración/hora fin si ya la tienes
-                // (lo dejé minimal para no romperte el layout)
-                getTotalDuracionMin();
-            }
+  function buildOptionsForServiceSelect(selectEl, categoria, selectedId = "") {
+    selectEl.innerHTML = "";
 
-            serviciosWrapper.addEventListener('change', function(e) {
-                if (e.target && e.target.matches('select[data-role="servicio"]')) {
-                    updateDuracionUI();
-                }
-            });
+    if (!categoria) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Selecciona primero una categoría";
+      selectEl.appendChild(opt);
+      return;
+    }
 
-            if (horaSelect) {
-                horaSelect.addEventListener('change', updateDuracionUI);
-            }
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "Seleccionar servicio";
+    selectEl.appendChild(opt0);
 
-            serviciosWrapper.addEventListener('click', function(e) {
-                const btn = e.target.closest('.remove-servicio');
-                if (!btn) return;
-                const row = btn.closest('.servicio-row');
-                if (row) {
-                    row.remove();
-                    updateDuracionUI();
-                }
-            });
+    const catN = norm(categoria);
 
+    serviciosAll
+      .filter(s => norm(s.categoria) === catN)
+      .forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
 
-            const norm = (v) => (v ?? '').toString().trim().toLowerCase();
+        const precio = Number(s.precio ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+        opt.textContent = `${s.nombre} - $${precio} (${s.duracion} min)`;
 
-            function buildOptionsForServiceSelect(selectEl, categoria, selectedId = "") {
-                selectEl.innerHTML = "";
+        // datasets para autollenar
+        opt.dataset.duracion = s.duracion ?? 0;
+        opt.dataset.precio   = s.precio ?? 0;
 
-                if (!categoria) {
-                    const opt = document.createElement("option");
-                    opt.value = "";
-                    opt.textContent = "Selecciona primero una categoría";
-                    selectEl.appendChild(opt);
-                    return;
-                }
+        if (String(selectedId) === String(s.id)) opt.selected = true;
+        selectEl.appendChild(opt);
+      });
+  }
 
-                const opt0 = document.createElement("option");
-                opt0.value = "";
-                opt0.textContent = "Seleccionar servicio";
-                selectEl.appendChild(opt0);
+  function recalcTotalDuracion() {
+    let total = 0;
+    serviciosWrapper.querySelectorAll('input[data-role="duracion_snapshot"]').forEach(inp => {
+      const v = parseInt(inp.value || '0', 10);
+      total += isNaN(v) ? 0 : v;
+    });
 
-                const catN = norm(categoria);
+    const totalInput = document.getElementById('duracion_total');
+    if (totalInput) totalInput.value = total;
+  }
 
-                serviciosAll
-                    .filter(s => norm(s.categoria) === catN)
-                    .forEach(s => {
-                        const opt = document.createElement("option");
-                        opt.value = s.id;
+  function recalcTotalMonto() {
+    let total = 0;
 
-                        // 👇 texto bonito como lo traías (precio + duracion)
-                        const precio = Number(s.precio ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
-                        opt.textContent = `${s.nombre} - $${precio} (${s.duracion} min)`;
+    serviciosWrapper.querySelectorAll('input[data-role="precio_snapshot"]').forEach(inp => {
+      const v = parseFloat(inp.value || '0');
+      total += isNaN(v) ? 0 : v;
+    });
 
-                        // 👇 esto es CLAVE para tu cálculo de duración
-                        opt.dataset.duracion = s.duracion ?? 0;
+    const totalInput = document.getElementById('total_servicios');
+    if (totalInput) totalInput.value = total.toFixed(2);
+  }
 
-                        if (String(selectedId) === String(s.id)) opt.selected = true;
-                        selectEl.appendChild(opt);
-                    });
-            }
+  function recalcAll() {
+    recalcTotalDuracion();
+    recalcTotalMonto();
+  }
 
-            function createExtraRow() {
-                const row = document.createElement('div');
-                row.className = "w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors";
-                row.setAttribute('data-row', 'extra');
+  function reindexRows() {
+    const rows = serviciosWrapper.querySelectorAll('.servicio-row');
 
-                // Reutilizamos las opciones del select principal de categoría (ya tiene tus categorías)
-                const categoriaOptionsHtml = categoriaMain ? categoriaMain.innerHTML : `<option value="">Seleccionar categoría</option>`;
+    rows.forEach((row, i) => {
+      const svc    = row.querySelector('select[data-role="servicio"]');
+      const precio = row.querySelector('input[data-role="precio_snapshot"]');
+      const dur    = row.querySelector('input[data-role="duracion_snapshot"]');
 
-                row.innerHTML = `
-                    <div class="col-span-12 md:col-span-4">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
-                        <select class="categoria-extra w-full border border-gray-300 rounded-lg px-4 py-3"
-                                data-role="categoria">
-                            ${categoriaOptionsHtml}
-                        </select>
-                    </div>
+      if (svc)    svc.name    = `servicios[${i}][id_servicio]`;
+      if (precio) precio.name = `servicios[${i}][precio_snapshot]`;
+      if (dur)    dur.name    = `servicios[${i}][duracion_snapshot]`;
+    });
 
-                    <div class="col-span-12 md:col-span-6">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Servicio</label>
-                        <select name="id_servicios[]"
-                                class="servicio-extra w-full border border-gray-300 rounded-lg px-4 py-3"
-                                data-role="servicio">
-                            <option value="">Selecciona primero una categoría</option>
-                        </select>
-                    </div>
+    // habilitar quitar solo si hay más de 1 fila
+    const canRemove = rows.length > 1;
+    rows.forEach(row => {
+      const btn = row.querySelector('.btn-remove-servicio');
+      if (btn) btn.disabled = !canRemove;
+    });
+  }
 
-                    <div class="col-span-12 md:col-span-2 flex md:justify-end">
-                        <button type="button"
-                                class="remove-servicio inline-flex items-center justify-center gap-3 w-full md:w-auto px-4 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors">
-                            <i class="fas fa-times"></i> Quitar
-                        </button>
-                    </div>
-                `;
+  // ✅ Delegación: CHANGE (categoría o servicio)
+  serviciosWrapper.addEventListener('change', (e) => {
 
-                const catSel = row.querySelector('select[data-role="categoria"]');
-                const svcSel = row.querySelector('select[data-role="servicio"]');
+    // cambio de categoría
+    const catSel = e.target.closest('select[data-role="categoria"]');
+    if (catSel) {
+      const row = catSel.closest('.servicio-row');
+      const svcSel = row?.querySelector('select[data-role="servicio"]');
+      if (!row || !svcSel) return;
 
-                // reset
-                if (catSel) catSel.selectedIndex = 0;
-                if (svcSel) svcSel.selectedIndex = 0;
+      buildOptionsForServiceSelect(svcSel, catSel.value, "");
 
-                // cuando cambia categoría, filtramos SOLO el select de servicio de esa fila
-                catSel?.addEventListener('change', () => {
-                    buildOptionsForServiceSelect(svcSel, catSel.value, "");
-                    updateDuracionUI();
-                });
+      // limpiar snapshots al cambiar categoría
+      const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
+      const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
+      if (precioInp) precioInp.value = '';
+      if (durInp) durInp.value = '';
 
-                // cuando cambia servicio, recalcula duración
-                svcSel?.addEventListener('change', updateDuracionUI);
+      recalcAll();
+      return;
+    }
 
-                return row;
-            }
+    // cambio de servicio
+    const svcSel = e.target.closest('select[data-role="servicio"]');
+    if (svcSel) {
+      const row = svcSel.closest('.servicio-row');
+      const opt = svcSel.options[svcSel.selectedIndex];
+      if (!row || !opt) return;
 
-            if (btnAddServicio) {
-                btnAddServicio.addEventListener('click', function() {
-                    const row = createExtraRow();
-                    serviciosWrapper.appendChild(row);
-                    updateDuracionUI();
-                });
-            }
+      const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
+      const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
 
-            updateDuracionUI();
+      const precio   = opt.dataset.precio ?? '';
+      const duracion = opt.dataset.duracion ?? '';
+
+      if (precioInp && (precioInp.value === '' || precioInp.value == 0)) precioInp.value = precio;
+      if (durInp && (durInp.value === '' || durInp.value == 0)) durInp.value = duracion;
+
+      recalcAll();
+    }
+  });
+
+  // ✅ Delegación: INPUT (si editan manualmente precio o duración)
+  serviciosWrapper.addEventListener('input', (e) => {
+    if (e.target.matches('input[data-role="duracion_snapshot"]') ||
+        e.target.matches('input[data-role="precio_snapshot"]')) {
+      recalcAll();
+    }
+  });
+
+  // ✅ Delegación: CLICK (quitar fila) — recalcula SIEMPRE
+  serviciosWrapper.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-remove-servicio');
+    if (!btn) return;
+
+    const row = btn.closest('.servicio-row');
+    if (!row) return;
+
+    const rows = serviciosWrapper.querySelectorAll('.servicio-row');
+    if (rows.length <= 1) return;
+
+    row.remove();
+    reindexRows();
+    recalcAll();
+  });
+
+  // ✅ Agregar fila (clonando la primera)
+  function addRow() {
+    const base = serviciosWrapper.querySelector('.servicio-row');
+    if (!base) return;
+
+    const clone = base.cloneNode(true);
+
+    // limpiar inputs
+    clone.querySelectorAll('input').forEach(inp => inp.value = '');
+
+    // reset selects
+    const catSel = clone.querySelector('select[data-role="categoria"]');
+    const svcSel = clone.querySelector('select[data-role="servicio"]');
+    if (catSel) catSel.selectedIndex = 0;
+
+    if (svcSel) {
+      svcSel.innerHTML = `<option value="">Selecciona primero una categoría</option>`;
+    }
+
+    // quitar ids duplicados
+    clone.querySelector('#servicio_main')?.removeAttribute('id');
+    clone.querySelector('#categoria_main')?.removeAttribute('id');
+
+    serviciosWrapper.appendChild(clone);
+
+    reindexRows();
+    recalcAll();
+  }
+
+  if (btnAddServicio) btnAddServicio.addEventListener('click', addRow);
+
+  // ✅ INIT
+  (() => {
+    const firstRow = serviciosWrapper.querySelector('.servicio-row');
+    if (!firstRow) return;
+
+    const catSel = firstRow.querySelector('select[data-role="categoria"]');
+    const svcSel = firstRow.querySelector('select[data-role="servicio"]');
+
+    // si viene old() del servicio, intenta setear categoría
+    const selectedId = svcSel?.value;
+    if (selectedId) {
+      const found = serviciosAll.find(s => String(s.id) === String(selectedId));
+      if (found?.categoria && catSel) catSel.value = found.categoria;
+    }
+
+    // poblar servicios si hay categoría seleccionada
+    if (catSel && svcSel) buildOptionsForServiceSelect(svcSel, catSel.value, selectedId || "");
+
+    reindexRows();
+    recalcAll();
+  })();
+}
+
             // ===========================
             // Método de pago (solo completada)
             // ===========================
@@ -606,54 +750,7 @@
                 }
             });
 
-            //=======================================================
-            //Filtrar servicios
-            const serviciosAll = @json($serviciosForJs);
-
-
-            const categoriaMain = document.getElementById('categoria_main');
-            const servicioMain  = document.getElementById('servicio_main');
-
-            function fillServiciosByCategoria(categoria, selectedId = "") {
-            servicioMain.innerHTML = "";
-
-            if (!categoria) {
-                const opt = document.createElement("option");
-                opt.value = "";
-                opt.textContent = "Selecciona primero una categoría";
-                servicioMain.appendChild(opt);
-                return;
-            }
-
-            const opt0 = document.createElement("option");
-            opt0.value = "";
-            opt0.textContent = "Seleccionar servicio";
-            servicioMain.appendChild(opt0);
-
-            serviciosAll
-                .filter(s => (s.categoria || '').toLowerCase() === categoria.toLowerCase())
-                .forEach(s => {
-                const opt = document.createElement("option");
-                opt.value = s.id;
-                opt.textContent = s.nombre;
-                if (String(selectedId) === String(s.id)) opt.selected = true;
-                servicioMain.appendChild(opt);
-                });
-            }
-
-            categoriaMain.addEventListener('change', () => {
-                fillServiciosByCategoria(categoriaMain.value, "");
-            });
-
-            // EDIT: preseleccionar categoría según servicio actual
-            const selectedMainId = "{{ old('id_servicio', $cita->id_servicio ?? '') }}";
-            if (selectedMainId) {
-            const found = serviciosAll.find(s => String(s.id) === String(selectedMainId));
-            if (found?.categoria) categoriaMain.value = found.categoria;
-            }
-            fillServiciosByCategoria(categoriaMain.value, selectedMainId);
-
 
         });
-    </script>
+</script>
 @endpush
