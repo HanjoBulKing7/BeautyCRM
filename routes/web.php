@@ -11,6 +11,7 @@ use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\ReporteController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DashboardCitasController;
 
 
 // Rutas Públicas (Cliente)
@@ -80,12 +81,11 @@ Route::get('/invitation/employee/{user}', [AuthController::class, 'acceptEmploye
     ->middleware('signed');
 // Rutas de Administración
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/home', function () {
-        if (!Auth::check() || Auth::user()->role_id != 3) {
-            return redirect('/login')->with('error', 'No tienes permisos para acceder a esta sección.');
-        }
-        return view('admin.dashboard');
-    })->name('dashboard');
+    
+    Route::get('/home', [DashboardCitasController::class, 'index'])
+        ->name('dashboard')
+        ->middleware('auth');
+
 
     Route::prefix('empleados')->name('empleados.')->group(function () {
         Route::get('/', [EmpleadoController::class, 'index'])->name('index');

@@ -117,6 +117,16 @@
       border-color: var(--bb-gold-border);
       color: rgba(17,24,39,.90);
     }
+    .bb-pill-green{
+      background: rgba(34,197,94,.12);
+      border-color: rgba(34,197,94,.22);
+      color: rgba(17,24,39,.92);
+    }
+    .bb-pill-red{
+      background: rgba(239,68,68,.12);
+      border-color: rgba(239,68,68,.22);
+      color: rgba(17,24,39,.92);
+    }
 
     .bb-action{
       display:inline-flex;
@@ -171,7 +181,7 @@
     .dark-mode .text-gray-900{ color: rgba(249,250,251,.98) !important; }
   </style>
 
-  {{-- ✅ Header: título izquierda, botones derecha --}}
+  {{-- ✅ Header --}}
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
     <div>
       <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
@@ -186,74 +196,101 @@
     </div>
 
     <div class="flex gap-2 sm:justify-end">
-      <a href="#" class="bb-btn-gold">➕ Registrar cita</a>
-      <a href="#" class="bb-btn-ghost">💰 Ver ventas</a>
+      <a href="{{ route('admin.citas.create') }}" class="bb-btn-gold">➕ Registrar cita</a>
+      <a href="{{ route('admin.ventas.index') }}" class="bb-btn-ghost">💰 Ver ventas</a>
     </div>
   </div>
 
-  {{-- ✅ Filtro minimalista (NO ocupa mucho) --}}
+  {{-- ✅ Filtro por fecha (ya conectado al controller con ?fecha=YYYY-MM-DD) --}}
   <div class="bb-glass-card px-4 py-3 mb-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <form id="fechaForm" method="GET" action="{{ route('admin.dashboard') }}"
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
       <div class="flex items-center gap-2">
-        <button type="button" class="bb-action bb-action-ink" title="Anterior">◀</button>
+        <a href="{{ route('admin.dashboard', ['fecha' => $prevDate]) }}"
+           class="bb-action bb-action-ink" title="Anterior">◀</a>
 
-        <input type="date" class="bb-input" style="max-width: 190px;" value="{{ now()->format('Y-m-d') }}">
+        <input type="date"
+               name="fecha"
+               class="bb-input"
+               style="max-width: 190px;"
+               value="{{ $fecha->format('Y-m-d') }}"
+               onchange="document.getElementById('fechaForm').submit()">
 
-        <button type="button" class="bb-action bb-action-ink" title="Siguiente">▶</button>
+        <a href="{{ route('admin.dashboard', ['fecha' => $nextDate]) }}"
+           class="bb-action bb-action-ink" title="Siguiente">▶</a>
 
-        <button type="button" class="bb-action bb-action-gold" title="Ir a hoy">Hoy</button>
+        <a href="{{ route('admin.dashboard', ['fecha' => $todayDate]) }}"
+           class="bb-action bb-action-gold" title="Ir a hoy">Hoy</a>
       </div>
 
       <div class="flex items-center gap-2">
         <span class="text-sm text-gray-500">
           Mostrando:
-          <span class="font-semibold text-gray-800">{{ now()->format('d/m/Y') }}</span>
+          <span class="font-semibold text-gray-800">{{ $fecha->format('d/m/Y') }}</span>
         </span>
       </div>
-    </div>
+    </form>
   </div>
 
-  {{-- ✅ Resumen (hardcode por ahora) --}}
+  {{-- ✅ Resumen (YA DINÁMICO) --}}
   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
     <div class="bb-glass-card p-4">
       <div class="flex items-center gap-3">
         <div class="bb-icon-pill" style="width:42px;height:42px;"><span class="text-xl">💰</span></div>
         <div>
           <p class="text-sm text-gray-500">Generado</p>
-          <p class="text-xl font-extrabold bb-gold">$1,250.00</p>
+          <p class="text-xl font-extrabold bb-gold">
+            ${{ number_format($generado ?? 0, 2) }}
+          </p>
         </div>
       </div>
     </div>
+
     <div class="bb-glass-card p-4">
       <div class="flex items-center gap-3">
         <div class="bb-icon-pill" style="width:42px;height:42px;"><span class="text-xl">📅</span></div>
         <div>
           <p class="text-sm text-gray-500">Citas del día</p>
-          <p class="text-xl font-extrabold text-gray-900">6</p>
+          <p class="text-xl font-extrabold text-gray-900">{{ $citasDia ?? 0 }}</p>
         </div>
       </div>
     </div>
+
     <div class="bb-glass-card p-4">
       <div class="flex items-center gap-3">
         <div class="bb-icon-pill" style="width:42px;height:42px;"><span class="text-xl">✅</span></div>
         <div>
           <p class="text-sm text-gray-500">Confirmadas</p>
-          <p class="text-xl font-extrabold text-gray-900">4</p>
+          <p class="text-xl font-extrabold text-gray-900">{{ $confirmadas ?? 0 }}</p>
         </div>
       </div>
     </div>
+
+    {{-- ✅ Cambio pedido: Pendientes -> Completadas --}}
     <div class="bb-glass-card p-4">
       <div class="flex items-center gap-3">
-        <div class="bb-icon-pill" style="width:42px;height:42px;"><span class="text-xl">⏳</span></div>
+        <div class="bb-icon-pill" style="width:42px;height:42px;"><span class="text-xl">🏁</span></div>
         <div>
-          <p class="text-sm text-gray-500">Pendientes</p>
-          <p class="text-xl font-extrabold text-gray-900">2</p>
+          <p class="text-sm text-gray-500">Completadas</p>
+          <p class="text-xl font-extrabold text-gray-900">{{ $completadas ?? 0 }}</p>
         </div>
       </div>
     </div>
   </div>
 
-  {{-- ✅ Tabla Desktop (ejemplo) --}}
+  @php
+    $pillClass = function ($estado) {
+      return match($estado) {
+        'confirmada'  => 'bb-pill bb-pill-gold',
+        'completada'  => 'bb-pill bb-pill-green',
+        'cancelada'   => 'bb-pill bb-pill-red',
+        default       => 'bb-pill',
+      };
+    };
+  @endphp
+
+  {{-- ✅ Tabla Desktop (YA DINÁMICA) --}}
   <div class="bb-glass-card overflow-hidden bb-hide-md">
     <div class="overflow-x-auto">
       <table class="min-w-full">
@@ -270,132 +307,117 @@
         </thead>
 
         <tbody>
-          <tr class="bb-row">
-            <td class="px-4 py-3 whitespace-nowrap"><div class="text-sm font-semibold text-gray-900">10:00</div></td>
-            <td class="px-4 py-3 whitespace-nowrap">
-              <div class="text-sm font-semibold text-gray-900">María López</div>
-              <div class="text-xs text-gray-500">maria@email.com</div>
-            </td>
-            <td class="px-4 py-3">
-              <div class="text-sm text-gray-900">Maquillaje Profesional</div>
-              <div class="text-xs text-gray-500">$450.00</div>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap"><div class="text-sm text-gray-900">Karla</div></td>
-            <td class="px-4 py-3 whitespace-nowrap"><span class="bb-pill bb-pill-gold">CONFIRMADA</span></td>
-            <td class="px-4 py-3 whitespace-nowrap"><span class="bb-pill bb-pill-gold">$450.00</span></td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
-              <div class="flex items-center justify-end gap-2">
-                <a class="bb-action bb-action-ink" href="#">👁 Ver</a>
-              </div>
-            </td>
-          </tr>
+          @forelse($citas as $cita)
+            <tr class="bb-row">
+              <td class="px-4 py-3 whitespace-nowrap">
+                <div class="text-sm font-semibold text-gray-900">
+                  {{ is_string($cita->hora_cita ?? null) ? substr($cita->hora_cita, 0, 5) : '—' }}
+                </div>
+              </td>
 
-          <tr class="bb-row">
-            <td class="px-4 py-3 whitespace-nowrap"><div class="text-sm font-semibold text-gray-900">12:30</div></td>
-            <td class="px-4 py-3 whitespace-nowrap">
-              <div class="text-sm font-semibold text-gray-900">Ana Pérez</div>
-              <div class="text-xs text-gray-500">ana@email.com</div>
-            </td>
-            <td class="px-4 py-3">
-              <div class="text-sm text-gray-900">Coloración</div>
-              <div class="text-xs text-gray-500">$800.00</div>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap"><div class="text-sm text-gray-900">Diana</div></td>
-            <td class="px-4 py-3 whitespace-nowrap"><span class="bb-pill">PENDIENTE</span></td>
-            <td class="px-4 py-3 whitespace-nowrap"><span class="text-xs text-gray-500">Sin venta</span></td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
-              <div class="flex items-center justify-end gap-2">
-                <button class="bb-action bb-action-gold" type="button">✅ Confirmar</button>
-                <a class="bb-action bb-action-ink" href="#">💳 Venta</a>
-                <a class="bb-action bb-action-ink" href="#">👁 Ver</a>
-              </div>
-            </td>
-          </tr>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <div class="text-sm font-semibold text-gray-900">{{ $cita->cliente_nombre ?? '—' }}</div>
+                <div class="text-xs text-gray-500">{{ $cita->cliente_email ?? '—' }}</div>
+              </td>
 
+              <td class="px-4 py-3">
+                <div class="text-sm text-gray-900">{{ $cita->servicios_label ?? '—' }}</div>
+                <div class="text-xs text-gray-500">
+                  ${{ number_format((float)($cita->servicios_total ?? 0), 2) }}
+                </div>
+              </td>
+
+              <td class="px-4 py-3 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ $cita->empleado_nombre ?? '—' }}</div>
+              </td>
+
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span class="{{ $pillClass($cita->estado_cita ?? null) }}">
+                  {{ strtoupper($cita->estado_cita ?? '—') }}
+                </span>
+              </td>
+
+              <td class="px-4 py-3 whitespace-nowrap">
+                @if(($cita->venta_total ?? 0) > 0)
+                  <span class="bb-pill bb-pill-gold">
+                    ${{ number_format((float)$cita->venta_total, 2) }}
+                  </span>
+                @else
+                  <span class="text-xs text-gray-500">Sin venta</span>
+                @endif
+              </td>
+
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                <div class="flex items-center justify-end gap-2">
+                  <a class="bb-action bb-action-ink" href="{{ route('admin.citas.show', $cita->id_cita) }}">👁 Ver</a>
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">
+                No hay citas para esta fecha.
+              </td>
+            </tr>
+          @endforelse
         </tbody>
       </table>
     </div>
   </div>
 
-  {{-- ✅ Cards Mobile (ejemplo) --}}
+  {{-- ✅ Cards Mobile (YA DINÁMICAS) --}}
   <div class="bb-show-md space-y-3">
-    <div class="bb-glass-card p-4">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <div class="text-xs text-gray-500">Hora</div>
-          <div class="text-lg font-extrabold text-gray-900">10:00</div>
-        </div>
-        <span class="bb-pill bb-pill-gold">CONFIRMADA</span>
-      </div>
-
-      <div class="mt-3 grid grid-cols-1 gap-2">
-        <div>
-          <div class="text-xs text-gray-500">Cliente</div>
-          <div class="text-sm font-semibold text-gray-900">María López</div>
-          <div class="text-xs text-gray-500">maria@email.com</div>
+    @forelse($citas as $cita)
+      <div class="bb-glass-card p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-xs text-gray-500">Hora</div>
+            <div class="text-lg font-extrabold text-gray-900">
+              {{ is_string($cita->hora_cita ?? null) ? substr($cita->hora_cita, 0, 5) : '—' }}
+            </div>
+          </div>
+          <span class="{{ $pillClass($cita->estado_cita ?? null) }}">
+            {{ strtoupper($cita->estado_cita ?? '—') }}
+          </span>
         </div>
 
-        <div>
-          <div class="text-xs text-gray-500">Servicio</div>
-          <div class="text-sm text-gray-900">Maquillaje Profesional</div>
-          <div class="text-xs text-gray-500">$450.00</div>
+        <div class="mt-3 grid grid-cols-1 gap-2">
+          <div>
+            <div class="text-xs text-gray-500">Cliente</div>
+            <div class="text-sm font-semibold text-gray-900">{{ $cita->cliente_nombre ?? '—' }}</div>
+            <div class="text-xs text-gray-500">{{ $cita->cliente_email ?? '—' }}</div>
+          </div>
+
+          <div>
+            <div class="text-xs text-gray-500">Servicio</div>
+            <div class="text-sm text-gray-900">{{ $cita->servicios_label ?? '—' }}</div>
+            <div class="text-xs text-gray-500">${{ number_format((float)($cita->servicios_total ?? 0), 2) }}</div>
+          </div>
+
+          <div>
+            <div class="text-xs text-gray-500">Empleado</div>
+            <div class="text-sm text-gray-900">{{ $cita->empleado_nombre ?? '—' }}</div>
+          </div>
+
+          <div>
+            <div class="text-xs text-gray-500">Venta</div>
+            @if(($cita->venta_total ?? 0) > 0)
+              <div class="text-sm font-semibold bb-gold">${{ number_format((float)$cita->venta_total, 2) }}</div>
+            @else
+              <div class="text-sm text-gray-500">Sin venta</div>
+            @endif
+          </div>
         </div>
 
-        <div>
-          <div class="text-xs text-gray-500">Empleado</div>
-          <div class="text-sm text-gray-900">Karla</div>
-        </div>
-
-        <div>
-          <div class="text-xs text-gray-500">Venta</div>
-          <div class="text-sm font-semibold bb-gold">$450.00</div>
-        </div>
-      </div>
-
-      <div class="mt-4 flex flex-wrap gap-2">
-        <a class="bb-action bb-action-ink" href="#">👁 Ver</a>
-      </div>
-    </div>
-
-    <div class="bb-glass-card p-4">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <div class="text-xs text-gray-500">Hora</div>
-          <div class="text-lg font-extrabold text-gray-900">12:30</div>
-        </div>
-        <span class="bb-pill">PENDIENTE</span>
-      </div>
-
-      <div class="mt-3 grid grid-cols-1 gap-2">
-        <div>
-          <div class="text-xs text-gray-500">Cliente</div>
-          <div class="text-sm font-semibold text-gray-900">Ana Pérez</div>
-          <div class="text-xs text-gray-500">ana@email.com</div>
-        </div>
-
-        <div>
-          <div class="text-xs text-gray-500">Servicio</div>
-          <div class="text-sm text-gray-900">Coloración</div>
-          <div class="text-xs text-gray-500">$800.00</div>
-        </div>
-
-        <div>
-          <div class="text-xs text-gray-500">Empleado</div>
-          <div class="text-sm text-gray-900">Diana</div>
-        </div>
-
-        <div>
-          <div class="text-xs text-gray-500">Venta</div>
-          <div class="text-sm text-gray-500">Sin venta</div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a class="bb-action bb-action-ink" href="{{ route('admin.citas.show', $cita->id_cita) }}">👁 Ver</a>
         </div>
       </div>
-
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button class="bb-action bb-action-gold" type="button">✅ Confirmar</button>
-        <a class="bb-action bb-action-ink" href="#">💳 Venta</a>
-        <a class="bb-action bb-action-ink" href="#">👁 Ver</a>
+    @empty
+      <div class="bb-glass-card p-4 text-sm text-gray-500 text-center">
+        No hay citas para esta fecha.
       </div>
-    </div>
+    @endforelse
   </div>
 
 </div>
