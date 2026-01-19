@@ -143,7 +143,7 @@ public function store(Request $request)
         'id_cliente'   => ['required', 'exists:clientes,id'],
         'fecha_cita'   => ['required', 'date'],
         'hora_cita'    => ['required'],
-        'id_empleado'  => ['nullable', 'exists:empleados,id_empleado'],
+        'id_empleado' => ['nullable', 'exists:empleados,id'],
         'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
         'observaciones'=> ['nullable', 'string'],
         'descuento'    => ['nullable', 'numeric', 'min:0'],
@@ -195,8 +195,6 @@ public function store(Request $request)
         'fecha_cita'            => $validated['fecha_cita'],
         'hora_cita'             => $validated['hora_cita'],
         'duracion_total_minutos'=> $totalDuracion,
-        // Si agregas columna total_servicios en DB, activa esta línea:
-        // 'total_servicios'     => $totalMonto,
         'descuento'             => $validated['descuento'] ?? 0,
         'estado_cita'           => $validated['estado_cita'],
         'metodo_pago'           => $validated['metodo_pago'] ?? null,
@@ -307,8 +305,48 @@ public function store(Request $request)
                 ->get();
 
 
-        return view('admin.citas.edit', compact('empleadosPorDepto', 'cita', 'clientes', 'servicios', 'empleados', 'categorias', 'serviciosForJs'));
-    }
+          // ✅ Servicios seleccionados para precargar en edit
+            $serviciosSeleccionados = $cita->servicios->map(function ($s) {
+                return [
+                    'id_servicio'        => (int) $s->id_servicio,
+                    'nombre'             => $s->nombre_servicio,
+                    'categoria'           => $s->categoria ?? '',
+                    'precio_snapshot'    => (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0),
+                    'duracion_snapshot'  => (int) ($s->pivot->duracion_snapshot ?? $s->duracion_minutos ?? 0),
+                ];
+            })->values();
+
+            // ✅ Fallback si es una cita vieja sin pivot
+            if ($serviciosSeleccionados->isEmpty() && !empty($cita->id_servicio)) {
+                $s = Servicio::where('id_servicio', $cita->id_servicio)->first();
+                if ($s) {
+                    $serviciosSeleccionados = collect([[
+                        'id_servicio'       => (int) $s->id_servicio,
+                        'nombre'            => $s->nombre_servicio,
+                        'categoria'          => $s->categoria ?? '',
+                        'precio_snapshot'   => (float) ($s->precio ?? 0),
+                        'duracion_snapshot' => (int) ($s->duracion_minutos ?? 0),
+                    ]]);
+                }
+            }
+
+            $totalServicios = (float) $serviciosSeleccionados->sum('precio_snapshot');
+            $duracionTotal  = (int) $serviciosSeleccionados->sum('duracion_snapshot');
+
+            return view('admin.citas.edit', compact(
+                'empleadosPorDepto',
+                'cita',
+                'clientes',
+                'servicios',
+                'empleados',
+                'categorias',
+                'serviciosForJs',
+                'serviciosSeleccionados',
+                'totalServicios',
+                'duracionTotal'
+            ));
+        }
+    
 
 
 public function update(Request $request, $id)
@@ -320,12 +358,11 @@ public function update(Request $request, $id)
         'id_cliente'   => ['required', 'exists:clientes,id'],
         'fecha_cita'   => ['required', 'date'],
         'hora_cita'    => ['required'],
-        'id_empleado'  => ['nullable', 'exists:empleados,id_empleado'],
+        'id_empleado' => ['nullable', 'exists:empleados,id'],
         'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
         'observaciones'=> ['nullable', 'string'],
         'descuento'    => ['nullable', 'numeric', 'min:0'],
         'metodo_pago'  => ['nullable', Rule::in(['efectivo','transferencia','tarjeta'])],
-
         'servicios'                     => ['required', 'array', 'min:1'],
         'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
         'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],

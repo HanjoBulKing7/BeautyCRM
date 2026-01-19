@@ -94,6 +94,77 @@
                     </label>
 
                     <div id="servicios-wrapper" class="space-y-3">
+
+@if($mode === 'edit' && $cita && $cita->servicios->count())
+
+    @foreach($cita->servicios as $i => $svc)
+        <div class="servicio-row bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
+             data-index="{{ $i }}">
+
+            {{-- CATEGORÍA --}}
+            <div class="md:col-span-3">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                <select
+                    class="categoria-select w-full border border-gray-300 rounded-lg px-4 py-3"
+                    data-role="categoria">
+                    <option value="">Seleccionar categoría</option>
+                    @foreach($categorias as $cat)
+                        <option value="{{ $cat }}"
+                            @selected($cat === $svc->categoria)>
+                            {{ $cat }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- SERVICIO --}}
+            <div class="md:col-span-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Servicio *</label>
+                <select
+                    name="servicios[{{ $i }}][id_servicio]"
+                    data-role="servicio"
+                    data-selected="{{ $svc->id_servicio }}"
+                    class="servicio-select w-full border border-gray-300 rounded-lg px-4 py-3"
+                    required>
+                    <option value="">Cargando servicios…</option>
+                </select>
+            </div>
+
+            {{-- PRECIO --}}
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+                <input type="number"
+                       name="servicios[{{ $i }}][precio_snapshot]"
+                       value="{{ $svc->pivot->precio_snapshot }}"
+                       data-role="precio_snapshot"
+                       class="precio-input w-full border border-gray-300 rounded-lg px-4 py-3">
+            </div>
+
+            {{-- DURACIÓN --}}
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Duración</label>
+                <input type="number"
+                       name="servicios[{{ $i }}][duracion_snapshot]"
+                       value="{{ $svc->pivot->duracion_snapshot }}"
+                       data-role="duracion_snapshot"
+                       class="duracion-input w-full border border-gray-300 rounded-lg px-4 py-3">
+            </div>
+
+            {{-- QUITAR --}}
+            <div class="md:col-span-1 flex items-center justify-center mt-7">
+                <button type="button"
+                        class="btn-remove-servicio w-12 h-12 rounded-lg bg-red-500 text-white hover:bg-red-600">
+                    ✕
+                </button>
+            </div>
+
+        </div>
+    @endforeach
+
+@else
+    {{-- CREATE: aquí dejas EXACTAMENTE tu fila original --}}
+@endif
+
                         {{-- Si vienes de old() por validación, podrías reconstruirlo en backend; por ahora 1 row inicial --}}
                     <div class="servicio-row bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center" data-index="0">
 
@@ -297,7 +368,6 @@
                 class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 required
             >
-                <option value="pendiente"  @selected($estadoSelected==='pendiente')>Pendiente</option>
                 <option value="confirmada" @selected($estadoSelected==='confirmada')>Confirmada</option>
                 <option value="cancelada"  @selected($estadoSelected==='cancelada')>Cancelada</option>
                 <option value="completada" @selected($estadoSelected==='completada')>Completada</option>
@@ -629,26 +699,30 @@ if (serviciosWrapper) {
   if (btnAddServicio) btnAddServicio.addEventListener('click', addRow);
 
   // ✅ INIT
-  (() => {
-    const firstRow = serviciosWrapper.querySelector('.servicio-row');
-    if (!firstRow) return;
+// ✅ INIT: procesa TODAS las filas y usa data-selected
+(() => {
+  const rows = serviciosWrapper.querySelectorAll('.servicio-row');
+  if (!rows.length) return;
 
-    const catSel = firstRow.querySelector('select[data-role="categoria"]');
-    const svcSel = firstRow.querySelector('select[data-role="servicio"]');
+  rows.forEach((row) => {
+    const catSel = row.querySelector('select[data-role="categoria"]');
+    const svcSel = row.querySelector('select[data-role="servicio"]');
+    if (!catSel || !svcSel) return;
 
-    // si viene old() del servicio, intenta setear categoría
-    const selectedId = svcSel?.value;
-    if (selectedId) {
-      const found = serviciosAll.find(s => String(s.id) === String(selectedId));
-      if (found?.categoria && catSel) catSel.value = found.categoria;
-    }
+    // 👇 clave: en edit el select trae value vacío, pero data-selected sí trae el id
+    const selectedId = svcSel.dataset.selected || svcSel.value || "";
 
-    // poblar servicios si hay categoría seleccionada
-    if (catSel && svcSel) buildOptionsForServiceSelect(svcSel, catSel.value, selectedId || "");
+    // Poblar opciones según categoría y seleccionar el id correcto
+    buildOptionsForServiceSelect(svcSel, catSel.value, selectedId);
 
-    reindexRows();
-    recalcAll();
-  })();
+    // (Opcional) deja actualizado el dataset por si luego reindexas/clonas
+    svcSel.dataset.selected = selectedId;
+  });
+
+  reindexRows();
+  recalcAll();
+})();
+
 }
 
             // ===========================
