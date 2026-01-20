@@ -174,6 +174,94 @@ class ReporteController extends Controller
             ->orderByDesc('cantidad')
             ->get();
 
+            //Labels para estandarizar los metodos de pago 
+                    $labelsPago = [
+            'efectivo'        => 'Efectivo',
+            'transferencia'   => 'Transferencia',
+            'tarjeta_credito' => 'Tarjeta crédito',
+            'tarjeta_debito'  => 'Tarjeta débito',
+            'tarjeta'         => 'Tarjeta',
+            'mixto'           => 'Mixto',
+            'sin_definir'     => 'Sin definir',
+        ];
+
+        $metodosPago = $metodosPago->map(function ($r) use ($labelsPago) {
+            $key = (string) ($r->metodo ?? 'sin_definir');
+
+            // label "bonito"
+            $r->metodo_label = $labelsPago[$key]
+                ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
+
+            return $r;
+        });
+
+
+
+            // ==========================
+            // 4.B) Resumen para gráfica (3 barras) + extras (mixto/otros)
+            // ==========================
+            $bucket = [
+                'efectivo' => ['monto' => 0.0, 'cantidad' => 0],
+                'transferencia' => ['monto' => 0.0, 'cantidad' => 0],
+                'tarjeta' => ['monto' => 0.0, 'cantidad' => 0],
+                'mixto' => ['monto' => 0.0, 'cantidad' => 0],
+                'otros' => ['monto' => 0.0, 'cantidad' => 0],
+            ];
+
+            foreach ($metodosPago as $row) {
+                $metodo = (string) ($row->metodo ?? 'sin_definir');
+                $monto  = (float) ($row->monto ?? 0);
+                $cant   = (int)   ($row->cantidad ?? 0);
+
+                if ($metodo === 'efectivo') {
+                    $bucket['efectivo']['monto'] += $monto;
+                    $bucket['efectivo']['cantidad'] += $cant;
+                    continue;
+                }
+
+                if ($metodo === 'transferencia') {
+                    $bucket['transferencia']['monto'] += $monto;
+                    $bucket['transferencia']['cantidad'] += $cant;
+                    continue;
+                }
+
+                if ($metodo === 'tarjeta_credito' || $metodo === 'tarjeta_debito' || $metodo === 'tarjeta') {
+                    $bucket['tarjeta']['monto'] += $monto;
+                    $bucket['tarjeta']['cantidad'] += $cant;
+                    continue;
+                }
+
+                if ($metodo === 'mixto') {
+                    $bucket['mixto']['monto'] += $monto;
+                    $bucket['mixto']['cantidad'] += $cant;
+                    continue;
+                }
+
+                $bucket['otros']['monto'] += $monto;
+                $bucket['otros']['cantidad'] += $cant;
+            }
+
+            $resumenPagos = [
+                'efectivo' => $bucket['efectivo'],
+                'transferencia' => $bucket['transferencia'],
+                'tarjeta' => $bucket['tarjeta'],
+                'mixto' => $bucket['mixto'],
+                'otros' => $bucket['otros'],
+                'total' => [
+                    'monto' => ($bucket['efectivo']['monto'] + $bucket['transferencia']['monto'] + $bucket['tarjeta']['monto'] + $bucket['mixto']['monto'] + $bucket['otros']['monto']),
+                    'cantidad' => ($bucket['efectivo']['cantidad'] + $bucket['transferencia']['cantidad'] + $bucket['tarjeta']['cantidad'] + $bucket['mixto']['cantidad'] + $bucket['otros']['cantidad']),
+                ],
+            ];
+
+            // Datos específicos para la gráfica (3 barras)
+            $resumenChart = [
+                'labels' => ['Efectivo', 'Transferencia', 'Tarjeta'],
+                'values' => [
+                    round($bucket['efectivo']['monto'], 2),
+                    round($bucket['transferencia']['monto'], 2),
+                    round($bucket['tarjeta']['monto'], 2),
+                ],
+            ];
 
 
         // ==========================
@@ -248,6 +336,9 @@ class ReporteController extends Controller
                 'ticket_promedio' => $ticketPromedio,
                 'metodos_pago'    => $metodosPago,
                 'ultimas'         => $ultimasVentas,
+                'resumen_pagos' => $resumenPagos,
+                'resumen_chart' => $resumenChart,
+
             ],
             'citas' => $citas,
             'empleados' => ['top' => $topEmpleados],

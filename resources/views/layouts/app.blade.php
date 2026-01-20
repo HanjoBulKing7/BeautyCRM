@@ -384,13 +384,17 @@
     </div>
   </main>
 
-  <!-- ✅ JS build (si existe) -->
-  @if(isset($manifest['resources/js/app.js']))
-    <script src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
-  @endif
+ {{-- ✅ JS build (si existe) --}}
+@if(isset($manifest['resources/js/app.js']))
+  <script src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
+@endif
 
-  @stack('scripts')
-  @yield('scripts')
+{{-- ✅ Chart.js SIEMPRE --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+@stack('scripts')
+@yield('scripts')
+
 
   <script>
     const sidebar = document.getElementById('sidebar');

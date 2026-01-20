@@ -76,7 +76,6 @@
           </button>
         </div>
       </div>
-
       <div class="mb-6 border-b border-gray-200 dark:border-gray-800">
         <nav class="flex gap-6">
           <a href="{{ route('admin.reportes.index', ['tab'=>'ventas','tipo'=>'diario','fecha'=>$fecha]) }}"

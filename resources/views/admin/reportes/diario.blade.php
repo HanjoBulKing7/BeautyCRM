@@ -73,9 +73,9 @@
             <tbody>
               @foreach($metodos as $m)
                 <tr class="border-t border-gray-100 dark:border-gray-800">
-                  <td class="py-2 text-gray-800 dark:text-gray-200">{{ $m->metodo ?? $m->metodo_pago ?? $m->forma_pago ?? '-' }}</td>
-                  <td class="py-2 text-gray-800 dark:text-gray-200">{{ (int)($m->cantidad ?? 0) }}</td>
-                  <td class="py-2 text-gray-800 dark:text-gray-200">{{ $mxn($m->monto ?? 0) }}</td>
+                  <td class="py-2 text-gray-800 dark:text-gray-200"> {{ $m->metodo_label ?? $m->metodo ?? $m->metodo_pago ?? $m->forma_pago ?? '-' }} </td>
+                  <td class="py-2 text-gray-800 dark:text-gray-200"> {{ (int)($m->cantidad ?? 0) }} </td>
+                  <td class="py-2 text-gray-800 dark:text-gray-200"> {{ $mxn($m->monto ?? 0) }} </td>
                 </tr>
               @endforeach
             </tbody>
@@ -170,4 +170,99 @@
     </div>
 
   </div>
+
+  {{-- ===========================
+     NUEVO BLOQUE: Gráfica + Resumen (debajo de "Últimas ventas")
+=========================== --}}
+@if(($stats['ok'] ?? false) && isset($stats['ventas']['resumen_chart'], $stats['ventas']['resumen_pagos']))
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+    {{-- Gráfica --}}
+    <div class="bg-white rounded-xl border border-gray-100 p-5">
+      <h3 class="font-semibold text-gray-800">Resumen de ventas</h3>
+      <p class="text-sm text-gray-500 mb-4">Ventas por método de pago</p>
+
+      <canvas id="resumenPagosChart"
+              data-labels='@json($stats["ventas"]["resumen_chart"]["labels"])'
+              data-values='@json($stats["ventas"]["resumen_chart"]["values"])'
+              height="120"></canvas>
+
+      {{-- Nota estilo "multipago" --}}
+      @php $mixto = (float)($stats['ventas']['resumen_pagos']['mixto']['monto'] ?? 0); @endphp
+      @if($mixto > 0)
+        <p class="text-xs text-gray-500 mt-3">
+          Nota: "Mixto" se suma al total, pero no aparece como barra (igual que multipago).
+        </p>
+      @endif
+    </div>
+
+    {{-- Resumen (lado derecho) --}}
+    <div class="bg-white rounded-xl border border-gray-100 p-5">
+      <h3 class="font-semibold text-gray-800">Resumen</h3>
+      <p class="text-sm text-gray-500 mb-4">Desglose por método</p>
+
+      @php
+        $rp = $stats['ventas']['resumen_pagos'];
+      @endphp
+
+      <div class="space-y-3 text-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600">Efectivo</span>
+          <span class="font-semibold">${{ number_format($rp['efectivo']['monto'] ?? 0, 2) }}</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600">Transferencia</span>
+          <span class="font-semibold">${{ number_format($rp['transferencia']['monto'] ?? 0, 2) }}</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600">Tarjeta</span>
+          <span class="font-semibold">${{ number_format($rp['tarjeta']['monto'] ?? 0, 2) }}</span>
+        </div>
+
+        @if(($rp['mixto']['monto'] ?? 0) > 0)
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Mixto</span>
+            <span class="font-semibold">${{ number_format($rp['mixto']['monto'] ?? 0, 2) }}</span>
+          </div>
+        @endif
+
+        @if(($rp['otros']['monto'] ?? 0) > 0)
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Otros</span>
+            <span class="font-semibold">${{ number_format($rp['otros']['monto'] ?? 0, 2) }}</span>
+          </div>
+        @endif
+
+        <hr class="my-3">
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-700 font-medium">Total</span>
+          <span class="font-bold">${{ number_format($rp['total']['monto'] ?? 0, 2) }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
 @endif
+
+@endif
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('resumenPagosChart');
+  if (!el) return;
+
+  const labels = JSON.parse(el.dataset.labels || '[]');
+  const values = JSON.parse(el.dataset.values || '[]');
+
+  new Chart(el, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values }] },
+    options: { plugins: { legend: { display: false } } }
+  });
+});
+</script>
+@endpush
