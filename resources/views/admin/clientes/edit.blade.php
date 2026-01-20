@@ -8,7 +8,15 @@
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-pink-100 text-pink-700">
+                <span
+                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border"
+                    style="
+                        background: linear-gradient(135deg, rgba(201,162,74,.18), rgba(255,255,255,.75));
+                        border-color: rgba(201,162,74,.22);
+                        box-shadow: 0 10px 22px rgba(201,162,74,.12);
+                        color: rgba(17,24,39,.90);
+                    "
+                >
                     <i class="fas fa-user-edit"></i>
                 </span>
                 Editar Cliente
@@ -17,16 +25,27 @@
         </div>
 
         <a href="{{ route('admin.clientes.index') }}"
-           class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200">
-            <i class="fas fa-arrow-left"></i>
+           class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+            <i class="fas fa-arrow-left" style="color: rgba(201,162,74,.95)"></i>
             Volver
         </a>
     </div>
 
     <!-- Card -->
-    <div class="bg-white rounded-xl shadow overflow-hidden">
-        <div class="px-6 py-4 bg-pink-50 border-b border-gray-100">
-            <h2 class="text-lg font-semibold text-gray-800">Información del cliente</h2>
+    <div class="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
+
+        <!-- Top bar (antes rosa) => Glass dorado estilo dashboard -->
+        <div
+            class="px-6 py-4"
+            style="
+                background: linear-gradient(135deg, rgba(201,162,74,.14), rgba(255,255,255,.78));
+                border-bottom: 1px solid rgba(201,162,74,.18);
+            "
+        >
+            <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-id-card" style="color: rgba(201,162,74,.92)"></i>
+                Información del cliente
+            </h2>
             <p class="text-sm text-gray-600 mt-1">Edita los datos necesarios y guarda cambios</p>
         </div>
 
@@ -36,16 +55,28 @@
                 @method('PUT')
 
                 @include('admin.clientes._form', ['cliente' => $cliente])
+
                 <div class="flex flex-col sm:flex-row gap-3 pt-2">
+
+                    <!-- Botón Actualizar (dorado tipo dashboard) -->
                     <button type="submit"
-                            class="inline-flex items-center justify-center gap-2 bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-400">
-                        <i class="fas fa-sync-alt"></i>
+                            class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition focus:outline-none"
+                            style="
+                                background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
+                                border: 1px solid rgba(201,162,74,.35);
+                                box-shadow: 0 10px 22px rgba(201,162,74,.18);
+                                color: #111827;
+                            "
+                            onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
+                            onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
+                    >
+                        <i class="fas fa-sync-alt" style="color: rgba(17,24,39,.90)"></i>
                         Actualizar Cliente
                     </button>
 
                     <a href="{{ route('admin.clientes.index') }}"
-                       class="inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-200">
-                        <i class="fas fa-times"></i>
+                       class="inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-200 transition">
+                        <i class="fas fa-times" style="color: rgba(17,24,39,.70)"></i>
                         Cancelar
                     </a>
                 </div>

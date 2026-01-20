@@ -4,58 +4,102 @@
     <!-- Fila 1: Nombre del Servicio y Categoría -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-tag text-pink-400 mr-2"></i>Nombre del Servicio *
+            <i class="fas fa-tag mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Nombre del Servicio <span class="text-red-500">*</span>
         </label>
-        <input type="text" name="nombre_servicio" value="{{ old('nombre_servicio', $servicio->nombre_servicio ?? '') }}" 
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition" 
-            required placeholder="Ej: Corte de Cabello, Manicure">
+        <input
+            type="text"
+            name="nombre_servicio"
+            value="{{ old('nombre_servicio', $servicio->nombre_servicio ?? '') }}"
+            class="w-full border border-gray-300 rounded-lg p-3 transition
+                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+            required
+            placeholder="Ej: Corte de Cabello, Manicure"
+        >
     </div>
 
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-layer-group text-pink-400 mr-2"></i>Categoría
+            <i class="fas fa-layer-group mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Categoría
         </label>
-        <input type="text" name="categoria" value="{{ old('categoria', $servicio->categoria ?? '') }}" 
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition" 
-            placeholder="Ej: Cabello, Uñas, Facial">
+        <input
+            type="text"
+            name="categoria"
+            value="{{ old('categoria', $servicio->categoria ?? '') }}"
+            class="w-full border border-gray-300 rounded-lg p-3 transition
+                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+            placeholder="Ej: Cabello, Uñas, Facial"
+        >
     </div>
 
     <!-- Fila 2: Precio y Duración -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-dollar-sign text-pink-400 mr-2"></i>Precio *
+            <i class="fas fa-dollar-sign mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Precio <span class="text-red-500">*</span>
         </label>
-        <input type="number" name="precio" step="0.01" min="0" value="{{ old('precio', $servicio->precio ?? '') }}" 
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition" 
-            required placeholder="0.00">
+        <input
+            type="number"
+            name="precio"
+            step="0.01"
+            min="0"
+            value="{{ old('precio', $servicio->precio ?? '') }}"
+            class="w-full border border-gray-300 rounded-lg p-3 transition
+                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+            required
+            placeholder="0.00"
+        >
     </div>
 
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-clock text-pink-400 mr-2"></i>Duración (minutos) *
+            <i class="fas fa-clock mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Duración (minutos) <span class="text-red-500">*</span>
         </label>
-        <input type="number" name="duracion_minutos" min="1" value="{{ old('duracion_minutos', $servicio->duracion_minutos ?? '') }}" 
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition" 
-            required placeholder="Ej: 60">
+        <input
+            type="number"
+            name="duracion_minutos"
+            min="1"
+            value="{{ old('duracion_minutos', $servicio->duracion_minutos ?? '') }}"
+            class="w-full border border-gray-300 rounded-lg p-3 transition
+                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+            required
+            placeholder="Ej: 60"
+        >
     </div>
 
     <!-- Fila 3: Descuento y Estado -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-percent text-pink-400 mr-2"></i>Descuento
+            <i class="fas fa-percent mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Descuento
         </label>
-        <input type="number" name="descuento" step="0.01" min="0" value="{{ old('descuento', $servicio->descuento ?? 0) }}" 
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition" 
-            placeholder="0.00">
+        <input
+            type="number"
+            name="descuento"
+            step="0.01"
+            min="0"
+            value="{{ old('descuento', $servicio->descuento ?? 0) }}"
+            class="w-full border border-gray-300 rounded-lg p-3 transition
+                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+            placeholder="0.00"
+        >
     </div>
 
     @if(!empty($showEstado))
         <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <label class="block text-sm font-medium mb-2 text-gray-700">
-                <i class="fas fa-toggle-on text-pink-400 mr-2"></i>Estado *
+                <i class="fas fa-toggle-on mr-2" style="color: rgba(201,162,74,.92)"></i>
+                Estado <span class="text-red-500">*</span>
             </label>
 
-            <select name="estado" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition" required>
+            <select
+                name="estado"
+                class="w-full border border-gray-300 rounded-lg p-3 transition
+                       focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+                required
+            >
                 <option value="activo" {{ old('estado', $servicio->estado ?? 'activo') == 'activo' ? 'selected' : '' }}>Activo</option>
                 <option value="inactivo" {{ old('estado', $servicio->estado ?? 'activo') == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
             </select>
@@ -65,29 +109,23 @@
     <!-- Fila 4: Descripción -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-align-left text-pink-400 mr-2"></i>Descripción
+            <i class="fas fa-align-left mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Descripción
         </label>
-        <textarea name="descripcion" rows="3" 
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
-            placeholder="Descripción detallada del servicio">{{ old('descripcion', $servicio->descripcion ?? '') }}</textarea>
+        <textarea
+            name="descripcion"
+            rows="3"
+            class="w-full border border-gray-300 rounded-lg p-3 transition
+                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+            placeholder="Descripción detallada del servicio"
+        >{{ old('descripcion', $servicio->descripcion ?? '') }}</textarea>
     </div>
-
-    <!-- Fila 5: Características 
-    OCULTAR DURANTE ETAPA DE DESARROLLO
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-list text-pink-400 mr-2"></i>Características
-        </label>
-        <textarea name="caracteristicas" rows="3" 
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
-            placeholder="Características o beneficios del servicio">{{ old('caracteristicas', $servicio->caracteristicas ?? '') }}</textarea>
-    </div>
-    -->
 
     {{-- Imagen del servicio --}}
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-image text-pink-400 mr-2"></i>Foto del Servicio
+            <i class="fas fa-image mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Foto del Servicio
         </label>
 
         <input
@@ -95,7 +133,8 @@
             name="imagen"
             id="imagenInput"
             accept="image/*"
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
+            class="w-full border border-gray-300 rounded-lg p-3 transition
+                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
         >
 
         @error('imagen')
@@ -118,25 +157,9 @@
                 style="aspect-ratio: 16 / 9;"
             >
         </div>
-</div>
+    </div>
 
 </div>
-
-<!-- Estilos personalizados -->
-<style>
-    .focus\:ring-gold-500:focus {
-        --tw-ring-color: #D4AF37;
-    }
-    .focus\:border-gold-500:focus {
-        border-color: #D4AF37;
-    }
-    .text-pink-400 {
-        color: #F8BBD9;
-    }
-    .transition {
-        transition: all 0.2s ease-in-out;
-    }
-</style>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {

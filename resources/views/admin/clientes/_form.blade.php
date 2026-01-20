@@ -3,14 +3,16 @@
     <!-- Nombre -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-user text-pink-500 mr-2"></i>Nombre <span class="text-red-500">*</span>
+            <i class="fas fa-user mr-2" style="color: rgba(201,162,74,.92)"></i>Nombre <span class="text-red-500">*</span>
         </label>
 
         <input
             type="text"
             name="nombre"
             value="{{ old('nombre', $cliente->nombre ?? '') }}"
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+            class="w-full border border-gray-300 rounded-lg p-3 bg-white
+                   focus:outline-none focus:ring-2 focus:ring-[#C9A24D]/30 focus:border-[#C9A24D]
+                   transition"
             required
             placeholder="Nombre completo del cliente"
         >
@@ -23,14 +25,16 @@
     <!-- Email -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-envelope text-pink-500 mr-2"></i>Email <span class="text-red-500">*</span>
+            <i class="fas fa-envelope mr-2" style="color: rgba(201,162,74,.92)"></i>Email <span class="text-red-500">*</span>
         </label>
 
         <input
             type="email"
             name="email"
             value="{{ old('email', $cliente->email ?? '') }}"
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+            class="w-full border border-gray-300 rounded-lg p-3 bg-white
+                   focus:outline-none focus:ring-2 focus:ring-[#C9A24D]/30 focus:border-[#C9A24D]
+                   transition"
             required
             placeholder="ejemplo@correo.com"
         >
@@ -43,14 +47,16 @@
     <!-- Teléfono -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-phone text-pink-500 mr-2"></i>Teléfono
+            <i class="fas fa-phone mr-2" style="color: rgba(201,162,74,.92)"></i>Teléfono
         </label>
 
         <input
             type="text"
             name="telefono"
             value="{{ old('telefono', $cliente->telefono ?? '') }}"
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+            class="w-full border border-gray-300 rounded-lg p-3 bg-white
+                   focus:outline-none focus:ring-2 focus:ring-[#C9A24D]/30 focus:border-[#C9A24D]
+                   transition"
             placeholder="Número de teléfono"
         >
 
@@ -62,13 +68,15 @@
     <!-- Dirección -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-map-marker-alt text-pink-500 mr-2"></i>Dirección
+            <i class="fas fa-map-marker-alt mr-2" style="color: rgba(201,162,74,.92)"></i>Dirección
         </label>
 
         <textarea
             name="direccion"
             rows="3"
-            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+            class="w-full border border-gray-300 rounded-lg p-3 bg-white
+                   focus:outline-none focus:ring-2 focus:ring-[#C9A24D]/30 focus:border-[#C9A24D]
+                   transition"
             placeholder="Dirección completa del cliente"
         >{{ old('direccion', $cliente->direccion ?? '') }}</textarea>
 
