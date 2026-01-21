@@ -596,9 +596,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 try {
                     const qs = new URLSearchParams();
                     qs.set('date', date);
-                    qs.append('servicios[]', servicioId); // ✅ ESTE ERA EL BUG (tu backend usa "servicios")
-
-                    // opcional: si luego quieres filtrar por empleado(s)
+                    qs.append('servicios[]', servicioId);
                     if (empleadoId) qs.append('empleados[]', empleadoId);
 
                     // nota: tu backend NO usa duracion por query, la calcula desde servicios en DB,
