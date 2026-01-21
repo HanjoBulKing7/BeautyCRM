@@ -16,6 +16,7 @@ use App\Models\Empleado;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Models\Venta;
+use App\Models\ServicioHorario;
 use Illuminate\Support\Facades\Schema;
 
 class CitaController extends Controller
@@ -29,61 +30,136 @@ class CitaController extends Controller
 
     public function horasDisponibles(Request $request)
     {
-        $fecha = $request->query('fecha');
-        $duracion = (int) $request->query('duracion', 0);
-        $citaId = $request->query('cita_id');
+        $date      = $request->query('date');
+        $servicios = $request->query('servicios', []);
+        $empleados = $request->query('empleados', []); // opcional
 
-        $servicioIds = collect($request->query('servicio_ids', []))
-            ->filter(fn($v) => $v !== null && $v !== '')
-            ->map(fn($v) => (int)$v)
-            ->unique()
-            ->values();
-
-        if (!$fecha || $duracion < 1 || $servicioIds->isEmpty()) {
+        if (!$date || !is_array($servicios) || count($servicios) === 0) {
             return response()->json([]);
         }
 
-        // 1) Ventanas permitidas por servicio (INTERSECCIÓN)
-        $windows = $this->buildAllowedWindowsForDateByServices($fecha, $servicioIds);
+        $fecha = Carbon::parse($date);
+        $dow   = $fecha->dayOfWeekIso; // 1..7 (Lun..Dom)
 
-        if (empty($windows)) return response()->json([]);
+        $ids = collect($servicios)
+            ->map(fn($v) => (int)$v)
+            ->filter()
+            ->unique()
+            ->values();
 
-        // 2) Quitar horas ocupadas por citas existentes (NO OVERLAP)
-        $busy = $this->getBusyIntervalsForDate($fecha, $citaId);
+        // 🔥 tus servicios usan PK id_servicio
+        $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
+        if ($serviciosDb->isEmpty()) return response()->json([]);
 
-        // 3) Generar slots (cada 30 min)
-        $slotMinutes = 30;
+        // Duración total (ajusta el campo si en tu tabla se llama distinto)
+        $totalMin = (int) $ids->sum(fn($id) => (int)($serviciosDb[$id]->duracion_minutos ?? 0));
+        if ($totalMin <= 0) $totalMin = 30;
+
+        // ✅ helper robusto: "HH:MM" o "HH:MM:SS" -> minutos del día
+        $toMinutes = function ($time) {
+            $t = substr((string)$time, 0, 5); // HH:MM
+            if (!str_contains($t, ':')) return 0;
+            [$h, $m] = array_map('intval', explode(':', $t));
+            return ($h * 60) + $m;
+        };
+
+        // ✅ OJO: en tu tabla es servicio_id (no id_servicio)
+        $horarios = ServicioHorario::whereIn('servicio_id', $ids)
+            ->where('dia_semana', $dow)
+            ->get()
+            ->groupBy('servicio_id');
+
+        // Si algún servicio no tiene horarios ese día => no hay disponibilidad
+        foreach ($ids as $idSrv) {
+            if (!isset($horarios[$idSrv]) || $horarios[$idSrv]->isEmpty()) {
+                return response()->json([]);
+            }
+        }
+
+        // 1) Intervalos por servicio [startMin, endMin]
+        $intervalsPerService = [];
+        foreach ($ids as $idSrv) {
+            $intervals = [];
+
+            foreach ($horarios[$idSrv] as $h) {
+                $sMin = $toMinutes($h->hora_inicio);
+                $eMin = $toMinutes($h->hora_fin);
+
+                // cruza medianoche (22:00 -> 02:00): para el día actual, hasta 24:00
+                if ($eMin <= $sMin) {
+                    $eMin = 24 * 60;
+                }
+
+                // seguridad
+                $sMin = max(0, min($sMin, 24 * 60));
+                $eMin = max(0, min($eMin, 24 * 60));
+
+                if ($eMin > $sMin) $intervals[] = [$sMin, $eMin];
+            }
+
+            if (empty($intervals)) return response()->json([]);
+            $intervalsPerService[] = $intervals;
+        }
+
+        // 2) Intersección entre servicios
+        $common = array_shift($intervalsPerService);
+        foreach ($intervalsPerService as $arr) {
+            $newCommon = [];
+            foreach ($common as [$a1, $a2]) {
+                foreach ($arr as [$b1, $b2]) {
+                    $s = max($a1, $b1);
+                    $e = min($a2, $b2);
+                    if ($e > $s) $newCommon[] = [$s, $e];
+                }
+            }
+            $common = $newCommon;
+            if (empty($common)) return response()->json([]);
+        }
+
+        // 3) Slots cada 30 min
+        $step  = 30;
         $slots = [];
 
-        foreach ($windows as [$start, $end]) {
-            // start/end son Carbon
-            $cursor = $start->copy();
+        foreach ($common as [$sMin, $eMin]) {
+            for ($t = $sMin; $t + $totalMin <= $eMin; $t += $step) {
+                $hh = intdiv($t, 60);
+                $mm = $t % 60;
 
-            while ($cursor->copy()->addMinutes($duracion)->lte($end)) {
-                $slotStart = $cursor->copy();
-                $slotEnd   = $cursor->copy()->addMinutes($duracion);
+                $value = sprintf('%02d:%02d', $hh, $mm);
+                $label = Carbon::createFromTime($hh, $mm)->format('g:i A');
 
-                // check overlap contra busy[]
-                $overlaps = false;
-                foreach ($busy as [$bStart, $bEnd]) {
-                    if ($slotStart->lt($bEnd) && $slotEnd->gt($bStart)) {
-                        $overlaps = true;
-                        break;
-                    }
-                }
-
-                if (!$overlaps) {
-                    $value = $slotStart->format('H:i');
-                    $label = $slotStart->format('g:i A');
-                    $slots[] = ['value' => $value, 'label' => $label];
-                }
-
-                $cursor->addMinutes($slotMinutes);
+                $slots[] = ['value' => $value, 'label' => $label];
             }
+        }
+
+        // 4) (Opcional) filtrar por empleados ocupados
+        $empIds = collect($empleados)->map(fn($v) => (int)$v)->filter()->unique()->values();
+
+        if ($empIds->isNotEmpty()) {
+            $citas = Cita::whereDate('fecha_cita', $fecha->format('Y-m-d'))
+                ->whereIn('id_empleado', $empIds)
+                ->where('estado_cita', '!=', 'cancelada')
+                ->get(['id_empleado', 'hora_cita', 'duracion_total_minutos']);
+
+            $slots = array_values(array_filter($slots, function ($slot) use ($citas, $totalMin) {
+                $start = Carbon::createFromFormat('H:i', $slot['value']);
+                $end   = $start->copy()->addMinutes($totalMin);
+
+                foreach ($citas as $c) {
+                    // hora_cita normalmente viene "HH:MM:SS"
+                    $cStart = Carbon::createFromFormat('H:i:s', $c->hora_cita);
+                    $dur    = (int)($c->duracion_total_minutos ?? 60);
+                    $cEnd   = $cStart->copy()->addMinutes(max(1, $dur));
+
+                    if ($start < $cEnd && $end > $cStart) return false; // overlap
+                }
+                return true;
+            }));
         }
 
         return response()->json($slots);
     }
+
 
     /**
      * Devuelve ventanas permitidas por servicio para esa fecha.
@@ -96,9 +172,9 @@ class CitaController extends Controller
 
         // Trae horarios de TODOS los servicios
         $horarios = \App\Models\ServicioHorario::query()
-            ->whereIn('id_servicio', $servicioIds->all())
+            ->whereIn('servicio_id', $servicioIds->all())
             ->where('dia_semana', $dow)
-            ->get(['id_servicio','hora_inicio','hora_fin']);
+            ->get(['servicio_id','hora_inicio','hora_fin']);
 
         // Agrupar por servicio
         $byService = $horarios->groupBy('id_servicio');
@@ -232,8 +308,6 @@ class CitaController extends Controller
             ])->values()
         );
     }
-
-
 
     public function index()
     {

@@ -114,8 +114,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // ✅ AJAX: empleados por servicio (ponla ARRIBA)
         Route::get('/empleados-por-servicio', [CitaController::class, 'empleadosPorServicio'])
             ->name('empleadosPorServicio');
+
+        // AJAX horas disponibles
         Route::get('/horas-disponibles', [CitaController::class, 'horasDisponibles'])
-        ->name('horasDisponibles');
+            ->name('horasDisponibles');
         Route::get('/', [CitaController::class, 'index'])->name('index');
         Route::get('/create', [CitaController::class, 'create'])->name('create');
         Route::post('/', [CitaController::class, 'store'])->name('store');

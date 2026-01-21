@@ -325,245 +325,339 @@
         })->values();
     @endphp
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
+ <script>
+document.addEventListener('DOMContentLoaded', function () {
 
-            // Flatpickr: create = minDate today, edit = permitir fechas pasadas y set defaultDate
-            flatpickr("#fecha_cita", {
-                locale: "es",
-                minDate: @json($mode === 'create' ? 'today' : null),
-                defaultDate: document.getElementById('fecha_cita').value || null,
-                dateFormat: "Y-m-d",
-                disableMobile: true,
+    // Flatpickr: create = minDate today, edit = permitir fechas pasadas y set defaultDate
+    flatpickr("#fecha_cita", {
+        locale: "es",
+        minDate: @json($mode === 'create' ? 'today' : null),
+        defaultDate: document.getElementById('fecha_cita').value || null,
+        dateFormat: "Y-m-d",
+        disableMobile: true,
+    });
+
+    // ===========================
+    // Multi-servicio (UI) + snapshots + empleado por servicio
+    // ===========================
+    const serviciosWrapper = document.getElementById('servicios-wrapper');
+    const btnAddServicio   = document.getElementById('btn-add-servicio');
+
+    if (serviciosWrapper) {
+
+        const serviciosAll = @json($serviciosForJs);
+        const norm = (v) => (v ?? '').toString().trim().toLowerCase();
+
+        function buildOptionsForServiceSelect(selectEl, categoria, selectedId = "") {
+            selectEl.innerHTML = "";
+
+            if (!categoria) {
+                const opt = document.createElement("option");
+                opt.value = "";
+                opt.textContent = "Selecciona primero una categoría";
+                selectEl.appendChild(opt);
+                return;
+            }
+
+            const opt0 = document.createElement("option");
+            opt0.value = "";
+            opt0.textContent = "Seleccionar servicio";
+            selectEl.appendChild(opt0);
+
+            const catN = norm(categoria);
+
+            serviciosAll
+                .filter(s => norm(s.categoria) === catN)
+                .forEach(s => {
+                    const opt = document.createElement("option");
+                    opt.value = s.id;
+
+                    const precio = Number(s.precio ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+                    opt.textContent = `${s.nombre} - $${precio} (${s.duracion} min)`;
+
+                    opt.dataset.duracion = s.duracion ?? 0;
+                    opt.dataset.precio   = s.precio ?? 0;
+
+                    if (String(selectedId) === String(s.id)) opt.selected = true;
+                    selectEl.appendChild(opt);
+                });
+        }
+
+        async function loadEmpleadosForRow(rowEl, servicioId, preselectId = null) {
+            const empleadoSelect = rowEl.querySelector('select[data-role="empleado"]');
+            if (!empleadoSelect) return;
+
+            empleadoSelect.innerHTML = `<option value="">Cargando...</option>`;
+            empleadoSelect.disabled = true;
+
+            if (!servicioId) {
+                empleadoSelect.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
+                return;
+            }
+
+            const url = `{{ route('admin.citas.empleadosPorServicio') }}?servicio_id=${encodeURIComponent(servicioId)}`;
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+            const data = await res.json();
+
+            empleadoSelect.innerHTML =
+                `<option value="">Selecciona un empleado</option>` +
+                data.map(e => `<option value="${e.id}">${e.label}</option>`).join('');
+
+            empleadoSelect.disabled = false;
+
+            if (preselectId) {
+                empleadoSelect.value = String(preselectId);
+            } else if (data.length === 1) {
+                empleadoSelect.value = String(data[0].id);
+            }
+        }
+
+        function recalcTotalDuracion() {
+            let total = 0;
+            serviciosWrapper.querySelectorAll('input[data-role="duracion_snapshot"]').forEach(inp => {
+                const v = parseInt(inp.value || '0', 10);
+                total += isNaN(v) ? 0 : v;
             });
 
-            // ===========================
-            // Multi-servicio (UI) + snapshots + empleado por servicio
-            // ===========================
-            const serviciosWrapper = document.getElementById('servicios-wrapper');
-            const btnAddServicio   = document.getElementById('btn-add-servicio');
+            const totalInput = document.getElementById('duracion_total');
+            if (totalInput) totalInput.value = total;
+        }
 
-            if (serviciosWrapper) {
+        function recalcTotalMonto() {
+            let total = 0;
 
-                const serviciosAll = @json($serviciosForJs);
-                const norm = (v) => (v ?? '').toString().trim().toLowerCase();
+            serviciosWrapper.querySelectorAll('input[data-role="precio_snapshot"]').forEach(inp => {
+                const v = parseFloat(inp.value || '0');
+                total += isNaN(v) ? 0 : v;
+            });
 
-                function buildOptionsForServiceSelect(selectEl, categoria, selectedId = "") {
-                    selectEl.innerHTML = "";
+            const totalInput = document.getElementById('total_servicios');
+            if (totalInput) totalInput.value = total.toFixed(2);
+        }
 
-                    if (!categoria) {
-                        const opt = document.createElement("option");
-                        opt.value = "";
-                        opt.textContent = "Selecciona primero una categoría";
-                        selectEl.appendChild(opt);
-                        return;
-                    }
+        function recalcAll() {
+            recalcTotalDuracion();
+            recalcTotalMonto();
+        }
 
-                    const opt0 = document.createElement("option");
-                    opt0.value = "";
-                    opt0.textContent = "Seleccionar servicio";
-                    selectEl.appendChild(opt0);
+        function reindexRows() {
+            const rows = serviciosWrapper.querySelectorAll('.servicio-row');
 
-                    const catN = norm(categoria);
+            rows.forEach((row, i) => {
+                const svc    = row.querySelector('select[data-role="servicio"]');
+                const emp    = row.querySelector('select[data-role="empleado"]');
+                const precio = row.querySelector('input[data-role="precio_snapshot"]');
+                const dur    = row.querySelector('input[data-role="duracion_snapshot"]');
 
-                    serviciosAll
-                        .filter(s => norm(s.categoria) === catN)
-                        .forEach(s => {
-                            const opt = document.createElement("option");
-                            opt.value = s.id;
+                if (svc)    svc.name    = `servicios[${i}][id_servicio]`;
+                if (emp)    emp.name    = `servicios[${i}][id_empleado]`;
+                if (precio) precio.name = `servicios[${i}][precio_snapshot]`;
+                if (dur)    dur.name    = `servicios[${i}][duracion_snapshot]`;
+            });
 
-                            const precio = Number(s.precio ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
-                            opt.textContent = `${s.nombre} - $${precio} (${s.duracion} min)`;
+            const canRemove = rows.length > 1;
+            rows.forEach(row => {
+                const btn = row.querySelector('.btn-remove-servicio');
+                if (btn) btn.disabled = !canRemove;
+            });
+        }
 
-                            opt.dataset.duracion = s.duracion ?? 0;
-                            opt.dataset.precio   = s.precio ?? 0;
+        // CLICK (quitar fila)
+        serviciosWrapper.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-remove-servicio');
+            if (!btn) return;
 
-                            if (String(selectedId) === String(s.id)) opt.selected = true;
-                            selectEl.appendChild(opt);
-                        });
+            const row = btn.closest('.servicio-row');
+            if (!row) return;
+
+            const rows = serviciosWrapper.querySelectorAll('.servicio-row');
+            if (rows.length <= 1) return;
+
+            row.remove();
+            reindexRows();
+            recalcAll();
+
+            // nota: hooks de horas viven dentro del INIT (más abajo) y este click también los dispara ahí
+        });
+
+        // Agregar fila (clonando la primera)
+        function addRow() {
+            const base = serviciosWrapper.querySelector('.servicio-row');
+            if (!base) return;
+
+            const clone = base.cloneNode(true);
+
+            // limpiar inputs
+            clone.querySelectorAll('input').forEach(inp => inp.value = '');
+
+            // reset selects
+            const catSel = clone.querySelector('select[data-role="categoria"]');
+            const svcSel = clone.querySelector('select[data-role="servicio"]');
+            const empSel = clone.querySelector('select[data-role="empleado"]');
+
+            if (catSel) catSel.selectedIndex = 0;
+
+            if (svcSel) {
+                svcSel.innerHTML = `<option value="">Selecciona primero una categoría</option>`;
+                svcSel.removeAttribute('data-selected');
+            }
+
+            if (empSel) {
+                empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
+                empSel.disabled = true;
+                empSel.value = '';
+                empSel.removeAttribute('data-preselect');
+            }
+
+            // quitar ids duplicados
+            clone.querySelector('#servicio_main')?.removeAttribute('id');
+            clone.querySelector('#categoria_main')?.removeAttribute('id');
+
+            serviciosWrapper.appendChild(clone);
+
+            reindexRows();
+            recalcAll();
+        }
+
+        if (btnAddServicio) btnAddServicio.addEventListener('click', addRow);
+
+        // INIT: procesa TODAS las filas (edit + create)
+        (async () => {
+            const rows = serviciosWrapper.querySelectorAll('.servicio-row');
+            if (!rows.length) return;
+
+            for (const row of rows) {
+                const catSel = row.querySelector('select[data-role="categoria"]');
+                const svcSel = row.querySelector('select[data-role="servicio"]');
+                if (!catSel || !svcSel) continue;
+
+                const selectedId = svcSel.dataset.selected || svcSel.value || "";
+                buildOptionsForServiceSelect(svcSel, catSel.value, selectedId);
+                svcSel.dataset.selected = selectedId;
+
+                // ✅ precargar empleados en edit (si existe data-preselect)
+                const empSel = row.querySelector('select[data-role="empleado"]');
+                const preEmp = empSel?.dataset.preselect || null;
+
+                const currentServiceId = selectedId || svcSel.value || null;
+                if (currentServiceId) {
+                    await loadEmpleadosForRow(row, currentServiceId, preEmp);
+                }
+            }
+
+            reindexRows();
+
+            const fechaInput = document.getElementById('fecha_cita');
+            const horaSelect = document.getElementById('hora_cita');
+
+            function setHoraOptions(items, placeholder = 'Seleccionar Hora') {
+                if (!horaSelect) return;
+
+                horaSelect.innerHTML = '';
+                const opt0 = document.createElement('option');
+                opt0.value = '';
+                opt0.textContent = placeholder;
+                horaSelect.appendChild(opt0);
+
+                (items || []).forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.value;       // "HH:MM"
+                    opt.textContent = t.label; // "5:30 PM"
+                    horaSelect.appendChild(opt);
+                });
+            }
+
+            // ✅ IMPORTANTE: este endpoint EN TU BACKEND espera `servicios[]` (no `servicio_id`)
+            async function refreshHorasDisponibles() {
+                if (!horaSelect) return;
+
+                // (por ahora tomamos SOLO la PRIMER fila)
+                const row = serviciosWrapper.querySelector('.servicio-row');
+                if (!row) return;
+
+                const svcSel = row.querySelector('select[data-role="servicio"]');
+                const empSel = row.querySelector('select[data-role="empleado"]');
+                const durInp = row.querySelector('input[data-role="duracion_snapshot"]');
+
+                const date = (fechaInput?.value || '').trim();
+                const servicioId = (svcSel?.value || '').trim();
+                const empleadoId = (empSel?.value || '').trim();
+                const duracion = (durInp?.value || '').trim();
+
+                if (!date || !servicioId) {
+                    setHoraOptions([], 'Selecciona fecha y servicio');
+                    horaSelect.disabled = true;
+                    return;
                 }
 
-                async function loadEmpleadosForRow(rowEl, servicioId, preselectId = null) {
-                    const empleadoSelect = rowEl.querySelector('select[data-role="empleado"]');
-                    if (!empleadoSelect) return;
+                horaSelect.disabled = true;
+                setHoraOptions([], 'Cargando horarios...');
 
-                    empleadoSelect.innerHTML = `<option value="">Cargando...</option>`;
-                    empleadoSelect.disabled = true;
+                try {
+                    const qs = new URLSearchParams();
+                    qs.set('date', date);
+                    qs.append('servicios[]', servicioId); // ✅ ESTE ERA EL BUG (tu backend usa "servicios")
 
-                    if (!servicioId) {
-                        empleadoSelect.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
-                        return;
-                    }
+                    // opcional: si luego quieres filtrar por empleado(s)
+                    if (empleadoId) qs.append('empleados[]', empleadoId);
 
-                    const url = `{{ route('admin.citas.empleadosPorServicio') }}?servicio_id=${encodeURIComponent(servicioId)}`;
+                    // nota: tu backend NO usa duracion por query, la calcula desde servicios en DB,
+                    // así que no hace falta mandarla (pero no estorba si la quieres usar luego).
+
+                    const url = `{{ route('admin.citas.horasDisponibles') }}?` + qs.toString();
                     const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
                     const data = await res.json();
 
-                    empleadoSelect.innerHTML =
-                        `<option value="">Selecciona un empleado</option>` +
-                        data.map(e => `<option value="${e.id}">${e.label}</option>`).join('');
-
-                    empleadoSelect.disabled = false;
-
-                    if (preselectId) {
-                        empleadoSelect.value = String(preselectId);
-                    } else if (data.length === 1) {
-                        empleadoSelect.value = String(data[0].id);
-                    }
-                }
-
-                function recalcTotalDuracion() {
-                    let total = 0;
-                    serviciosWrapper.querySelectorAll('input[data-role="duracion_snapshot"]').forEach(inp => {
-                        const v = parseInt(inp.value || '0', 10);
-                        total += isNaN(v) ? 0 : v;
-                    });
-
-                    const totalInput = document.getElementById('duracion_total');
-                    if (totalInput) totalInput.value = total;
-                }
-
-                function recalcTotalMonto() {
-                    let total = 0;
-
-                    serviciosWrapper.querySelectorAll('input[data-role="precio_snapshot"]').forEach(inp => {
-                        const v = parseFloat(inp.value || '0');
-                        total += isNaN(v) ? 0 : v;
-                    });
-
-                    const totalInput = document.getElementById('total_servicios');
-                    if (totalInput) totalInput.value = total.toFixed(2);
-                }
-
-                function recalcAll() {
-                    recalcTotalDuracion();
-                    recalcTotalMonto();
-                }
-
-                function reindexRows() {
-                    const rows = serviciosWrapper.querySelectorAll('.servicio-row');
-
-                    rows.forEach((row, i) => {
-                        const svc    = row.querySelector('select[data-role="servicio"]');
-                        const emp    = row.querySelector('select[data-role="empleado"]');
-                        const precio = row.querySelector('input[data-role="precio_snapshot"]');
-                        const dur    = row.querySelector('input[data-role="duracion_snapshot"]');
-
-                        if (svc)    svc.name    = `servicios[${i}][id_servicio]`;
-                        if (emp)    emp.name    = `servicios[${i}][id_empleado]`;
-                        if (precio) precio.name = `servicios[${i}][precio_snapshot]`;
-                        if (dur)    dur.name    = `servicios[${i}][duracion_snapshot]`;
-                    });
-
-                    const canRemove = rows.length > 1;
-                    rows.forEach(row => {
-                        const btn = row.querySelector('.btn-remove-servicio');
-                        if (btn) btn.disabled = !canRemove;
-                    });
-                }
-
-                // CHANGE (categoría o servicio)
-                serviciosWrapper.addEventListener('change', async (e) => {
-
-                    // cambio de categoría
-                    const catSel = e.target.closest('select[data-role="categoria"]');
-                    if (catSel) {
-                        const row = catSel.closest('.servicio-row');
-                        const svcSel = row?.querySelector('select[data-role="servicio"]');
-                        if (!row || !svcSel) return;
-
-                        buildOptionsForServiceSelect(svcSel, catSel.value, "");
-
-                        // limpiar snapshots al cambiar categoría
-                        const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
-                        const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
-                        if (precioInp) precioInp.value = '';
-                        if (durInp) durInp.value = '';
-
-                        // reset empleado
-                        const empSel = row.querySelector('select[data-role="empleado"]');
-                        if (empSel) {
-                            empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
-                            empSel.disabled = true;
-                            empSel.value = '';
-                            empSel.removeAttribute('data-preselect');
-                        }
-
-                        recalcAll();
+                    if (!Array.isArray(data) || data.length === 0) {
+                        setHoraOptions([], 'Sin horas disponibles');
+                        horaSelect.disabled = true;
+                        horaSelect.value = '';
                         return;
                     }
 
-                    // cambio de servicio
-                    const svcSel = e.target.closest('select[data-role="servicio"]');
-                    if (svcSel) {
-                        const row = svcSel.closest('.servicio-row');
-                        const opt = svcSel.options[svcSel.selectedIndex];
-                        if (!row || !opt) return;
+                    const prev = horaSelect.value;
+                    await Promise.resolve(); // microtick
+                    setHoraOptions(data, 'Seleccionar Hora');
+                    horaSelect.disabled = false;
 
-                        const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
-                        const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
+                    if (prev && data.some(x => x.value === prev)) horaSelect.value = prev;
+                    else horaSelect.value = '';
 
-                        const precio   = opt.dataset.precio ?? '';
-                        const duracion = opt.dataset.duracion ?? '';
+                } catch (e) {
+                    console.error(e);
+                    setHoraOptions([], 'Error cargando horarios');
+                    horaSelect.disabled = true;
+                    horaSelect.value = '';
+                }
+            }
 
-                        if (precioInp && (precioInp.value === '' || precioInp.value == 0)) precioInp.value = precio;
-                        if (durInp && (durInp.value === '' || durInp.value == 0)) durInp.value = duracion;
+            // ===========================
+            // HOOKS para refrescar horas
+            // ===========================
+            if (fechaInput) {
+                fechaInput.addEventListener('change', () => setTimeout(refreshHorasDisponibles, 0));
+            }
 
-                        // ✅ cargar empleados para este servicio
-                        await loadEmpleadosForRow(row, svcSel.value || null);
+            // cuando cambian categoría/servicio/empleado o duración snapshot
+            serviciosWrapper.addEventListener('change', async (e) => {
 
-                        recalcAll();
-                    }
-                });
+                // cambio de categoría
+                const catSel = e.target.closest('select[data-role="categoria"]');
+                if (catSel) {
+                    const row = catSel.closest('.servicio-row');
+                    const svcSel = row?.querySelector('select[data-role="servicio"]');
+                    if (!row || !svcSel) return;
 
-                // INPUT (si editan manualmente precio o duración)
-                serviciosWrapper.addEventListener('input', (e) => {
-                    if (
-                        e.target.matches('input[data-role="duracion_snapshot"]') ||
-                        e.target.matches('input[data-role="precio_snapshot"]')
-                    ) {
-                        recalcAll();
-                    }
-                });
+                    buildOptionsForServiceSelect(svcSel, catSel.value, "");
 
-                // CLICK (quitar fila)
-                serviciosWrapper.addEventListener('click', (e) => {
-                    const btn = e.target.closest('.btn-remove-servicio');
-                    if (!btn) return;
+                    // limpiar snapshots al cambiar categoría
+                    const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
+                    const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
+                    if (precioInp) precioInp.value = '';
+                    if (durInp) durInp.value = '';
 
-                    const row = btn.closest('.servicio-row');
-                    if (!row) return;
-
-                    const rows = serviciosWrapper.querySelectorAll('.servicio-row');
-                    if (rows.length <= 1) return;
-
-                    row.remove();
-                    reindexRows();
-                    recalcAll();
-                });
-
-                // Agregar fila (clonando la primera)
-                function addRow() {
-                    const base = serviciosWrapper.querySelector('.servicio-row');
-                    if (!base) return;
-
-                    const clone = base.cloneNode(true);
-
-                    // limpiar inputs
-                    clone.querySelectorAll('input').forEach(inp => inp.value = '');
-
-                    // reset selects
-                    const catSel = clone.querySelector('select[data-role="categoria"]');
-                    const svcSel = clone.querySelector('select[data-role="servicio"]');
-                    const empSel = clone.querySelector('select[data-role="empleado"]');
-
-                    if (catSel) catSel.selectedIndex = 0;
-
-                    if (svcSel) {
-                        svcSel.innerHTML = `<option value="">Selecciona primero una categoría</option>`;
-                        svcSel.removeAttribute('data-selected');
-                    }
-
+                    // reset empleado
+                    const empSel = row.querySelector('select[data-role="empleado"]');
                     if (empSel) {
                         empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
                         empSel.disabled = true;
@@ -571,155 +665,173 @@
                         empSel.removeAttribute('data-preselect');
                     }
 
-                    // quitar ids duplicados
-                    clone.querySelector('#servicio_main')?.removeAttribute('id');
-                    clone.querySelector('#categoria_main')?.removeAttribute('id');
-
-                    serviciosWrapper.appendChild(clone);
-
-                    reindexRows();
                     recalcAll();
-                }
-
-                if (btnAddServicio) btnAddServicio.addEventListener('click', addRow);
-
-                const servicioIds = Array.from(document.querySelectorAll('select[data-role="servicio"]'))
-                    .map(s => s.value)
-                    .filter(Boolean);
-
-                const qsServicios = servicioIds.map(id => `servicio_ids[]=${encodeURIComponent(id)}`).join('&');
-
-                const url = `{{ route('admin.citas.horasDisponibles') }}?fecha=${encodeURIComponent(fecha)}&duracion=${dur}` +
-                    `&${qsServicios}` +
-                    (citaIdForHoras ? `&cita_id=${encodeURIComponent(citaIdForHoras)}` : '');
-
-                // INIT: procesa TODAS las filas (edit + create)
-                (async () => {
-                    const rows = serviciosWrapper.querySelectorAll('.servicio-row');
-                    if (!rows.length) return;
-
-                    for (const row of rows) {
-                        const catSel = row.querySelector('select[data-role="categoria"]');
-                        const svcSel = row.querySelector('select[data-role="servicio"]');
-                        if (!catSel || !svcSel) continue;
-
-                        const selectedId = svcSel.dataset.selected || svcSel.value || "";
-                        buildOptionsForServiceSelect(svcSel, catSel.value, selectedId);
-                        svcSel.dataset.selected = selectedId;
-
-                        // ✅ precargar empleados en edit (si existe data-preselect)
-                        const empSel = row.querySelector('select[data-role="empleado"]');
-                        const preEmp = empSel?.dataset.preselect || null;
-
-                        const currentServiceId = selectedId || svcSel.value || null;
-                        if (currentServiceId) {
-                            await loadEmpleadosForRow(row, currentServiceId, preEmp);
-                        }
-                    }
-
-                    reindexRows();
-                    recalcAll();
-                })();
-            }
-
-            // ===========================
-            // Método de pago (solo completada)
-            // ===========================
-            const estadoSelect = document.getElementById('estado_cita');
-            const metodoWrap   = document.getElementById('metodo_pago_wrap');
-            const metodoSelect = document.getElementById('metodo_pago');
-
-            function toggleMetodoPago() {
-                const show = (estadoSelect?.value === 'completada');
-
-                if (metodoWrap) metodoWrap.style.display = show ? '' : 'none';
-
-                if (metodoSelect) {
-                    metodoSelect.required = show;
-                    if (!show) metodoSelect.value = '';
-                }
-            }
-
-            if (estadoSelect) {
-                estadoSelect.addEventListener('change', toggleMetodoPago);
-            }
-            toggleMetodoPago();
-
-            // ===========================
-            // Buscador de clientes
-            // ===========================
-            const CLIENTES = @json($clientesForJs);
-            const input    = document.getElementById('cliente_search');
-            const dropdown = document.getElementById('cliente_dropdown');
-            const results  = document.getElementById('cliente_results');
-            const hidden   = document.getElementById('id_cliente');
-
-            function hideResults() {
-                dropdown.classList.add('hidden');
-                results.innerHTML = '';
-            }
-
-            function escapeHtml(str) {
-                return String(str)
-                    .replaceAll('&', '&amp;')
-                    .replaceAll('<', '&lt;')
-                    .replaceAll('>', '&gt;')
-                    .replaceAll('"', '&quot;')
-                    .replaceAll("'", '&#039;');
-            }
-
-            function showResults(items) {
-                if (!items.length) {
-                    results.innerHTML = `<div class="px-4 py-3 text-sm text-gray-500">Sin resultados</div>`;
-                    dropdown.classList.remove('hidden');
+                    setTimeout(refreshHorasDisponibles, 0);
                     return;
                 }
 
-                results.innerHTML = items.map(c => `
-                    <button type="button"
-                        class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm"
-                        data-id="${c.id}"
-                        data-label="${escapeHtml(c.label || '')}"
-                    >
-                        <div class="font-medium text-gray-800">${escapeHtml(c.nombre || 'Sin nombre')}</div>
-                        ${c.email ? `<div class="text-gray-500">${escapeHtml(c.email)}</div>` : ''}
-                    </button>
-                `).join('');
+                // cambio de servicio
+                const svcSel = e.target.closest('select[data-role="servicio"]');
+                if (svcSel) {
+                    const row = svcSel.closest('.servicio-row');
+                    const opt = svcSel.options[svcSel.selectedIndex];
+                    if (!row || !opt) return;
 
-                dropdown.classList.remove('hidden');
-            }
+                    const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
+                    const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
 
-            input.addEventListener('input', () => {
-                const q = input.value.trim().toLowerCase();
+                    const precio   = opt.dataset.precio ?? '';
+                    const duracion = opt.dataset.duracion ?? '';
 
-                if (!q) {
-                    hidden.value = '';
-                    hideResults();
+                    if (precioInp && (precioInp.value === '' || precioInp.value == 0)) precioInp.value = precio;
+                    if (durInp && (durInp.value === '' || durInp.value == 0)) durInp.value = duracion;
+
+                    // ✅ cargar empleados para este servicio
+                    await loadEmpleadosForRow(row, svcSel.value || null);
+
+                    recalcAll();
+
+                    // ✅ refrescar horas al cambiar servicio (y ya con empleados cargados)
+                    await refreshHorasDisponibles();
                     return;
                 }
 
-                const filtered = CLIENTES.filter(c =>
-                    (c.nombre || '').toLowerCase().includes(q) ||
-                    (c.email  || '').toLowerCase().includes(q)
-                ).slice(0, 8);
-
-                showResults(filtered);
-            });
-
-            results.addEventListener('click', (e) => {
-                const btn = e.target.closest('button[data-id]');
-                if (!btn) return;
-
-                hidden.value = btn.dataset.id;
-                input.value  = btn.dataset.label || '';
-                hideResults();
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('#cliente_search') && !e.target.closest('#cliente_dropdown')) {
-                    hideResults();
+                // cambio de empleado
+                const empSel = e.target.closest('select[data-role="empleado"]');
+                if (empSel) {
+                    setTimeout(refreshHorasDisponibles, 0);
+                    return;
                 }
             });
-        });
-    </script>
+
+            serviciosWrapper.addEventListener('input', (e) => {
+                if (
+                    e.target.matches('input[data-role="duracion_snapshot"]') ||
+                    e.target.matches('input[data-role="precio_snapshot"]')
+                ) {
+                    recalcAll();
+                    // si cambian duración manualmente y quieres que afecte horas:
+                    // setTimeout(refreshHorasDisponibles, 0);
+                }
+            });
+
+            if (btnAddServicio) {
+                btnAddServicio.addEventListener('click', () => setTimeout(refreshHorasDisponibles, 0));
+            }
+
+            serviciosWrapper.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-remove-servicio')) {
+                    setTimeout(refreshHorasDisponibles, 0);
+                }
+            });
+
+            // primer load
+            await refreshHorasDisponibles();
+
+            recalcAll();
+        })();
+    }
+
+    // ===========================
+    // Método de pago (solo completada)
+    // ===========================
+    const estadoSelect = document.getElementById('estado_cita');
+    const metodoWrap   = document.getElementById('metodo_pago_wrap');
+    const metodoSelect = document.getElementById('metodo_pago');
+
+    function toggleMetodoPago() {
+        const show = (estadoSelect?.value === 'completada');
+
+        if (metodoWrap) metodoWrap.style.display = show ? '' : 'none';
+
+        if (metodoSelect) {
+            metodoSelect.required = show;
+            if (!show) metodoSelect.value = '';
+        }
+    }
+
+    if (estadoSelect) {
+        estadoSelect.addEventListener('change', toggleMetodoPago);
+    }
+
+    toggleMetodoPago();
+
+    // ===========================
+    // Buscador de clientes
+    // ===========================
+    const CLIENTES = @json($clientesForJs);
+    const input    = document.getElementById('cliente_search');
+    const dropdown = document.getElementById('cliente_dropdown');
+    const results  = document.getElementById('cliente_results');
+    const hidden   = document.getElementById('id_cliente');
+
+    function hideResults() {
+        dropdown.classList.add('hidden');
+        results.innerHTML = '';
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function showResults(items) {
+        if (!items.length) {
+            results.innerHTML = `<div class="px-4 py-3 text-sm text-gray-500">Sin resultados</div>`;
+            dropdown.classList.remove('hidden');
+            return;
+        }
+
+        results.innerHTML = items.map(c => `
+            <button type="button"
+                class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm"
+                data-id="${c.id}"
+                data-label="${escapeHtml(c.label || '')}"
+            >
+                <div class="font-medium text-gray-800">${escapeHtml(c.nombre || 'Sin nombre')}</div>
+                ${c.email ? `<div class="text-gray-500">${escapeHtml(c.email)}</div>` : ''}
+            </button>
+        `).join('');
+
+        dropdown.classList.remove('hidden');
+    }
+
+    input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+
+        if (!q) {
+            hidden.value = '';
+            hideResults();
+            return;
+        }
+
+        const filtered = CLIENTES.filter(c =>
+            (c.nombre || '').toLowerCase().includes(q) ||
+            (c.email  || '').toLowerCase().includes(q)
+        ).slice(0, 8);
+
+        showResults(filtered);
+    });
+
+    results.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-id]');
+        if (!btn) return;
+
+        hidden.value = btn.dataset.id;
+        input.value  = btn.dataset.label || '';
+        hideResults();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#cliente_search') && !e.target.closest('#cliente_dropdown')) {
+            hideResults();
+        }
+    });
+});
+</script>
+
 @endpush
