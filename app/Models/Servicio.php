@@ -11,7 +11,8 @@ class Servicio extends Model
 
     protected $table = 'servicios';
     protected $primaryKey = 'id_servicio';
-    
+    protected $keyType = 'int';
+
     protected $fillable = [
         'nombre_servicio',
         'descripcion',
@@ -40,6 +41,12 @@ class Servicio extends Model
         return $this->hasMany(Cita::class, 'id_servicio');
     }
 
+    public function horarios()
+    {
+        return $this->hasMany(\App\Models\ServicioHorario::class, 'servicio_id', 'id_servicio');
+    }
+
+
     public function servicios()
     {
     return $this->belongsToMany(
@@ -50,5 +57,5 @@ class Servicio extends Model
     )
     ->withTimestamps()
     ->withPivot(['precio_snapshot', 'duracion_snapshot']);
-}
+    }
 }

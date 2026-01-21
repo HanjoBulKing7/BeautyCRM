@@ -151,13 +151,124 @@
 
             <img
                 id="imagenPreview"
-                src="{{ isset($servicio) && $servicio->imagen ? asset('storage/'.$servicio->imagen) : '' }}"
+                src="{{ isset($servicio) && $servicio->imagen ? asset('storage/' . ltrim($servicio->imagen, '/')) : '' }}"
                 alt="Preview"
                 class="hidden w-full max-w-md rounded-xl border border-gray-200 shadow-sm object-cover"
                 style="aspect-ratio: 16 / 9;"
             >
         </div>
     </div>
+
+    {{-- =========================
+    HORARIOS DEL SERVICIO
+    ========================= --}}
+    @php
+    $dias = [
+        0 => 'Domingo',
+        1 => 'Lunes',
+        2 => 'Martes',
+        3 => 'Miércoles',
+        4 => 'Jueves',
+        5 => 'Viernes',
+        6 => 'Sábado',
+    ];
+
+    // Prefill para edit
+    $horariosPrefill = [];
+    if(isset($servicio) && $servicio && $servicio->exists) {
+        foreach(($servicio->horarios ?? []) as $h) {
+        $horariosPrefill[$h->dia_semana][] = [
+            'hora_inicio' => substr((string)$h->hora_inicio, 0, 5),
+            'hora_fin'    => substr((string)$h->hora_fin, 0, 5),
+        ];
+        }
+    }
+    @endphp
+
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+    <div class="flex items-start justify-between gap-3">
+        <div>
+        <label class="block text-sm font-medium text-gray-700">
+            <i class="fas fa-calendar-alt mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Horarios del Servicio
+        </label>
+        <p class="text-xs text-gray-500 mt-1">
+            Agrega uno o más rangos por día (ej. 10:00–14:00 y 16:00–19:00).
+        </p>
+        </div>
+    </div>
+
+    <div class="mt-4 space-y-4" id="bb-horarios-wrapper">
+        @foreach($dias as $dia => $diaLabel)
+        @php
+            $rows = old("horarios.$dia") ?? ($horariosPrefill[$dia] ?? []);
+            $rows = is_array($rows) ? $rows : [];
+        @endphp
+
+        <div class="rounded-lg border border-gray-200 p-3">
+            <div class="flex items-center justify-between gap-3">
+            <div class="font-medium text-gray-800">{{ $diaLabel }}</div>
+
+            <button
+                type="button"
+                class="text-sm px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50"
+                data-add-horario
+                data-dia="{{ $dia }}"
+            >
+                + Agregar rango
+            </button>
+            </div>
+
+            <div class="mt-3 space-y-2" data-dia-wrap="{{ $dia }}">
+            @foreach($rows as $i => $r)
+                @php
+                $hi = data_get($r, 'hora_inicio', '');
+                $hf = data_get($r, 'hora_fin', '');
+                @endphp
+
+                <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-gray-50 rounded-lg p-2" data-horario-row>
+                <div class="flex gap-2 items-center w-full sm:w-auto">
+                    <label class="text-xs text-gray-600 w-16">Inicio</label>
+                    <input type="time"
+                        name="horarios[{{ $dia }}][{{ $i }}][hora_inicio]"
+                        value="{{ $hi }}"
+                        class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+
+                <div class="flex gap-2 items-center w-full sm:w-auto">
+                    <label class="text-xs text-gray-600 w-16">Fin</label>
+                    <input type="time"
+                        name="horarios[{{ $dia }}][{{ $i }}][hora_fin]"
+                        value="{{ $hf }}"
+                        class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+
+                <button type="button"
+                        class="ml-auto text-xs px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                        data-remove-horario>
+                    Quitar
+                </button>
+                </div>
+            @endforeach
+            </div>
+        </div>
+        @endforeach
+    </div>
+
+    @error('horarios')
+    <div class="mt-3 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm space-y-1">
+        @if(is_array($message))
+        @foreach($message as $m)
+            <div>• {{ $m }}</div>
+        @endforeach
+        @else
+        <div>• {{ $message }}</div>
+        @endif
+    </div>
+    @enderror
+
+    </div>
+
 
 </div>
 
@@ -187,5 +298,66 @@ document.addEventListener("DOMContentLoaded", () => {
         preview.src = url;
         preview.classList.remove("hidden");
     });
+
+        // ==========================
+    // Horarios del servicio (UI)
+    // ==========================
+    const horariosWrapper = document.getElementById('bb-horarios-wrapper');
+    if (horariosWrapper) {
+
+        const nextIndexForDay = (day) => {
+            const dayWrap = horariosWrapper.querySelector(`[data-dia-wrap="${day}"]`);
+            const rows = dayWrap ? dayWrap.querySelectorAll('[data-horario-row]') : [];
+            return rows.length;
+        };
+
+        horariosWrapper.addEventListener('click', (e) => {
+
+            const addBtn = e.target.closest('[data-add-horario]');
+            if (addBtn) {
+                const day = addBtn.getAttribute('data-dia');
+                const dayWrap = horariosWrapper.querySelector(`[data-dia-wrap="${day}"]`);
+                if (!dayWrap) return;
+
+                const i = nextIndexForDay(day);
+
+                const row = document.createElement('div');
+                row.className = 'flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-gray-50 rounded-lg p-2';
+                row.setAttribute('data-horario-row', '');
+
+                row.innerHTML = `
+                    <div class="flex gap-2 items-center w-full sm:w-auto">
+                        <label class="text-xs text-gray-600 w-16">Inicio</label>
+                        <input type="time"
+                               name="horarios[${day}][${i}][hora_inicio]"
+                               class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
+                    </div>
+
+                    <div class="flex gap-2 items-center w-full sm:w-auto">
+                        <label class="text-xs text-gray-600 w-16">Fin</label>
+                        <input type="time"
+                               name="horarios[${day}][${i}][hora_fin]"
+                               class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
+                    </div>
+
+                    <button type="button"
+                            class="ml-auto text-xs px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                            data-remove-horario>
+                        Quitar
+                    </button>
+                `;
+
+                dayWrap.appendChild(row);
+                return;
+            }
+
+            const removeBtn = e.target.closest('[data-remove-horario]');
+            if (removeBtn) {
+                const row = removeBtn.closest('[data-horario-row]');
+                if (row) row.remove();
+            }
+        });
+    }
+
 });
 </script>

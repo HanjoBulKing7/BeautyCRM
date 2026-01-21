@@ -95,184 +95,14 @@
             @enderror
         </div>
 
-        {{-- SERVICIOS (dinámicos) --}}
-        <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-scissors mr-1" style="{{ $bbIconColor }}"></i>
-                Servicios <span class="text-red-500">*</span>
-            </label>
-
-            <div id="servicios-wrapper" class="space-y-3">
-
-                @if($mode === 'edit' && $cita && $cita->servicios->count())
-                    @foreach($cita->servicios as $i => $svc)
-                        <div
-                            class="servicio-row bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
-                            data-index="{{ $i }}"
-                        >
-                            {{-- CATEGORÍA --}}
-                            <div class="md:col-span-3">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
-                                <select
-                                    class="categoria-select {{ $bbField }}"
-                                    data-role="categoria"
-                                >
-                                    <option value="">Seleccionar categoría</option>
-                                    @foreach($categorias as $cat)
-                                        <option value="{{ $cat }}" @selected($cat === $svc->categoria)>
-                                            {{ $cat }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- SERVICIO --}}
-                            <div class="md:col-span-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Servicio *</label>
-                                <select
-                                    name="servicios[{{ $i }}][id_servicio]"
-                                    data-role="servicio"
-                                    data-selected="{{ $svc->id_servicio }}"
-                                    class="servicio-select {{ $bbField }}"
-                                    required
-                                >
-                                    <option value="">Cargando servicios…</option>
-                                </select>
-                            </div>
-
-                            {{-- PRECIO --}}
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
-                                <input
-                                    type="number"
-                                    name="servicios[{{ $i }}][precio_snapshot]"
-                                    value="{{ $svc->pivot->precio_snapshot }}"
-                                    data-role="precio_snapshot"
-                                    class="precio-input {{ $bbField }}"
-                                >
-                            </div>
-
-                            {{-- DURACIÓN --}}
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Duración</label>
-                                <input
-                                    type="number"
-                                    name="servicios[{{ $i }}][duracion_snapshot]"
-                                    value="{{ $svc->pivot->duracion_snapshot }}"
-                                    data-role="duracion_snapshot"
-                                    class="duracion-input {{ $bbField }}"
-                                >
-                            </div>
-
-                            {{-- QUITAR --}}
-                            <div class="md:col-span-1 flex items-center justify-center mt-7">
-                                <button
-                                    type="button"
-                                    class="btn-remove-servicio w-12 h-12 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
-                                    title="Quitar servicio"
-                                >
-                                    <i class="fas fa-times text-lg leading-none"></i>
-                                </button>
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
-
-                {{-- Row inicial (Create) / base para clonar --}}
-                <div
-                    class="servicio-row bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
-                    data-index="0"
-                >
-                    {{-- CATEGORÍA (filtro) --}}
-                    <div class="md:col-span-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
-                        <select
-                            id="categoria_main"
-                            class="categoria-select {{ $bbField }}"
-                            data-role="categoria"
-                        >
-                            <option value="">Seleccionar categoría</option>
-                            @foreach($categorias as $cat)
-                                <option value="{{ $cat }}">{{ $cat }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- SELECT DE SERVICIO --}}
-                    <div class="md:col-span-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Servicio <span class="text-red-500">*</span>
-                        </label>
-
-                        <select
-                            id="servicio_main"
-                            name="servicios[0][id_servicio]"
-                            data-role="servicio"
-                            class="servicio-select {{ $bbField }}"
-                            required
-                        >
-                            <option value="">Selecciona primero una categoría</option>
-                        </select>
-                    </div>
-
-                    {{-- PRECIO (editable) --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-0 bottom-0 flex items-center text-gray-500">$</span>
-                            <input
-                                type="number"
-                                step="1"
-                                min="0"
-                                name="servicios[0][precio_snapshot]"
-                                class="precio-input {{ $bbField }} pl-9"
-                                placeholder="0.00"
-                                data-role="precio_snapshot"
-                            >
-                        </div>
-                    </div>
-
-                    {{-- DURACIÓN (editable) --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Duración</label>
-                        <input
-                            type="number"
-                            step="1"
-                            min="0"
-                            name="servicios[0][duracion_snapshot]"
-                            class="duracion-input {{ $bbField }}"
-                            placeholder="min"
-                            data-role="duracion_snapshot"
-                        >
-                    </div>
-
-                    {{-- QUITAR --}}
-                    <div class="md:col-span-1 flex items-center justify-center mt-7">
-                        <button
-                            type="button"
-                            class="btn-remove-servicio remove-servicio w-12 h-12 inline-flex items-center justify-center leading-none rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
-                            title="Quitar servicio"
-                        >
-                            <i class="fas fa-times text-lg leading-none"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button
-                    type="button"
-                    id="btn-add-servicio"
-                    class="mt-2 inline-flex items-center text-sm font-semibold transition"
-                    style="color: rgba(201,162,74,.95)"
-                >
-                    <i class="fas fa-plus-circle mr-2"></i>
-                    Agregar otro servicio
-                </button>
-
-                @error('servicios')
-                    <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-                @enderror
-            </div>
-        </div>
+        {{-- SERVICIOS ROWS (partial) --}}
+        @include('admin.citas.partials._servicios_rows', [
+            'mode' => $mode,
+            'cita' => $cita,
+            'categorias' => $categorias,
+            'bbField' => $bbField,
+            'bbIconColor' => $bbIconColor,
+        ])
 
         {{-- TOTAL DURACIÓN --}}
         <div class="mt-3">
@@ -329,7 +159,7 @@
                 @for($h = 9; $h <= 20; $h++)
                     @foreach([0, 30] as $m)
                         @php $time = sprintf('%02d:%02d', $h, $m); @endphp
-                        <option value="{{ $time }}" @selected($horaSelected == $time)}>
+                        <option value="{{ $time }}" @selected($horaSelected == $time)>
                             {{ \Carbon\Carbon::createFromFormat('H:i', $time)->format('g:i A') }}
                         </option>
                     @endforeach
@@ -341,44 +171,10 @@
             @enderror
         </div>
 
-        {{-- EMPLEADO (agrupado por departamento) --}}
-        <div>
-            <label for="id_empleado" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-user-tie mr-1" style="{{ $bbIconColor }}"></i>
-                Empleado
-            </label>
-
-            @php
-                $empleadosPorDepto = $empleados->groupBy(fn ($e) => $e->departamento ?? 'Sin departamento');
-                $empSelected = old('id_empleado', $cita->id_empleado ?? '');
-            @endphp
-
-            <select
-                id="id_empleado"
-                name="id_empleado"
-                class="{{ $bbField }}"
-            >
-                <option value="">No asignado</option>
-
-                @foreach($empleadosPorDepto as $depto => $emps)
-                    <optgroup label="{{ $depto }}">
-                        @foreach($emps as $e)
-                            @php
-                                $nombreEmp = trim(($e->nombre ?? $e->name ?? '') . ' ' . ($e->apellido ?? ''));
-                                $correoEmp = $e->email ?? '';
-                            @endphp
-                            <option value="{{ $e->id }}" @selected((string) $empSelected === (string) $e->id)}>
-                                {{ $nombreEmp }}{{ $correoEmp ? ' - ' . $correoEmp : '' }}
-                            </option>
-                        @endforeach
-                    </optgroup>
-                @endforeach
-            </select>
-
-            @error('id_empleado')
-                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-            @enderror
-        </div>
+        {{-- EMPLEADO GLOBAL (DESACTIVADO) --}}
+        <!--
+        <div> ... </div>
+        -->
 
         {{-- ESTADO --}}
         <div>
@@ -542,17 +338,14 @@
             });
 
             // ===========================
-            // Multi-servicio (UI) + snapshots (precio/duracion editables)
+            // Multi-servicio (UI) + snapshots + empleado por servicio
             // ===========================
             const serviciosWrapper = document.getElementById('servicios-wrapper');
             const btnAddServicio   = document.getElementById('btn-add-servicio');
 
-            // Si por alguna razón no existe el wrapper, salimos para no romper el resto del script
             if (serviciosWrapper) {
 
-                // ✅ usa tu PHP mapping
                 const serviciosAll = @json($serviciosForJs);
-
                 const norm = (v) => (v ?? '').toString().trim().toLowerCase();
 
                 function buildOptionsForServiceSelect(selectEl, categoria, selectedId = "") {
@@ -582,13 +375,41 @@
                             const precio = Number(s.precio ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
                             opt.textContent = `${s.nombre} - $${precio} (${s.duracion} min)`;
 
-                            // datasets para autollenar
                             opt.dataset.duracion = s.duracion ?? 0;
                             opt.dataset.precio   = s.precio ?? 0;
 
                             if (String(selectedId) === String(s.id)) opt.selected = true;
                             selectEl.appendChild(opt);
                         });
+                }
+
+                async function loadEmpleadosForRow(rowEl, servicioId, preselectId = null) {
+                    const empleadoSelect = rowEl.querySelector('select[data-role="empleado"]');
+                    if (!empleadoSelect) return;
+
+                    empleadoSelect.innerHTML = `<option value="">Cargando...</option>`;
+                    empleadoSelect.disabled = true;
+
+                    if (!servicioId) {
+                        empleadoSelect.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
+                        return;
+                    }
+
+                    const url = `{{ route('admin.citas.empleadosPorServicio') }}?servicio_id=${encodeURIComponent(servicioId)}`;
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+                    const data = await res.json();
+
+                    empleadoSelect.innerHTML =
+                        `<option value="">Selecciona un empleado</option>` +
+                        data.map(e => `<option value="${e.id}">${e.label}</option>`).join('');
+
+                    empleadoSelect.disabled = false;
+
+                    if (preselectId) {
+                        empleadoSelect.value = String(preselectId);
+                    } else if (data.length === 1) {
+                        empleadoSelect.value = String(data[0].id);
+                    }
                 }
 
                 function recalcTotalDuracion() {
@@ -624,15 +445,16 @@
 
                     rows.forEach((row, i) => {
                         const svc    = row.querySelector('select[data-role="servicio"]');
+                        const emp    = row.querySelector('select[data-role="empleado"]');
                         const precio = row.querySelector('input[data-role="precio_snapshot"]');
                         const dur    = row.querySelector('input[data-role="duracion_snapshot"]');
 
                         if (svc)    svc.name    = `servicios[${i}][id_servicio]`;
+                        if (emp)    emp.name    = `servicios[${i}][id_empleado]`;
                         if (precio) precio.name = `servicios[${i}][precio_snapshot]`;
                         if (dur)    dur.name    = `servicios[${i}][duracion_snapshot]`;
                     });
 
-                    // habilitar quitar solo si hay más de 1 fila
                     const canRemove = rows.length > 1;
                     rows.forEach(row => {
                         const btn = row.querySelector('.btn-remove-servicio');
@@ -640,8 +462,8 @@
                     });
                 }
 
-                // ✅ Delegación: CHANGE (categoría o servicio)
-                serviciosWrapper.addEventListener('change', (e) => {
+                // CHANGE (categoría o servicio)
+                serviciosWrapper.addEventListener('change', async (e) => {
 
                     // cambio de categoría
                     const catSel = e.target.closest('select[data-role="categoria"]');
@@ -657,6 +479,15 @@
                         const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
                         if (precioInp) precioInp.value = '';
                         if (durInp) durInp.value = '';
+
+                        // reset empleado
+                        const empSel = row.querySelector('select[data-role="empleado"]');
+                        if (empSel) {
+                            empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
+                            empSel.disabled = true;
+                            empSel.value = '';
+                            empSel.removeAttribute('data-preselect');
+                        }
 
                         recalcAll();
                         return;
@@ -678,11 +509,14 @@
                         if (precioInp && (precioInp.value === '' || precioInp.value == 0)) precioInp.value = precio;
                         if (durInp && (durInp.value === '' || durInp.value == 0)) durInp.value = duracion;
 
+                        // ✅ cargar empleados para este servicio
+                        await loadEmpleadosForRow(row, svcSel.value || null);
+
                         recalcAll();
                     }
                 });
 
-                // ✅ Delegación: INPUT (si editan manualmente precio o duración)
+                // INPUT (si editan manualmente precio o duración)
                 serviciosWrapper.addEventListener('input', (e) => {
                     if (
                         e.target.matches('input[data-role="duracion_snapshot"]') ||
@@ -692,7 +526,7 @@
                     }
                 });
 
-                // ✅ Delegación: CLICK (quitar fila) — recalcula SIEMPRE
+                // CLICK (quitar fila)
                 serviciosWrapper.addEventListener('click', (e) => {
                     const btn = e.target.closest('.btn-remove-servicio');
                     if (!btn) return;
@@ -708,7 +542,7 @@
                     recalcAll();
                 });
 
-                // ✅ Agregar fila (clonando la primera)
+                // Agregar fila (clonando la primera)
                 function addRow() {
                     const base = serviciosWrapper.querySelector('.servicio-row');
                     if (!base) return;
@@ -721,10 +555,20 @@
                     // reset selects
                     const catSel = clone.querySelector('select[data-role="categoria"]');
                     const svcSel = clone.querySelector('select[data-role="servicio"]');
+                    const empSel = clone.querySelector('select[data-role="empleado"]');
+
                     if (catSel) catSel.selectedIndex = 0;
 
                     if (svcSel) {
                         svcSel.innerHTML = `<option value="">Selecciona primero una categoría</option>`;
+                        svcSel.removeAttribute('data-selected');
+                    }
+
+                    if (empSel) {
+                        empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
+                        empSel.disabled = true;
+                        empSel.value = '';
+                        empSel.removeAttribute('data-preselect');
                     }
 
                     // quitar ids duplicados
@@ -739,25 +583,39 @@
 
                 if (btnAddServicio) btnAddServicio.addEventListener('click', addRow);
 
-                // ✅ INIT: procesa TODAS las filas y usa data-selected
-                (() => {
+                const servicioIds = Array.from(document.querySelectorAll('select[data-role="servicio"]'))
+                    .map(s => s.value)
+                    .filter(Boolean);
+
+                const qsServicios = servicioIds.map(id => `servicio_ids[]=${encodeURIComponent(id)}`).join('&');
+
+                const url = `{{ route('admin.citas.horasDisponibles') }}?fecha=${encodeURIComponent(fecha)}&duracion=${dur}` +
+                    `&${qsServicios}` +
+                    (citaIdForHoras ? `&cita_id=${encodeURIComponent(citaIdForHoras)}` : '');
+
+                // INIT: procesa TODAS las filas (edit + create)
+                (async () => {
                     const rows = serviciosWrapper.querySelectorAll('.servicio-row');
                     if (!rows.length) return;
 
-                    rows.forEach((row) => {
+                    for (const row of rows) {
                         const catSel = row.querySelector('select[data-role="categoria"]');
                         const svcSel = row.querySelector('select[data-role="servicio"]');
-                        if (!catSel || !svcSel) return;
+                        if (!catSel || !svcSel) continue;
 
-                        // 👇 clave: en edit el select trae value vacío, pero data-selected sí trae el id
                         const selectedId = svcSel.dataset.selected || svcSel.value || "";
-
-                        // Poblar opciones según categoría y seleccionar el id correcto
                         buildOptionsForServiceSelect(svcSel, catSel.value, selectedId);
-
-                        // (Opcional) deja actualizado el dataset por si luego reindexas/clonas
                         svcSel.dataset.selected = selectedId;
-                    });
+
+                        // ✅ precargar empleados en edit (si existe data-preselect)
+                        const empSel = row.querySelector('select[data-role="empleado"]');
+                        const preEmp = empSel?.dataset.preselect || null;
+
+                        const currentServiceId = selectedId || svcSel.value || null;
+                        if (currentServiceId) {
+                            await loadEmpleadosForRow(row, currentServiceId, preEmp);
+                        }
+                    }
 
                     reindexRows();
                     recalcAll();

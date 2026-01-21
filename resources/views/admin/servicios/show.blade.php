@@ -115,6 +115,84 @@
 
         </div>
 
+        @php
+            $dias = [
+                0 => 'Domingo',
+                1 => 'Lunes',
+                2 => 'Martes',
+                3 => 'Miércoles',
+                4 => 'Jueves',
+                5 => 'Viernes',
+                6 => 'Sábado',
+            ];
+
+            $horariosPorDia = ($servicio->horarios ?? collect())
+                ->sortBy(['dia_semana', 'hora_inicio'])
+                ->groupBy('dia_semana');
+
+            // Solo días con rangos
+            $diasConHorario = $horariosPorDia->keys()->sort()->values();
+
+            $fmt = fn($t) => $t ? \Carbon\Carbon::parse($t)->format('H:i') : '';
+        @endphp
+
+        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+            <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-clock" style="color: rgba(201,162,74,.92)"></i>
+                Horarios del Servicio
+            </h3>
+
+            @if($diasConHorario->isEmpty())
+                <p class="text-gray-500 text-sm">No hay horarios definidos para este servicio.</p>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach($diasConHorario as $numDia)
+                        @php
+                            $rangos = $horariosPorDia->get($numDia, collect());
+                            $labelDia = $dias[$numDia] ?? ('Día ' . $numDia);
+                        @endphp
+
+                        <div class="rounded-xl border border-gray-200 p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-semibold text-gray-800">{{ $labelDia }}</span>
+
+                                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800">
+                                    {{ $rangos->count() }} rango(s)
+                                </span>
+                            </div>
+
+                            <ul class="space-y-2">
+                                @foreach($rangos as $h)
+                                    @php
+                                        $inicio = $fmt($h->hora_inicio);
+                                        $fin    = $fmt($h->hora_fin);
+                                        $cruzaMedianoche = ($inicio && $fin && $fin < $inicio);
+                                    @endphp
+
+                                    <li class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                                        <div class="text-sm text-gray-700">
+                                            <span class="font-medium">{{ $inicio }}</span>
+                                            <span class="text-gray-400 mx-1">—</span>
+                                            <span class="font-medium">{{ $fin }}</span>
+
+                                            @if($cruzaMedianoche)
+                                                <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                                                    Cruza medianoche
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <span class="text-xs text-gray-400">#{{ $h->id }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+
         <!-- Botones de acción -->
         <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
 

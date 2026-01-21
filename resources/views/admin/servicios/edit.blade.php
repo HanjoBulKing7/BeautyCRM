@@ -31,7 +31,7 @@
     </div>
 
     <div class="p-6">
-        <form method="POST" action="{{ route('admin.servicios.update', $servicio->id_servicio) }}" class="space-y-6">
+        <form method="POST" action="{{ route('admin.servicios.update', $servicio->id_servicio) }}" enctype="multipart/form-data" class="space-y-6">
             @method('PUT')
             @csrf
 
