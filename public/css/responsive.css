@@ -1,3 +1,46 @@
+/* =========================================
+   ✅ Mobile fixes (phones)
+   No borra nada: solo override en pantallas chicas
+========================================= */
+@media (max-width: 575.98px) {
+
+  /* El hero debe ocupar toda la pantalla */
+  .Normal-hero-section{
+    height: 100vh;
+    min-height: 100vh;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Wrapper full alto + recorte */
+  .Normal-hero-image-wrapper{
+    position: relative;
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Capas SIEMPRE cubriendo todo */
+  .Normal-hero-image-wrapper img.sky,
+  .Normal-hero-image-wrapper img.mountains,
+  .Normal-hero-image-wrapper img.man-standing{
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    margin: 0 !important;
+    transform: none !important; /* <- clave: quita el translateY(-50%) */
+  }
+
+  /* Por si tu CSS viejo solo afectaba al sky */
+  .Normal-hero-image-wrapper img.sky{
+    top: 0 !important;
+  }
+}
+
+
 /* Small devices (landscape phones, 576px and up) */
 @media (min-width: 576px) {
   .Normal-menu-block-link {

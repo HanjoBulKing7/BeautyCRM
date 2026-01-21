@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
 h2 {
   margin-top: 0;
   margin-bottom: 1rem;
@@ -109,6 +111,54 @@ h2 {
   max-width: 800px;
   margin: 0 auto;
   text-align: center;
+}
+/* ✅ Override tipografía: Inter (sin borrar nada) */
+.horizontal-main-wrapper{
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.horizontal-heading{
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 600; /* elegante, no tan pesado */
+  letter-spacing: 0.02em; /* toque pro */
+}
+
+/* ✅ Link "Agendar cita" (sin romper nada) */
+.horizontal-cta{
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .75rem;
+
+  font-weight: 600;
+  text-decoration: none;
+  color: #292929;
+
+  border-bottom: 2px solid rgba(184, 134, 11, 0.35);
+  padding-bottom: 2px;
+
+  transition: color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.horizontal-cta:hover{
+  color: #b8860b;
+  border-bottom-color: #b8860b;
+  transform: translateY(-1px);
+}
+.horizontal-cta:focus-visible{
+  outline: 2px solid #b8860b;
+  outline-offset: 4px;
+  border-bottom-color: #b8860b;
+  color: #b8860b;
+}
+/* ✅ Fix: quitar efecto "doble" y adelgazar el título */
+.horizontal-heading{
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 600;        /* 400 si la quieres aún más delgada */
+  text-shadow: none;       /* 👈 quita el “duplicado” */
+  text-transform: uppercase;
+
+  letter-spacing: 0.02em;  /* toque elegante (opcional) */
 }
 
 @media (max-width: 575.98px) {

@@ -9,8 +9,10 @@
 @section('content')
     @include('beauty.partials.header')
     @include('beauty.scrollGaleriaHero-module')
-
+    @include('beauty.scrollHorizontal-module')
     @include('beauty.galeria')
+
+    
     @include('beauty.partials.footer')
     
 

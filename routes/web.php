@@ -6,20 +6,32 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\ServicioController;
+use App\Http\Controllers\ServiciosPublicController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\AgendarCitaPublicController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardCitasController;
 
 
 // Rutas Públicas (Cliente)
-Route::get('/home', [HomeController::class, 'index'])->name('cliente.home');
+Route::get('/home', [HomeController::class, 'index'])
+    ->name('cliente.home');
+
 Route::view('/galeria', 'galeria')->name('galeria');
 
-Route::view('/servicio', 'servicio')->name('servicio');
-Route::view('/agendarcita', 'agendarcita')->name('agendarcita');
+Route::get('/servicio', [ServiciosPublicController::class, 'index'])
+    ->name('servicio.public');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/agendar-cita', [CitaController::class, 'create'])
+        ->name('citas.create');
+    Route::post('/agendar-cita', [CitaController::class, 'store'])
+        ->name('citas.store');
+});
+
 
 Route::get('/anticipo', function () {
     return view('cliente.anticipo');
