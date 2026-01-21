@@ -18,7 +18,7 @@
         id: "bb-hero",
         trigger: root,
         start: "top top",
-        end: "+=100%",
+        end: "+=70%",
         pin: true,
         scrub: true,
         invalidateOnRefresh: true,

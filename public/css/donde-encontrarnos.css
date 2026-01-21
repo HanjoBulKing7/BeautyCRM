@@ -134,3 +134,41 @@
 .find-us__mapCard.is-fallback .find-us__mapFallback {
   display: flex;
 }
+/* ============================
+   ✅ Responsive: en móvil apila (mapa abajo)
+   (NO borra nada, solo override)
+============================ */
+@media (max-width: 767.98px) {
+
+  .find-us{
+    padding: 56px 14px; /* un poco más compacto en móvil */
+  }
+
+  .find-us__container{
+    grid-template-columns: 1fr;  /* 👈 1 columna */
+    gap: 16px;
+  }
+
+  /* Asegura alturas más cómodas en móvil */
+  .find-us__media,
+  .find-us__mapCard{
+    min-height: 320px;
+    border-radius: 18px;
+  }
+
+  .find-us__map{
+    min-height: 320px;
+  }
+
+  /* ✅ Orden: imagen primero, mapa abajo */
+  .find-us__media{ order: 1; }
+  .find-us__mapCard{ order: 2; }
+
+  /* (Opcional) el texto centrado no tan grande */
+  .find-us__label{
+    font-size: clamp(20px, 6vw, 30px);
+    white-space: normal; /* evita que se corte si no cabe */
+    text-align: center;
+    padding: 0 12px;
+  }
+}

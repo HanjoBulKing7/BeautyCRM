@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Lobster&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap");
 
 * {
   margin: 0;
@@ -129,6 +130,7 @@ body {
   z-index: 1;
 }
 
+
 @media (max-width: 575.98px) {
   .hero-about-section p {
     font-size: 1.15rem;
@@ -137,5 +139,71 @@ body {
 
   .hero-intro p {
     letter-spacing: 0.12em;
+  }
+}
+/* ============================
+   ✅ BeautyBonita Premium Title
+   (mismo vibe que "iPhone 15 Pro")
+============================ */
+
+/* El timeline de scroll (como en la demo) */
+.hero-wrapper-element{
+  view-timeline-name: --bb-scroll;
+  view-timeline-axis: block;
+}
+
+.hero-intro .bb-title{
+  display: grid;
+  gap: 0.18em;
+  margin: 0;
+  line-height: 1;
+  text-align: center;
+}
+
+.hero-intro .bb-title__kicker{
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.38em;
+  font-size: clamp(0.85rem, 1.35vw, 1.15rem);
+  color: rgba(255,255,255,0.88);
+}
+
+.hero-intro .bb-title__main{
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(2.8rem, 7vw, 6.3rem);
+  letter-spacing: 0.03em;
+  text-shadow: 0 14px 42px rgba(0,0,0,0.35);
+  transform: scale(1);
+  will-change: transform, opacity;
+}
+
+/* Animaciones (equivalentes a scale-up + fade-away) */
+@keyframes bb-scale-up {
+  to { transform: scale(1.35); }
+}
+@keyframes bb-fade-away {
+  to { opacity: 0; }
+}
+
+/* Solo aplica si el navegador soporta scroll-driven animations */
+@supports (animation-timeline: --bb-scroll) {
+
+  .hero-intro .bb-title__kicker{
+    animation: bb-fade-away both linear;
+    animation-timeline: --bb-scroll;
+    animation-range: exit 20% exit 90%;
+  }
+
+  .hero-intro .bb-title__main{
+    animation:
+      bb-scale-up both ease-in-out,
+      bb-fade-away both linear;
+    animation-timeline: --bb-scroll;
+    animation-range:
+      exit 0% exit 100%,
+      exit 55% exit 90%;
   }
 }

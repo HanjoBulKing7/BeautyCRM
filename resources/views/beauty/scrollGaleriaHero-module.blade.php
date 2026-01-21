@@ -7,8 +7,11 @@
 <div class="hero-wrapper">
     <div class="hero-wrapper-element">
         <div class="hero-intro">
-            <h1>BeautyBonita</h1>
-            <p>Salon de belleza</p>
+            <h1 class="bb-title">
+                <span class="bb-title__kicker">Salon </span>
+                <span class="bb-title__main">Beauty Bonita</span>
+            </h1>
+            <p> De belleza</p>
         </div>
 
         <div class="hero-content">

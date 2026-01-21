@@ -3,20 +3,12 @@
 @endpush
 
     <section class="horizontal-main-wrapper">
-      <div class="horizontal-section">
-        <div class="horizontal-container-medium">
-          <div class="horizontal-padding-vertical">
-            <div class="horizontal-max-width-large">
-              <h1 class="horizontal-heading"></h1>
-            </div>
-          </div>
-        </div>
-      </div>
+      
      <div class="horizontal-section">
         <div class="horizontal-container-medium">
           <div class="horizontal-padding-vertical">
             <div class="horizontal-max-width-large">
-              <h1 class="horizontal-heading">Beauty Bonita Salon De Belleza</h1>
+              <h1 class="horizontal-heading">Cuidado y Belleza para Ti</h1>
             </div>
           </div>
         </div>
@@ -29,12 +21,13 @@
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
                 <h2 class="horizontal-item_number">1</h2>
-                <h2>Pestañas en Acción: Realza tu Mirada Cada Día</h2>
+                <h2>Tratamientos Capilares: Brillo, Fuerza y Reparación</h2>
                 <p class="horizontal-item_p">
-                  Descubre la belleza de unas pestañas perfectas con técnicas profesionales
-                  que resaltan tu mirada, aportan volumen y transforman tu estilo de manera
-                  natural y elegante.
+                  Devuélvele vida a tu cabello con hidrataciones profundas, 
+                  reparación y nutrición profesional. Ideal para controlar frizz, 
+                  mejorar textura y lograr un acabado suave y luminoso.
                 </p>
+                <a href="/agendarcita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
                 src="https://videos.pexels.com/video-files/10178127/10178127-uhd_2560_1440_30fps.mp4"
@@ -48,12 +41,13 @@
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
                 <h2 class="horizontal-item_number">2</h2>
-                <h2>Nature's Symphony: The Sounds That Heal the Soul</h2>
+                <h2>Pestañas: Mirada Definida Todo el Día</h2>
                 <p class="horizontal-item_p">
-                  Immerse yourself in the soothing sounds of chirping birds,
-                  rustling leaves, and flowing streams – nature's music for
-                  peace and tranquility.
+                  Realza tu mirada con técnicas que aportan longitud, 
+                  volumen y curvatura con un resultado elegante y natural. 
+                  Perfecto para verte increíble sin esfuerzo.
                 </p>
+                <a href="/agendarcita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
                 src="https://videos.pexels.com/video-files/15708463/15708463-uhd_2560_1440_24fps.mp4"
@@ -68,13 +62,14 @@
               <div class="horizontal-item_content">
                 <h2 class="horizontal-item_number">3</h2>
                 <h2>
-                  Cejas en Armonía: El Arte que Realza tu Expresión
+                  Pedicura: Pies Suaves y Presentables
                 </h2>
                 <p class="horizontal-item_p">
-                  Sumérgete en la belleza de unas cejas perfectamente diseñadas, donde cada
-                  trazo aporta forma, equilibrio y definición para lograr una mirada más
-                  expresiva y natural.
+                  Relájate con un cuidado completo: limpieza, exfoliación 
+                  e hidratación para unos pies suaves y lindos. 
+                  Un toque perfecto para sentirte fresca y segura.
                 </p>
+                <a href="/agendarcita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
                 src="https://videos.pexels.com/video-files/15708462/15708462-uhd_2560_1440_24fps.mp4"
@@ -88,11 +83,13 @@
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
                 <h2 class="horizontal-item_number">4</h2>
-                <h2>Belleza Renaciente: Tratamientos Faciales que Transforman tu Piel</h2>
+                <h2>Faciales: Piel Radiante y Renovada</h2>
                 <p class="horizontal-item_p">
-                  Descubre el poder de rituales faciales que revitalizan, hidratan y renuevan
-                  tu piel, revelando un brillo natural que refleja su verdadera belleza.
+                  Rituales faciales que limpian, hidratan y revitalizan tu piel. 
+                  Logra un glow natural, textura más uniforme y 
+                  una sensación de frescura desde la primera sesión.
                 </p>
+                <a href="/agendarcita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
                 src="https://videos.pexels.com/video-files/5788966/5788966-hd_1920_1080_25fps.mp4"
