@@ -20,9 +20,9 @@ class Servicio extends Model
         'duracion_minutos',
         'estado',
         'imagen',
-        'categoria', // ← Cambiado de id_categoria a categoria (string)
-        'descuento',          
-        'caracteristicas'     
+        'id_categoria',
+        'descuento',
+        'caracteristicas',
     ];
 
     protected $casts = [
@@ -30,32 +30,31 @@ class Servicio extends Model
         'duracion_minutos' => 'integer',
         'descuento' => 'decimal:2',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Relación con las citas
-     */
-    public function citas()
+    // ✅ Servicio pertenece a una categoría
+    public function categoria()
     {
-        return $this->hasMany(Cita::class, 'id_servicio');
+        return $this->belongsTo(CategoriaServicio::class, 'id_categoria', 'id_categoria');
     }
 
+    // ✅ Horarios (si existe tabla servicio_horarios con FK servicio_id)
     public function horarios()
     {
         return $this->hasMany(\App\Models\ServicioHorario::class, 'servicio_id', 'id_servicio');
     }
 
-
-    public function servicios()
+    // ✅ Citas por pivot (cita_servicio = body)
+    public function citas()
     {
-    return $this->belongsToMany(
-        Servicio::class,
-        'cita_servicio',
-        'id_cita',
-        'id_servicio'
-    )
-    ->withTimestamps()
-    ->withPivot(['precio_snapshot', 'duracion_snapshot']);
+        return $this->belongsToMany(
+            \App\Models\Cita::class,
+            'cita_servicio',
+            'id_servicio',
+            'id_cita'
+        )
+        ->withTimestamps()
+        ->withPivot(['precio_snapshot', 'duracion_snapshot']);
     }
 }

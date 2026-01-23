@@ -18,19 +18,16 @@ class CategoriaServicio extends Model
         'slug',
         'descripcion',
         'imagen',
-        'estado'
+        'estado',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Relación con servicios
-     */
     public function servicios(): HasMany
     {
-        return $this->hasMany(Servicio::class, 'id_categoria');
+        return $this->hasMany(\App\Models\Servicio::class, 'id_categoria', 'id_categoria');
     }
 }
