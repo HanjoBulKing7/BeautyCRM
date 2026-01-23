@@ -163,6 +163,14 @@
             </div>
         @endif
 
+        <div class="d-grid gap-2 mb-3">
+            <a href="{{ route('google.employee.redirect') }}" class="btn btn-outline-secondary">
+                <i class="fab fa-google me-2"></i> Continuar con Google
+            </a>
+        </div>
+
+        <div class="text-muted small mb-2">— o —</div>
+
         <!-- Formulario -->
         <form id="registerForm" method="POST" action="{{ route('register') }}" autocomplete="off" class="mt-3">
             @csrf
@@ -183,48 +191,17 @@
                        value="{{ old('email') }}" required placeholder="Ingrese su correo electrónico" autocomplete="email">
             </div>
 
-            <!-- Selector de Rol -->
             <div class="mb-3 text-start">
-                <label class="form-label">
-                    <i class="fas fa-user-tag me-2"></i>Tipo de usuario
-                </label>
-                <div class="role-options">
-                    <label class="role-option d-block" for="role_cliente">
-                        <input type="radio" name="role_id" id="role_cliente" value="1" class="role-radio" 
-                               {{ old('role_id', '1') == '1' ? 'checked' : '' }}>
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-user me-3 text-beauty"></i>
-                            <div class="text-start">
-                                <strong>Cliente</strong>
-                                <p class="small text-muted mb-0">Para agendar citas y servicios</p>
-                            </div>
-                        </div>
-                    </label>
-
-                    <label class="role-option d-block" for="role_empleado">
-                        <input type="radio" name="role_id" id="role_empleado" value="2" class="role-radio"
-                               {{ old('role_id') == '2' ? 'checked' : '' }}>
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-user-check me-3 text-beauty"></i>
-                            <div class="text-start">
-                                <strong>Empleado</strong>
-                                <p class="small text-muted mb-0">Para gestionar citas y servicios</p>
-                            </div>
-                        </div>
-                    </label>
-
-                    <label class="role-option d-block" for="role_admin">
-                        <input type="radio" name="role_id" id="role_admin" value="3" class="role-radio"
-                               {{ old('role_id') == '3' ? 'checked' : '' }}>
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-user-shield me-3 text-beauty"></i>
-                            <div class="text-start">
-                                <strong>Administrador</strong>
-                                <p class="small text-muted mb-0">Acceso completo al sistema</p>
-                            </div>
-                        </div>
-                    </label>
-                </div>
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="telefono"
+                    name="telefono"
+                    value="{{ old('telefono') }}"
+                    required
+                    placeholder="Ej. 55 1234 5678"
+                >
             </div>
 
             <div class="mb-3 text-start">

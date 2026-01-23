@@ -12,10 +12,11 @@ class DashboardCitasController extends Controller
 {
     public function index(Request $request)
     {
-        // ✅ Seguridad: solo admin role_id = 3 (igual que tu closure)
-        if (!Auth::check() || Auth::user()->role_id != 3) {
+        // ✅ Seguridad: admin (3) y empleado (2) pueden entrar al dashboard CRM
+        if (!Auth::check() || !in_array((int)Auth::user()->role_id, [2, 3], true)) {
             return redirect('/login')->with('error', 'No tienes permisos para acceder a esta sección.');
         }
+
 
         // ✅ Fecha seleccionada (GET ?fecha=YYYY-MM-DD)
         $fecha = $request->filled('fecha')
