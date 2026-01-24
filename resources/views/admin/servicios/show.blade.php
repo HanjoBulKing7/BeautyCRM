@@ -59,7 +59,7 @@
                     <div class="space-y-2 text-gray-700">
                         <p>
                             <span class="font-medium text-gray-800">Categoría:</span>
-                            {{ $servicio->categoria ?? 'No especificada' }}
+                            {{ $servicio->categoria->nombre ?? 'No especificada' }}
                         </p>
 
                         <p>
