@@ -51,13 +51,13 @@
         </label>
 
         <input
-            type="text"
-            name="telefono"
-            value="{{ old('telefono', $cliente->telefono ?? '') }}"
-            class="w-full border border-gray-300 rounded-lg p-3 bg-white
-                   focus:outline-none focus:ring-2 focus:ring-[#C9A24D]/30 focus:border-[#C9A24D]
-                   transition"
-            placeholder="Número de teléfono"
+        type="tel"
+        name="telefono"
+        value="{{ old('telefono', $cliente->telefono ?? '') }}"
+        inputmode="tel"
+        autocomplete="tel"
+        class="..."
+        placeholder="Número de teléfono"
         >
 
         @error('telefono')

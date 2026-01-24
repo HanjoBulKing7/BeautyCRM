@@ -1,8 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Beauty Bonita')</title>
 
   <!-- ✅ CSS/JS (build si existe) + fallback -->
@@ -15,26 +17,23 @@
   @if(isset($manifest['resources/css/app.css']))
     <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/app.css']['file']) }}">
   @else
-    {{-- Fallback: Tailwind CDN (solo si NO hay build) --}}
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-    {{-- (Opcional) si copiaste componentes a public/css/components.css --}}
     @if(file_exists(public_path('css/components.css')))
       <link rel="stylesheet" href="{{ asset('css/components.css') }}">
     @endif
 
-    {{-- ✅ (Opcional) si copiaste ui.css a public/css/ui.css --}}
     @if(file_exists(public_path('css/ui.css')))
       <link rel="stylesheet" href="{{ asset('css/ui.css') }}">
     @endif
   @endif
 
-  {{-- ✅ COMPONENTS.CSS (dark-mode y overrides) --}}
+  {{-- ✅ COMPONENTS.CSS --}}
   @if(isset($manifest['resources/css/components.css']))
     <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/components.css']['file']) }}">
   @endif
 
-  {{-- ✅ UI.CSS (bb-* design system para tus vistas index) --}}
+  {{-- ✅ UI.CSS --}}
   @if(isset($manifest['resources/css/ui.css']))
     <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/ui.css']['file']) }}">
   @endif
@@ -42,10 +41,8 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- 🔹 Permite inyectar estilos desde las vistas -->
   @stack('styles')
 
-  <!-- ✅ THEME: Light (Glass blanco + dorado). Dark mode se va a resources/css/components.css -->
   <style>
     :root{
       --bb-gold: #C9A24A;
@@ -92,12 +89,6 @@
       box-shadow: 0 0 25px rgba(17,24,39,.06);
     }
 
-    .sidebar::-webkit-scrollbar{ width:6px; }
-    .sidebar::-webkit-scrollbar-thumb{
-      background-color: rgba(17,24,39,.18);
-      border-radius: 999px;
-    }
-
     main{ margin-left:16rem; transition: margin-left .3s ease; }
 
     header{
@@ -118,102 +109,6 @@
       box-shadow: 0 6px 20px rgba(17,24,39,.06);
     }
 
-    .sidebar a{
-      display:flex;
-      align-items:center;
-      padding:.75rem 1rem;
-      border-radius: .95rem;
-      margin:.25rem .5rem;
-      text-decoration:none;
-      position:relative;
-      overflow:hidden;
-      transition: all .25s ease;
-      color: var(--bb-ink) !important;
-    }
-
-    .sidebar a i{
-      width:1.5rem;
-      text-align:center;
-      margin-right:.75rem;
-      color: rgba(201,162,74,.95) !important;
-      transition: transform .25s ease, opacity .25s ease;
-      opacity:.95;
-    }
-
-    .sidebar a::before{
-      content:"";
-      position:absolute;
-      top:0; left:-120%;
-      width:120%;
-      height:100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
-      transition: left .6s ease;
-    }
-    .sidebar a:hover::before{ left:120%; }
-
-    .sidebar a:hover{
-      transform: translateX(4px);
-      box-shadow: 0 10px 25px rgba(17,24,39,.08);
-      background: rgba(255,255,255,.55);
-    }
-    .sidebar a:hover i{ transform: scale(1.08); }
-
-    .sidebar a.bg-gray-200,
-    .sidebar a.bg-orange-100,
-    .sidebar a.bg-yellow-100,
-    .sidebar a.bg-blue-100,
-    .sidebar a.bg-purple-100,
-    .sidebar a.bg-red-100,
-    .sidebar a.bg-green-100,
-    .sidebar a.bg-pink-100,
-    .sidebar a.bg-teal-100,
-    .sidebar a.bg-green-50{
-      background: linear-gradient(135deg, rgba(201,162,74,.22), rgba(255,255,255,.60)) !important;
-      color: var(--bb-ink) !important;
-      font-weight: 700;
-      border: 1px solid rgba(201,162,74,.28);
-      box-shadow: 0 12px 28px rgba(201,162,74,.18);
-    }
-    .sidebar a.bg-gray-200::after,
-    .sidebar a.bg-orange-100::after,
-    .sidebar a.bg-yellow-100::after,
-    .sidebar a.bg-blue-100::after,
-    .sidebar a.bg-purple-100::after,
-    .sidebar a.bg-red-100::after,
-    .sidebar a.bg-green-100::after,
-    .sidebar a.bg-pink-100::after,
-    .sidebar a.bg-teal-100::after,
-    .sidebar a.bg-green-50::after{
-      content:"";
-      position:absolute;
-      right:0;
-      top:50%;
-      transform: translateY(-50%);
-      width:4px;
-      height:60%;
-      border-radius:999px;
-      background: var(--bb-gold);
-    }
-
-    .sidebar .text-gray-300,
-    .sidebar .text-gray-400,
-    .sidebar .text-gray-500,
-    .sidebar .text-gray-600,
-    .sidebar .text-gray-700{
-      color: var(--bb-muted) !important;
-    }
-
-    .sidebar .bb-logo-wrap{
-      border-bottom: 1px solid rgba(201,162,74,.18);
-      background: rgba(255,255,255,.35);
-    }
-
-    .sidebar .rounded-full.bg-orange-500{
-      background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2)) !important;
-      color: #111827 !important;
-      box-shadow: 0 10px 22px rgba(201,162,74,.22);
-    }
-
     .bb-icon-btn{
       width: 42px;
       height: 42px;
@@ -231,13 +126,11 @@
       background: rgba(255,255,255,.80);
       box-shadow: 0 16px 30px rgba(17,24,39,.09);
     }
-    .bb-icon-btn i{ color: rgba(17,24,39,.85); }
 
     .bb-notif-btn{
       background: linear-gradient(135deg, rgba(201,162,74,.95), rgba(231,215,161,.95));
       border: 1px solid rgba(201,162,74,.35);
     }
-    .bb-notif-btn i{ color:#111827; }
 
     #notifications-panel{
       background: rgba(255,255,255,.78);
@@ -247,40 +140,51 @@
       box-shadow: 0 18px 45px rgba(17,24,39,.12);
     }
 
-    .bg-white{
-      background: rgba(255,255,255,.72) !important;
-      backdrop-filter: blur(14px) saturate(140%);
-      -webkit-backdrop-filter: blur(14px) saturate(140%);
-      border: 1px solid rgba(255,255,255,.65) !important;
-      box-shadow: 0 10px 26px rgba(17,24,39,.06);
-      border-radius: 1rem;
-    }
-
     @media (max-width:1024px){
-      .sidebar{
-        transform: translateX(-100%);
-        z-index:50;
-        box-shadow: 0 0 35px rgba(17,24,39,.12);
-        padding-bottom: 5rem;
-      }
+      .sidebar{ transform: translateX(-100%); z-index:50; }
       .sidebar.open{ transform: translateX(0); }
       .overlay.open{ display:block; }
       main{ margin-left:0 !important; padding:1rem; }
-      .ml-64{ margin-left:0 !important; }
       header{ left:0 !important; width:100% !important; padding:0 1rem; }
-
-      .sidebar .p-4.border-t{
-        position: sticky;
-        bottom:0;
-        z-index:60;
-        background: rgba(255,255,255,.85);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-top: 1px solid var(--bb-border);
-      }
     }
 
-    #theme-icon.fa-sun{ color: var(--bb-gold) !important; }
+    /* ====== BeautyCRM Modal (fallback) ====== */
+    .bb-modal-backdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: none;
+      z-index: 9998;
+    }
+    .bb-modal-backdrop.open{ display:block; }
+
+    .bb-modal{
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 9999;
+      padding: 16px;
+    }
+    .bb-modal.open{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bb-modal-card{
+      width: min(1100px, 96vw);
+      height: min(84vh, 900px);
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border: 1px solid rgba(255,255,255,.65);
+      border-radius: 18px;
+      box-shadow: 0 20px 70px rgba(17,24,39,.22);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .bb-modal-body{ flex: 1; overflow: auto; }
   </style>
 </head>
 
@@ -345,7 +249,7 @@
         <button id="notifications-toggle" class="bb-icon-btn bb-notif-btn relative" aria-label="Notificaciones">
           <i class="fas fa-bell"></i>
           <span id="notification-count"
-                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center hidden">0</span>
+                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-content-center hidden">0</span>
         </button>
 
         <div id="notifications-panel"
@@ -384,17 +288,37 @@
     </div>
   </main>
 
- {{-- ✅ JS build (si existe) --}}
-@if(isset($manifest['resources/js/app.js']))
-  <script src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
-@endif
+  <!-- ✅ Modal fallback (para páginas que NO sean dashboard) -->
+  <div id="bb-modal-backdrop" class="bb-modal-backdrop"></div>
+  <div id="bb-modal" class="bb-modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="bb-modal-card">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <h3 id="bb-modal-title" class="text-lg font-semibold text-gray-800">—</h3>
+        <button id="bb-modal-close" type="button" class="bb-icon-btn" aria-label="Cerrar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="bb-modal-body" class="bb-modal-body p-5">
+        <div class="text-sm text-gray-500">Cargando…</div>
+      </div>
+    </div>
+  </div>
 
-{{-- ✅ Chart.js SIEMPRE --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  {{-- ✅ JS build (si existe) --}}
+  @if(isset($manifest['resources/js/app.js']))
+    <script src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
+  @endif
 
-@stack('scripts')
-@yield('scripts')
+  {{-- ✅ Chart.js SIEMPRE --}}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
+  {{-- ✅ FullCalendar GLOBAL (para que funcione en /admin/home con HTML inyectado) --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales/es.global.min.js"></script>
+
+  @stack('scripts')
+  @yield('scripts')
 
   <script>
     const sidebar = document.getElementById('sidebar');
@@ -461,23 +385,298 @@
     }
     notificationsToggle?.addEventListener('click', loadNotifications);
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('[data-submenu]').forEach(toggle => {
-        toggle.addEventListener('click', (e) => {
-          e.preventDefault();
-          const id = toggle.getAttribute('data-submenu');
-          const menu = document.getElementById(id);
-          if (!menu) return;
+    // ======================================================
+    // ✅ INITs globales de módulos (para HTML inyectado)
+    // ======================================================
+    window.BB = window.BB || {};
 
-          menu.classList.toggle('hidden');
-          const expanded = !menu.classList.contains('hidden');
-          toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    // Citas calendar (busca #citas-calendar con data-events)
+    window.BB.initCitasCalendar = function(root = document){
+      const el = root.querySelector('#citas-calendar');
+      if(!el || typeof FullCalendar === 'undefined') return;
 
-          const chevron = toggle.querySelector('.nav-chevron');
-          if (chevron) chevron.classList.toggle('open', expanded);
-        });
+      const raw = el.getAttribute('data-events') || '[]';
+      let events = [];
+      try{ events = JSON.parse(raw); }catch(e){ events = []; }
+
+      if (el._bbCalendar) {
+        try { el._bbCalendar.destroy(); } catch(e) {}
+        el._bbCalendar = null;
+      }
+
+      const calendar = new FullCalendar.Calendar(el, {
+        locale: 'es',
+        firstDay: 1,
+        initialView: 'dayGridMonth',
+        height: 'auto',
+        nowIndicator: true,
+        selectable: true,
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        },
+        buttonText: {
+          today: 'Hoy',
+          month: 'Mes',
+          week: 'Semana',
+          day: 'Día',
+          list: 'Agenda'
+        },
+        events,
       });
+
+      el._bbCalendar = calendar;
+      calendar.render();
+      setTimeout(() => calendar.updateSize(), 50);
+    };
+
+    // Llama a todos los init que existan (crece a futuro)
+    function bbRunInits(root){
+      if (window.BB?.initCitasCalendar) window.BB.initCitasCalendar(root);
+    }
+
+    // ======================================================
+    // BeautyCRM Hub Loader:
+    // - Si existe #bb-module-host => carga dentro del dashboard y OCULTA #bb-dashboard-only
+    // - Si NO existe => abre modal fallback
+    // ======================================================
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    const bbHost = document.getElementById('bb-module-host');              // solo dashboard
+    const bbDashboardOnly = document.getElementById('bb-dashboard-only');  // solo dashboard
+
+    const bbModal = document.getElementById('bb-modal');
+    const bbModalBackdrop = document.getElementById('bb-modal-backdrop');
+    const bbModalTitle = document.getElementById('bb-modal-title');
+    const bbModalBody = document.getElementById('bb-modal-body');
+    const bbModalClose = document.getElementById('bb-modal-close');
+    const bbDashboardHeader = document.getElementById('bb-dashboard-header');
+
+    function bbEnterModuleView(){
+      if (bbDashboardOnly) bbDashboardOnly.classList.add('hidden');
+      if (bbHost) bbHost.classList.remove('hidden');
+      if (bbDashboardHeader) bbDashboardHeader.classList.add('hidden');
+    }
+
+    function bbExitModuleView(){
+      if (bbHost){ bbHost.innerHTML = ''; bbHost.classList.add('hidden'); }
+      if (bbDashboardOnly) bbDashboardOnly.classList.remove('hidden');
+      if (bbDashboardHeader) bbDashboardHeader.classList.remove('hidden');
+    }
+
+    window.bbExitModuleView = bbExitModuleView;
+
+    function bbOpenModal() {
+      if (!bbModal) return;
+
+      bbModal.classList.remove('open');
+      bbModalBackdrop?.classList.remove('open');
+
+      bbModal.classList.add('open');
+      bbModalBackdrop?.classList.add('open');
+      bbModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function bbCloseModal() {
+      if (!bbModal) return;
+      bbModal.classList.remove('open');
+      bbModalBackdrop?.classList.remove('open');
+      bbModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    bbModalClose?.addEventListener('click', bbCloseModal);
+    bbModalBackdrop?.addEventListener('click', bbCloseModal);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') bbCloseModal(); });
+
+    function bbSetLoading(targetEl) {
+      if (!targetEl) return;
+      targetEl.innerHTML = `
+        <div class="bg-white p-4 rounded-xl">
+          <div class="text-sm text-gray-500">Cargando…</div>
+        </div>
+      `;
+    }
+
+    function bbRenderHtmlInto(targetEl, html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const contentNode = doc.querySelector('main .max-w-6xl');
+      targetEl.innerHTML = contentNode ? contentNode.innerHTML : html;
+    }
+
+    async function bbLoadModule(href, title = 'Módulo') {
+      // cerrar modal si existiera
+      bbCloseModal();
+
+      const url = new URL(href, window.location.href);
+
+      // ✅ el dashboard NUNCA se carga dentro del host (evita anidado)
+      if (bbHost && url.pathname === '/admin/home') {
+        bbExitModuleView();
+        window.location.href = url.pathname + url.search;
+        return;
+      }
+
+      // cerrar sidebar móvil
+      sidebar?.classList.remove('open');
+      overlay?.classList.remove('open');
+
+      // forzar modo partial
+      url.searchParams.set('modal', '1');
+
+      // ✅ si estamos en dashboard => cargar en host
+      if (bbHost) {
+        bbEnterModuleView();
+        bbHost.innerHTML = '';
+        bbSetLoading(bbHost);
+
+        const res = await fetch(url.href, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin',
+        });
+
+        if (res.redirected) return bbLoadModule(res.url, title);
+
+        const html = await res.text();
+        bbRenderHtmlInto(bbHost, html);
+
+        // ✅ IMPORTANTE: inicializa JS del módulo (FullCalendar, etc.)
+        bbRunInits(bbHost);
+
+        bbHost.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      // ✅ fallback modal fuera del dashboard
+      if (bbModalTitle) bbModalTitle.textContent = title;
+      if (bbModalBody) bbSetLoading(bbModalBody);
+      bbOpenModal();
+
+      const res = await fetch(url.href, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+      });
+
+      if (res.redirected) return bbLoadModule(res.url, title);
+
+      const html = await res.text();
+      if (bbModalBody) {
+        bbRenderHtmlInto(bbModalBody, html);
+
+        // ✅ IMPORTANTE: inicializa JS del módulo
+        bbRunInits(bbModalBody);
+      }
+    }
+
+    const isDashboardPage = !!bbHost && window.location.pathname === '/admin/home';
+
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a,[data-bb-modal="1"]');
+      if (!a) return;
+
+      if (a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      const hasFlag = a.hasAttribute('data-bb-modal') || a.getAttribute('data-bb-modal') === '1';
+      if (!hasFlag) return;
+
+      // ✅ SOLO interceptar en /admin/home
+      if (!isDashboardPage) return;
+
+      const href = a.getAttribute('data-bb-url') || a.getAttribute('data-url') || a.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+      e.preventDefault();
+
+      const title = a.getAttribute('data-bb-title') || a.getAttribute('data-title') || (a.textContent || '').trim() || 'Módulo';
+      bbLoadModule(href, title);
     });
+
+    // 2) Links internos dentro del módulo (host o modal)
+    function bbAttachInternalNav(containerGetter) {
+      document.addEventListener('click', (e) => {
+        const container = containerGetter();
+        if (!container || !container.contains(e.target)) return;
+
+        const a = e.target.closest('a');
+        if (!a) return;
+
+        if (a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+        const href =
+          a.getAttribute('data-bb-url') ||
+          a.getAttribute('data-url') ||
+          a.getAttribute('href');
+
+        if (!href) return;
+
+        const url = new URL(href, window.location.href);
+        const isSameOrigin = url.origin === window.location.origin;
+        const isAdminPath  = isSameOrigin && url.pathname.startsWith('/admin');
+
+        if (!isAdminPath) return;
+
+        // ✅ Si es dashboard, no lo metas al host (solo vuelve)
+        if (bbHost && url.pathname === '/admin/home') {
+          e.preventDefault();
+          bbExitModuleView();
+          history.pushState({}, '', url.pathname + url.search);
+          return;
+        }
+
+        e.preventDefault();
+        bbLoadModule(url.href, bbModalTitle?.textContent || 'Módulo');
+      }, true);
+    }
+
+    bbAttachInternalNav(() => bbHost);
+    bbAttachInternalNav(() => bbModalBody);
+
+    // 3) Submits dentro del módulo (host o modal)
+    async function bbHandleSubmit(container, e) {
+      const form = e.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      if (!container || !container.contains(form)) return;
+
+      e.preventDefault();
+
+      const action = form.getAttribute('action') || window.location.href;
+      const method = (form.getAttribute('method') || 'POST').toUpperCase();
+      const fd     = new FormData(form);
+
+      // forzar modo partial
+      if (!fd.has('modal')) fd.append('modal', '1');
+
+      if (method === 'GET') {
+        const u = new URL(action, window.location.href);
+        for (const [k, v] of fd.entries()) u.searchParams.set(k, String(v));
+        return bbLoadModule(u.href, bbModalTitle?.textContent || 'Módulo');
+      }
+
+      const res = await fetch(action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+        },
+        credentials: 'same-origin',
+        body: fd,
+      });
+
+      if (res.redirected) return bbLoadModule(res.url, bbModalTitle?.textContent || 'Módulo');
+
+      const html = await res.text();
+      bbRenderHtmlInto(container, html);
+
+      // ✅ IMPORTANTE: re-inicializa JS del módulo (por ejemplo, si regresas a citas index)
+      bbRunInits(container);
+    }
+
+    document.addEventListener('submit', (e) => { if (bbHost) bbHandleSubmit(bbHost, e); }, true);
+    document.addEventListener('submit', (e) => { if (bbModalBody) bbHandleSubmit(bbModalBody, e); }, true);
   </script>
 </body>
 </html>
+```

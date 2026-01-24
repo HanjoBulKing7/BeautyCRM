@@ -198,7 +198,8 @@
     <!-- Card calendario -->
     <div class="bb-glass-card overflow-hidden">
       <div class="p-2 md:p-3">
-        <div id="citas-calendar"></div>
+        <div id="citas-calendar" data-events='@json($calendarEvents ?? [])'></div>
+
       </div>
     </div>
 

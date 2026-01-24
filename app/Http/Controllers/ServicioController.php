@@ -11,17 +11,33 @@ use Illuminate\Support\Facades\DB;
 
 class ServicioController extends Controller
 {
-    public function index()
+    
+    public function index(Request $request)
     {
+        if ($r = $this->redirectIfModalInBrowser($request)) return $r;
+
         $servicios = Servicio::latest()->paginate(10);
-        return view('admin.servicios.index', compact('servicios')); // ← CAMBIADO
+
+        if ($this->isFragment($request)) {
+            return view('admin.servicios.partials.index-content', compact('servicios'));
+        }
+
+        return view('admin.servicios.index', compact('servicios'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        if ($r = $this->redirectIfModalInBrowser($request)) return $r;
+
         $servicio = new Servicio();
-        return view('admin.servicios.create', compact('servicio')); // ← CAMBIADO
+
+        if ($this->isFragment($request)) {
+            return view('admin.servicios.partials.create-content', compact('servicio'));
+        }
+
+        return view('admin.servicios.create', compact('servicio'));
     }
+
 
     public function store(Request $request)
     {
@@ -54,18 +70,33 @@ class ServicioController extends Controller
 
 
 
-    public function show(Servicio $servicio)
+    public function show(Request $request, Servicio $servicio)
     {
+        if ($r = $this->redirectIfModalInBrowser($request)) return $r;
+
         $servicio->load('horarios');
+
+        if ($this->isFragment($request)) {
+            return view('admin.servicios.partials.show-content', compact('servicio'));
+        }
+
         return view('admin.servicios.show', compact('servicio'));
     }
 
 
-    public function edit(Servicio $servicio)
+    public function edit(Request $request, Servicio $servicio)
     {
+        if ($r = $this->redirectIfModalInBrowser($request)) return $r;
+
         $servicio->load('horarios');
+
+        if ($this->isFragment($request)) {
+            return view('admin.servicios.partials.edit-content', compact('servicio'));
+        }
+
         return view('admin.servicios.edit', compact('servicio'));
     }
+
 
 
     public function update(Request $request, Servicio $servicio)
@@ -198,5 +229,24 @@ class ServicioController extends Controller
 
         if ($rows) ServicioHorario::insert($rows);
     }
+
+    private function isFragment(Request $request): bool
+    {
+        // Fragment = lo que usará el loader
+        return $request->ajax() || $request->boolean('modal');
+    }
+
+    private function redirectIfModalInBrowser(Request $request)
+    {
+        // Si alguien abre ?modal=1 directo (NO ajax), lo mandamos a la página normal
+        if ($request->boolean('modal') && !$request->ajax()) {
+            $query = $request->except('modal');
+            $url = $request->url() . (count($query) ? ('?' . http_build_query($query)) : '');
+            return redirect()->to($url);
+        }
+
+        return null;
+    }
+
 
 }
