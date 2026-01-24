@@ -18,7 +18,7 @@
     </div>
 
     <div class="p-6">
-        <form method="POST" action="{{ route('admin.productos.store') }}" enctype="multipart/form-data" class="space-y-6">
+        <form method="POST" action="{{ route('admin.productos.store') }}" class="space-y-6">
             @include('admin.productos._form', compact('producto','categorias'))
 
             <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">

@@ -44,6 +44,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Producto</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Categoría</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Precio</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Estado</th>
                         <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
@@ -52,25 +53,23 @@
                     @forelse($productos as $p)
                         <tr class="bb-row">
                             <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    @if(!empty($p->imagen))
-                                        <div class="w-30 h-20 rounded-xl overflow-hidden border border-gray-200 shadow-sm shrink-0">
-                                            <img src="{{ asset('storage/' . ltrim($p->imagen,'/')) }}"
-                                                 alt="Imagen producto"
-                                                 class="w-full h-full object-cover"
-                                                 loading="lazy">
-                                        </div>
-                                    @else
-                                        <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
-                                            <i class="fas fa-box" style="color: rgba(201,162,74,.92)"></i>
-                                        </span>
-                                    @endif
+                                <div class="flex items-start gap-3">
+                                    <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
+                                        <i class="fas fa-box" style="color: rgba(201,162,74,.92)"></i>
+                                    </span>
 
                                     <div>
                                         <div class="text-sm font-semibold text-gray-900 dark:text-white">
                                             {{ $p->nombre }}
                                         </div>
-                                        <div class="text-xs text-gray-500">ID: #{{ $p->id }}</div>
+
+                                        @if(!empty($p->descripcion))
+                                            <div class="text-xs text-gray-500 mt-1 line-clamp-2">
+                                                {{ $p->descripcion }}
+                                            </div>
+                                        @else
+                                            <div class="text-xs text-gray-400 mt-1">Sin descripción</div>
+                                        @endif
                                     </div>
                                 </div>
                             </td>
@@ -84,6 +83,15 @@
                             <td class="px-4 py-3">
                                 <span class="text-sm font-semibold text-gray-800 dark:text-white">
                                     ${{ number_format((float)$p->precio, 2) }}
+                                </span>
+                            </td>
+
+                            <td class="px-4 py-3">
+                                @php $isActivo = ($p->estado ?? 'activo') === 'activo'; @endphp
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                             {{ $isActivo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
+                                    <i class="fas fa-circle text-[8px] mr-2"></i>
+                                    {{ $isActivo ? 'Activo' : 'Inactivo' }}
                                 </span>
                             </td>
 
@@ -127,7 +135,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-10 text-center">
+                            <td colspan="5" class="px-4 py-10 text-center">
                                 <div class="text-gray-500">
                                     <div class="mx-auto bb-icon-pill" style="width:56px;height:56px;border-radius:18px;">
                                         <span class="text-2xl">✨</span>

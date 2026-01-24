@@ -19,17 +19,6 @@
 
     <div class="p-6 space-y-6">
 
-        @if(!empty($producto->imagen))
-            <div class="flex justify-center">
-                <div class="w-[320px] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white">
-                    <img src="{{ asset('storage/' . ltrim($producto->imagen,'/')) }}"
-                         class="w-full h-[180px] object-cover"
-                         alt="Imagen producto"
-                         loading="lazy">
-                </div>
-            </div>
-        @endif
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                 <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -37,20 +26,31 @@
                     Información
                 </h3>
 
+                @php $isActivo = ($producto->estado ?? 'activo') === 'activo'; @endphp
+
                 <div class="space-y-2 text-gray-700">
                     <p><span class="font-medium text-gray-800">Categoría:</span> {{ $producto->categoria->nombre ?? '—' }}</p>
                     <p><span class="font-medium text-gray-800">Precio:</span> ${{ number_format((float)$producto->precio, 2) }}</p>
+                    <p>
+                        <span class="font-medium text-gray-800">Estado:</span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                     {{ $isActivo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
+                            <i class="fas fa-circle text-[8px] mr-2"></i>
+                            {{ $isActivo ? 'Activo' : 'Inactivo' }}
+                        </span>
+                    </p>
                     <p><span class="font-medium text-gray-800">Creado:</span> {{ optional($producto->created_at)->format('Y-m-d H:i') }}</p>
                 </div>
             </div>
 
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                 <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fas fa-image" style="color: rgba(201,162,74,.92)"></i>
-                    Imagen
+                    <i class="fas fa-align-left" style="color: rgba(201,162,74,.92)"></i>
+                    Descripción
                 </h3>
-                <p class="text-gray-600">
-                    {{ $producto->imagen ? 'Sí (guardada en storage)' : '—' }}
+
+                <p class="text-gray-700 leading-relaxed">
+                    {{ $producto->descripcion ?: 'Sin descripción.' }}
                 </p>
             </div>
         </div>

@@ -42,7 +42,7 @@
     </div>
 
     <!-- Categoría -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
             <i class="fas fa-layer-group mr-2" style="color: rgba(201,162,74,.92)"></i>
             Categoría <span class="text-red-500">*</span>
@@ -68,56 +68,43 @@
         @error('id_categoria') <p class="text-red-500 text-sm mt-2">{{ $message }}</p> @enderror
     </div>
 
-    <!-- Imagen -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+    <!-- Estado -->
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-image mr-2" style="color: rgba(201,162,74,.92)"></i>
-            Imagen
+            <i class="fas fa-toggle-on mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Estado <span class="text-red-500">*</span>
         </label>
 
-        <input
-            type="file"
-            name="imagen"
-            id="prodImagenInput"
-            accept="image/*"
+        <select
+            name="estado"
             class="w-full border border-gray-300 rounded-lg p-3 transition
                    focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+            required
         >
-        @error('imagen') <p class="text-red-500 text-sm mt-2">{{ $message }}</p> @enderror
+            @php $estadoVal = old('estado', $producto->estado ?? 'activo'); @endphp
+            <option value="activo" {{ $estadoVal === 'activo' ? 'selected' : '' }}>Activo</option>
+            <option value="inactivo" {{ $estadoVal === 'inactivo' ? 'selected' : '' }}>Inactivo</option>
+        </select>
 
-        <p class="text-xs text-gray-500 mt-2">
-            Recomendado: JPG/PNG/WEBP (máx 2MB).
-        </p>
+        @error('estado') <p class="text-red-500 text-sm mt-2">{{ $message }}</p> @enderror
+    </div>
 
-        <div class="mt-4">
-            <p class="text-sm font-medium text-gray-700 mb-2">Vista previa</p>
+    <!-- Descripción -->
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+        <label class="block text-sm font-medium mb-2 text-gray-700">
+            <i class="fas fa-align-left mr-2" style="color: rgba(201,162,74,.92)"></i>
+            Descripción
+        </label>
 
-            <img
-                id="prodImagenPreview"
-                src="{{ !empty($producto->imagen) ? asset('storage/' . ltrim($producto->imagen,'/')) : '' }}"
-                class="{{ !empty($producto->imagen) ? '' : 'hidden' }} w-full max-w-md rounded-xl border border-gray-200 shadow-sm object-cover"
-                style="aspect-ratio: 16 / 9;"
-                alt="Preview"
-            >
-        </div>
+        <textarea
+            name="descripcion"
+            rows="4"
+            class="w-full border border-gray-300 rounded-lg p-3 transition
+                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
+            placeholder="Describe el producto (opcional)"
+        >{{ old('descripcion', $producto->descripcion ?? '') }}</textarea>
+
+        @error('descripcion') <p class="text-red-500 text-sm mt-2">{{ $message }}</p> @enderror
     </div>
 
 </div>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const input = document.getElementById("prodImagenInput");
-    const preview = document.getElementById("prodImagenPreview");
-
-    if (input && preview) {
-        input.addEventListener("change", (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-            if (!file.type.startsWith("image/")) return;
-
-            preview.src = URL.createObjectURL(file);
-            preview.classList.remove("hidden");
-        });
-    }
-});
-</script>

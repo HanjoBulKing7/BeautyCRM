@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use App\Models\CategoriaServicio;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProductoController extends Controller
 {
@@ -18,7 +17,8 @@ class ProductoController extends Controller
     public function create()
     {
         $producto = new Producto();
-        $categorias = CategoriaServicio::all(); // o ->orderBy('nombre')->get()
+        $categorias = CategoriaServicio::orderBy('nombre')->get();
+
         return view('admin.productos.create', compact('producto', 'categorias'));
     }
 
@@ -27,22 +27,21 @@ class ProductoController extends Controller
         $request->validate([
             'nombre'       => 'required|string|max:120',
             'precio'       => 'required|numeric|min:0|max:999999.99',
+            'descripcion'  => 'nullable|string',
             'id_categoria' => 'required|exists:categorias_servicios,id_categoria',
-            'imagen'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'estado'       => 'required|in:activo,inactivo',
         ]);
 
-        $data = $request->all();
-
-        // Manejar imagen
-        if ($request->hasFile('imagen')) {
-            $imagePath = $request->file('imagen')->store('productos', 'public');
-            $data['imagen'] = $imagePath;
-        }
-
-        Producto::create($data);
+        Producto::create($request->only([
+            'nombre',
+            'precio',
+            'descripcion',
+            'id_categoria',
+            'estado',
+        ]));
 
         return redirect()->route('admin.productos.index')
-                         ->with('success', 'Producto creado correctamente');
+            ->with('success', 'Producto creado correctamente');
     }
 
     public function show(Producto $producto)
@@ -53,7 +52,7 @@ class ProductoController extends Controller
 
     public function edit(Producto $producto)
     {
-        $categorias = CategoriaServicio::all(); // o ->orderBy('nombre')->get()
+        $categorias = CategoriaServicio::orderBy('nombre')->get();
         return view('admin.productos.edit', compact('producto', 'categorias'));
     }
 
@@ -62,40 +61,28 @@ class ProductoController extends Controller
         $request->validate([
             'nombre'       => 'required|string|max:120',
             'precio'       => 'required|numeric|min:0|max:999999.99',
+            'descripcion'  => 'nullable|string',
             'id_categoria' => 'required|exists:categorias_servicios,id_categoria',
-            'imagen'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'estado'       => 'required|in:activo,inactivo',
         ]);
 
-        $data = $request->all();
-
-        // Manejar imagen
-        if ($request->hasFile('imagen')) {
-
-            // Eliminar imagen anterior si existe
-            if ($producto->imagen) {
-                Storage::disk('public')->delete($producto->imagen);
-            }
-
-            $imagePath = $request->file('imagen')->store('productos', 'public');
-            $data['imagen'] = $imagePath;
-        }
-
-        $producto->update($data);
+        $producto->update($request->only([
+            'nombre',
+            'precio',
+            'descripcion',
+            'id_categoria',
+            'estado',
+        ]));
 
         return redirect()->route('admin.productos.index')
-                         ->with('success', 'Producto actualizado correctamente');
+            ->with('success', 'Producto actualizado correctamente');
     }
 
     public function destroy(Producto $producto)
     {
-        // Eliminar imagen si existe
-        if ($producto->imagen) {
-            Storage::disk('public')->delete($producto->imagen);
-        }
-
         $producto->delete();
 
         return redirect()->route('admin.productos.index')
-                         ->with('success', 'Producto eliminado correctamente');
+            ->with('success', 'Producto eliminado correctamente');
     }
 }
