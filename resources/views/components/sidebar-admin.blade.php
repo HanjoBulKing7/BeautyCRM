@@ -34,15 +34,56 @@
 </a>
 </li>
 
-<!-- Servicios -->
+{{-- =====================
+   Servicios (submenu limpio)
+===================== --}}
+@php
+  $openServicios = request()->is('admin/servicios*')
+             || request()->is('admin/categoriaservicios*')
+             || request()->is('admin/productos*');
+
+@endphp
+<!-- Servicios (Servicios + Categorías + Productos) -->
 <li>
-    <a href="{{ url('/admin/servicios') }}"
-       class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
-              {{ request()->is('admin/servicios*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
-        <i class="fas fa-scissors mr-3 text-lg"></i>
-        <span>Servicios</span>
+    <a href="#"
+       data-submenu="submenu-servicios"
+       aria-expanded="{{ $openServicios ? 'true' : 'false' }}"
+       class="nav-group-toggle {{ $openServicios ? 'bg-yellow-100 text-yellow-600 font-semibold active' : 'text-gray-700' }}">
+        <span class="flex items-center">
+            <i class="fas fa-scissors text-yellow-500"></i>
+            <span>Servicios</span>
+        </span>
+        <i class="fas fa-chevron-right nav-chevron {{ $openServicios ? 'open' : '' }}"></i>
     </a>
+
+    <ul id="submenu-servicios" class="nav-submenu {{ $openServicios ? '' : 'hidden' }}">
+        <li>
+            <a href="{{ url('/admin/servicios') }}"
+               class="{{ request()->is('admin/servicios*') ? 'bg-yellow-100 text-yellow-600 font-semibold active' : 'text-gray-700' }}">
+                <i class="fas fa-list text-yellow-500"></i>
+                <span>Servicios</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ url('/admin/categoriaservicios') }}"
+               class="{{ request()->is('admin/categoriaservicios*') ? 'bg-yellow-100 text-yellow-600 font-semibold active' : 'text-gray-700' }}">
+                <i class="fas fa-layer-group text-yellow-500"></i>
+                <span>Categorías</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ url('/admin/productos') }}"
+               class="{{ request()->is('admin/productos*') ? 'bg-yellow-100 text-yellow-600 font-semibold active' : 'text-gray-700' }}">
+                <i class="fas fa-box text-yellow-500"></i>
+                <span>Productos</span>
+            </a>
+        </li>
+    </ul>
 </li>
+
+
 <!-- Clientes -->
 <li>
         <a href="{{ url('/admin/clientes') }}"

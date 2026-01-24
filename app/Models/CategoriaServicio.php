@@ -25,6 +25,15 @@ class CategoriaServicio extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+    public function getRouteKeyName()
+    {
+        return 'id_categoria';
+    }
+
+    public function productos(): HasMany
+    {
+        return $this->hasMany(\App\Models\Producto::class, 'id_categoria', 'id_categoria');
+    }
 
     public function servicios(): HasMany
     {

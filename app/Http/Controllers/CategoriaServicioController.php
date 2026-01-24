@@ -17,7 +17,8 @@ class CategoriaServicioController extends Controller
 
     public function create()
     {
-        return view('admin.categoriaservicios.create');
+        $categoria = new CategoriaServicio();
+        return view('admin.categoriaservicios.create', compact('categoria'));
     }
 
     public function store(Request $request)
