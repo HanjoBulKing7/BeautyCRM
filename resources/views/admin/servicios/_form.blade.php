@@ -23,15 +23,27 @@
             <i class="fas fa-layer-group mr-2" style="color: rgba(201,162,74,.92)"></i>
             Categoría
         </label>
-        <input
-            type="text"
-            name="categoria"
-            value="{{ old('categoria', $servicio->categoria ?? '') }}"
+
+        <select
+            name="id_categoria"
             class="w-full border border-gray-300 rounded-lg p-3 transition
-                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
-            placeholder="Ej: Cabello, Uñas, Facial"
+                focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
         >
+            <option value="">— Sin categoría —</option>
+
+            @foreach(($categorias ?? []) as $cat)
+                <option value="{{ $cat->id_categoria }}"
+                    {{ (string)old('id_categoria', $servicio->id_categoria ?? '') === (string)$cat->id_categoria ? 'selected' : '' }}>
+                    {{ $cat->nombre }}
+                </option>
+            @endforeach
+        </select>
+
+        @error('id_categoria')
+            <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
+        @enderror
     </div>
+
 
     <!-- Fila 2: Precio y Duración -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">

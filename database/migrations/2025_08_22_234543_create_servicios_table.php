@@ -15,12 +15,22 @@ return new class extends Migration
             $table->decimal('precio', 10, 2);
             $table->integer('duracion_minutos');
             $table->enum('estado', ['activo', 'inactivo'])->default('activo');
-            $table->string('categoria', 50)->nullable(); // ← Nueva columna
+
+            $table->unsignedBigInteger('id_categoria')->nullable();
+
+            $table->foreign('id_categoria')
+                ->references('id_categoria')
+                ->on('categorias_servicios')
+                ->nullOnDelete();
+
             $table->string('imagen')->nullable();
             $table->decimal('descuento', 10, 2)->default(0);
             $table->text('caracteristicas')->nullable();
             $table->timestamps();
+
+            $table->index('id_categoria');
         });
+
     }
 
     public function down(): void

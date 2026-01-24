@@ -12,6 +12,8 @@ use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AgendarCitaPublicController;
+use App\Http\Controllers\CategoriaServicioController;
+use App\Http\Controllers\ProductoController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardCitasController;
 
@@ -149,6 +151,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
         Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
     });
+    
+    // Rutas de Categoria Servicios
+    Route::prefix('categoriaservicios')->name('categoriaservicios.')->middleware('auth')->group(function () {
+        Route::get('/', [CategoriaServicioController::class, 'index'])->name('index');
+        Route::get('/create', [CategoriaServicioController::class, 'create'])->name('create');
+        Route::post('/', [CategoriaServicioController::class, 'store'])->name('store');
+        Route::get('/{categoria}', [CategoriaServicioController::class, 'show'])->name('show');
+        Route::get('/{categoria}/edit', [CategoriaServicioController::class, 'edit'])->name('edit');
+        Route::put('/{categoria}', [CategoriaServicioController::class, 'update'])->name('update');
+        Route::delete('/{categoria}', [CategoriaServicioController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::resource('productos', ProductoController::class)->middleware('auth');
+    
     // SERVICIOS - CORREGIDO
     Route::resource('servicios', ServicioController::class);
 

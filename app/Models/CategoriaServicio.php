@@ -18,19 +18,25 @@ class CategoriaServicio extends Model
         'slug',
         'descripcion',
         'imagen',
-        'estado'
+        'estado',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
+    public function getRouteKeyName()
+    {
+        return 'id_categoria';
+    }
 
-    /**
-     * Relación con servicios
-     */
+    public function productos(): HasMany
+    {
+        return $this->hasMany(\App\Models\Producto::class, 'id_categoria', 'id_categoria');
+    }
+
     public function servicios(): HasMany
     {
-        return $this->hasMany(Servicio::class, 'id_categoria');
+        return $this->hasMany(\App\Models\Servicio::class, 'id_categoria', 'id_categoria');
     }
 }

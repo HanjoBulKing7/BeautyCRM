@@ -3,15 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Servicio;
+use App\Models\ServicioHorario;
+use App\Models\CategoriaServicio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Models\ServicioHorario;
-use Illuminate\Support\Facades\DB;
-
 
 class ServicioController extends Controller
 {
-    
     public function index(Request $request)
     {
         if ($r = $this->redirectIfModalInBrowser($request)) return $r;
@@ -31,26 +29,28 @@ class ServicioController extends Controller
 
         $servicio = new Servicio();
 
+        // ✅ Para el <select> de categoría (del pull)
+        $categorias = CategoriaServicio::orderBy('nombre')->get();
+
         if ($this->isFragment($request)) {
-            return view('admin.servicios.partials.create-content', compact('servicio'));
+            return view('admin.servicios.partials.create-content', compact('servicio', 'categorias'));
         }
 
-        return view('admin.servicios.create', compact('servicio'));
+        return view('admin.servicios.create', compact('servicio', 'categorias'));
     }
-
 
     public function store(Request $request)
     {
         $request->validate([
-            'nombre_servicio' => 'required|string|max:100',
-            'descripcion' => 'nullable|string',
-            'precio' => 'required|numeric|min:0',
-            'duracion_minutos' => 'required|integer|min:1',
-            'categoria' => 'nullable|string|max:50',
-            'estado' => 'nullable|in:activo,inactivo',
-            'descuento' => 'nullable|numeric|min:0',
-            'caracteristicas' => 'nullable|string',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'nombre_servicio'   => 'required|string|max:100',
+            'descripcion'       => 'nullable|string',
+            'precio'            => 'required|numeric|min:0',
+            'duracion_minutos'  => 'required|integer|min:1',
+            'id_categoria'      => 'nullable|exists:categorias_servicios,id_categoria',
+            'estado'            => 'nullable|in:activo,inactivo',
+            'descuento'         => 'nullable|numeric|min:0',
+            'caracteristicas'   => 'nullable|string',
+            'imagen'            => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ], [
             'imagen.image' => 'Selecciona un archivo de imagen válido.',
             'imagen.mimes' => 'La imagen debe ser JPG, JPEG, PNG o WEBP.',
@@ -63,18 +63,22 @@ class ServicioController extends Controller
             $data['imagen'] = $request->file('imagen')->store('servicios', 'public');
         }
 
-        Servicio::create($data);
+        $servicio = Servicio::create($data);
+
+        // ✅ Guardar horarios si vienen
+        $horarios = $request->input('horarios');
+        $this->validateHorariosOrFail($horarios);
+        $this->syncHorariosServicio($servicio, $horarios);
 
         return redirect()->route('admin.servicios.index')->with('success', 'Servicio creado correctamente');
     }
-
-
 
     public function show(Request $request, Servicio $servicio)
     {
         if ($r = $this->redirectIfModalInBrowser($request)) return $r;
 
-        $servicio->load('horarios');
+        // ✅ incluir categoria (del pull) + horarios (tu lógica)
+        $servicio->load('horarios', 'categoria');
 
         if ($this->isFragment($request)) {
             return view('admin.servicios.partials.show-content', compact('servicio'));
@@ -83,36 +87,35 @@ class ServicioController extends Controller
         return view('admin.servicios.show', compact('servicio'));
     }
 
-
     public function edit(Request $request, Servicio $servicio)
     {
         if ($r = $this->redirectIfModalInBrowser($request)) return $r;
 
         $servicio->load('horarios');
 
+        // ✅ Para el <select> de categoría (del pull)
+        $categorias = CategoriaServicio::orderBy('nombre')->get();
+
         if ($this->isFragment($request)) {
-            return view('admin.servicios.partials.edit-content', compact('servicio'));
+            return view('admin.servicios.partials.edit-content', compact('servicio', 'categorias'));
         }
 
-        return view('admin.servicios.edit', compact('servicio'));
+        return view('admin.servicios.edit', compact('servicio', 'categorias'));
     }
-
-
 
     public function update(Request $request, Servicio $servicio)
     {
         $request->validate([
-            'nombre_servicio' => 'required|string|max:100',
-            'descripcion' => 'nullable|string',
-            'precio' => 'required|numeric|min:0',
-            'duracion_minutos' => 'required|integer|min:1',
-            'categoria' => 'nullable|string|max:50',
-            'estado' => 'required|in:activo,inactivo',
-            'descuento' => 'nullable|numeric|min:0',
-            'caracteristicas' => 'nullable|string',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'nombre_servicio'   => 'required|string|max:100',
+            'descripcion'       => 'nullable|string',
+            'precio'            => 'required|numeric|min:0',
+            'duracion_minutos'  => 'required|integer|min:1',
+            'id_categoria'      => 'nullable|exists:categorias_servicios,id_categoria',
+            'estado'            => 'required|in:activo,inactivo',
+            'descuento'         => 'nullable|numeric|min:0',
+            'caracteristicas'   => 'nullable|string',
+            'imagen'            => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ], [
-            // ✅ mensajes “hardcode” para que NO salga validation.image
             'imagen.image' => 'Selecciona un archivo de imagen válido.',
             'imagen.mimes' => 'La imagen debe ser JPG, JPEG, PNG o WEBP.',
             'imagen.max'   => 'La imagen no debe pesar más de 2MB.',
@@ -124,20 +127,21 @@ class ServicioController extends Controller
             if ($servicio->imagen) {
                 Storage::disk('public')->delete($servicio->imagen);
             }
-
             $data['imagen'] = $request->file('imagen')->store('servicios', 'public');
         }
 
         $servicio->update($data);
 
+        // ✅ Actualizar horarios si vienen
+        $horarios = $request->input('horarios');
+        $this->validateHorariosOrFail($horarios);
+        $this->syncHorariosServicio($servicio, $horarios);
+
         return redirect()->route('admin.servicios.index')->with('success', 'Servicio actualizado correctamente');
     }
 
-
-
     public function destroy(Servicio $servicio)
     {
-        // Eliminar imagen si existe
         if ($servicio->imagen) {
             Storage::disk('public')->delete($servicio->imagen);
         }
@@ -146,6 +150,10 @@ class ServicioController extends Controller
 
         return redirect()->route('admin.servicios.index')->with('success', 'Servicio eliminado correctamente');
     }
+
+    // ============================
+    // Horarios helpers
+    // ============================
 
     private function validateHorariosOrFail(?array $horarios): void
     {
@@ -156,26 +164,22 @@ class ServicioController extends Controller
         foreach ($horarios as $dia => $rangos) {
             if (!is_array($rangos)) continue;
 
-            // Normalizar y filtrar rangos completos
             $clean = [];
 
             foreach ($rangos as $idx => $r) {
                 $hi = $r['hora_inicio'] ?? null;
                 $hf = $r['hora_fin'] ?? null;
 
-                // si viene incompleto lo ignoramos (no es error)
                 if (!$hi || !$hf) continue;
 
-                // Validación: inicio < fin (sin medianoche)
                 if ($hi >= $hf) {
-                    $errores[] = "Día {$dia}: el rango #".($idx+1)." tiene hora_inicio ({$hi}) mayor o igual a hora_fin ({$hf}).";
+                    $errores[] = "Día {$dia}: el rango #" . ($idx + 1) . " tiene hora_inicio ({$hi}) mayor o igual a hora_fin ({$hf}).";
                     continue;
                 }
 
                 $clean[] = ['inicio' => $hi, 'fin' => $hf, 'idx' => $idx];
             }
 
-            // Ordenar por inicio y validar solapes
             usort($clean, fn($a, $b) => strcmp($a['inicio'], $b['inicio']));
 
             for ($i = 0; $i < count($clean); $i++) {
@@ -183,10 +187,8 @@ class ServicioController extends Controller
                     $a = $clean[$i];
                     $b = $clean[$j];
 
-                    // Si el siguiente empieza después (o igual) del fin del actual, ya no puede solapar (por estar ordenado)
                     if ($b['inicio'] >= $a['fin']) break;
 
-                    // Solape detectado
                     $errores[] = "Día {$dia}: rangos solapados ({$a['inicio']}-{$a['fin']}) con ({$b['inicio']}-{$b['fin']}).";
                 }
             }
@@ -199,8 +201,7 @@ class ServicioController extends Controller
         }
     }
 
-
-    private function syncHorariosServicio(\App\Models\Servicio $servicio, ?array $horarios): void
+    private function syncHorariosServicio(Servicio $servicio, ?array $horarios): void
     {
         if (!$horarios) return;
 
@@ -230,6 +231,10 @@ class ServicioController extends Controller
         if ($rows) ServicioHorario::insert($rows);
     }
 
+    // ============================
+    // Loader helpers (como antes)
+    // ============================
+
     private function isFragment(Request $request): bool
     {
         // Fragment = lo que usará el loader
@@ -247,6 +252,4 @@ class ServicioController extends Controller
 
         return null;
     }
-
-
 }

@@ -1,95 +1,72 @@
 @extends('layouts.app')
-
-@section('title', 'Panel de Administración')
+@section('title','Crear Categoría - Salón de Belleza')
 
 @section('content')
-        <!-- Header -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-light text-gray-800">Crear Nueva Categoría</h1>
-            <p class="text-gray-500 mt-1">Completa el formulario para agregar una nueva categoría de servicios</p>
-        </div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
-        <!-- Mostrar errores de validación -->
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+    <!-- Header => Glass dorado estilo dashboard -->
+    <div
+        class="p-6"
+        style="
+            background: linear-gradient(135deg, rgba(201,162,74,.14), rgba(255,255,255,.78));
+            border-bottom: 1px solid rgba(201,162,74,.18);
+        "
+    >
+        <div class="flex items-center gap-3">
+            <div
+                class="p-3 rounded-full border"
+                style="
+                    background: linear-gradient(135deg, rgba(201,162,74,.18), rgba(255,255,255,.75));
+                    border-color: rgba(201,162,74,.22);
+                    box-shadow: 0 10px 22px rgba(201,162,74,.12);
+                "
+            >
+                <i class="fas fa-layer-group text-xl" style="color: rgba(17,24,39,.90)"></i>
             </div>
-        @endif
-
-        <!-- Formulario -->
-        <div class="card p-6">
-            <form action="{{ route('admin.categoriaservicios.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Nombre -->
-                    <div class="md:col-span-2">
-                        <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la categoría *</label>
-                        <input type="text" name="nombre" id="nombre" value="{{ old('nombre') }}" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
-                               required>
-                    </div>
-
-                    <!-- Descripción -->
-                    <div class="md:col-span-2">
-                        <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                        <textarea name="descripcion" id="descripcion" rows="3"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300">{{ old('descripcion') }}</textarea>
-                    </div>
-
-                    <!-- Imagen -->
-                    <div class="md:col-span-2">
-                        <label for="imagen" class="block text-sm font-medium text-gray-700 mb-1">Imagen</label>
-                        <input type="file" name="imagen" id="imagen" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
-                               accept="image/jpeg,image/png,image/jpg,image/gif">
-                        <p class="text-xs text-gray-500 mt-1">Formatos permitidos: jpeg, png, jpg, gif. Tamaño máximo: 2MB</p>
-                    </div>
-
-                    <!-- Estado -->
-                    <div class="md:col-span-2">
-                        <label for="estado" class="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
-                        <select name="estado" id="estado" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300" required>
-                            <option value="">Seleccionar estado</option>
-                            <option value="activa" {{ old('estado') == 'activa' ? 'selected' : '' }}>Activa</option>
-                            <option value="inactiva" {{ old('estado') == 'inactiva' ? 'selected' : '' }}>Inactiva</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Botones -->
-                <div class="flex justify-end space-x-3 mt-8">
-                    <a href="{{ route('admin.categoriaservicios.index') }}" class="btn-secondary text-white px-4 py-2 rounded-md flex items-center">
-                        <i data-feather="arrow-left" class="mr-2 w-4 h-4"></i>
-                        Cancelar
-                    </a>
-                    <button type="submit" class="btn-primary text-white px-4 py-2 rounded-md flex items-center">
-                        <i data-feather="save" class="mr-2 w-4 h-4"></i>
-                        Guardar Categoría
-                    </button>
-                </div>
-            </form>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Crear Nueva Categoría</h1>
+                <p class="text-gray-600 text-sm">Agregue una nueva categoría al catálogo</p>
+            </div>
         </div>
-@endsection
+    </div>
 
-@section('scripts')
-    <!-- JS -->
-    <script>
-        // Inicializar feather icons
-        feather.replace();
+    <div class="p-6">
+        <form method="POST" action="{{ route('admin.categoriaservicios.store') }}" enctype="multipart/form-data" class="space-y-6">
+            @csrf
 
-        // Manejar el menú móvil
-        document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
-            const menu = document.getElementById('mobile-menu');
-            if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden');
-            } else {
-                menu.classList.add('hidden');
-            }
-        });
-    </script>
+            @include('admin.categoriaservicios._form', [
+                'categoria'  => new App\Models\CategoriaServicio(),
+                'showEstado' => false
+            ])
+
+            <!-- Botones de acción -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+
+                <!-- Guardar (dorado tipo dashboard) -->
+                <button type="submit"
+                        class="px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+                        style="
+                            background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
+                            border: 1px solid rgba(201,162,74,.35);
+                            box-shadow: 0 10px 22px rgba(201,162,74,.18);
+                            color: #111827;
+                        "
+                        onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
+                        onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
+                >
+                    <i class="fas fa-save" style="color: rgba(17,24,39,.90)"></i>
+                    Guardar Categoría
+                </button>
+
+                <!-- Cancelar -->
+                <a href="{{ route('admin.categoriaservicios.index') }}"
+                   class="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
+                          flex items-center justify-center gap-2 transition">
+                    <i class="fas fa-times" style="color: rgba(17,24,39,.70)"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

@@ -16,7 +16,7 @@
     <!-- Citas (modal) -->
     <li>
         <a href="{{ url('/admin/citas') }}"
-           data-bb-modal
+           data-bb-modal="1"
            data-bb-title="Citas"
            data-bb-url="{{ url('/admin/citas') }}?modal=1"
            class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
@@ -29,7 +29,7 @@
     <!-- Ventas (Citas Completadas) (modal) -->
     <li>
         <a href="{{ url('/admin/ventas') }}"
-           data-bb-modal
+           data-bb-modal="1"
            data-bb-title="Citas Completadas"
            data-bb-url="{{ url('/admin/ventas') }}?modal=1"
            class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
@@ -39,23 +39,74 @@
         </a>
     </li>
 
-    <!-- Servicios (modal) -->
+    {{-- =====================
+       Servicios (submenu limpio)
+    ===================== --}}
+    @php
+        $openServicios =
+            request()->is('admin/servicios*')
+            || request()->is('admin/categoriaservicios*')
+            || request()->is('admin/productos*');
+    @endphp
+
+    <!-- Servicios (Servicios + Categorías + Productos) -->
     <li>
-        <a href="{{ url('/admin/servicios') }}"
-           data-bb-modal
-           data-bb-title="Servicios"
-           data-bb-url="{{ url('/admin/servicios') }}?modal=1"
-           class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
-                  {{ request()->is('admin/servicios*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
-            <i class="fas fa-scissors mr-3 text-lg"></i>
-            <span>Servicios</span>
+        <a href="#"
+           data-submenu="submenu-servicios"
+           aria-expanded="{{ $openServicios ? 'true' : 'false' }}"
+           class="nav-group-toggle flex items-center justify-between p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+                  {{ $openServicios ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+            <span class="flex items-center gap-3">
+                <i class="fas fa-scissors text-lg"></i>
+                <span>Servicios</span>
+            </span>
+
+            <i class="fas fa-chevron-right nav-chevron {{ $openServicios ? 'open' : '' }}"></i>
         </a>
+
+        <ul id="submenu-servicios" class="nav-submenu mt-2 space-y-1 {{ $openServicios ? '' : 'hidden' }}">
+            <li>
+                <a href="{{ url('/admin/servicios') }}"
+                   data-bb-modal="1"
+                   data-bb-title="Servicios"
+                   data-bb-url="{{ url('/admin/servicios') }}?modal=1"
+                   class="flex items-center gap-3 p-3 rounded-xl text-[14px] font-medium transition-all duration-300
+                          {{ request()->is('admin/servicios*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+                    <i class="fas fa-list"></i>
+                    <span>Servicios</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ url('/admin/categoriaservicios') }}"
+                   data-bb-modal="1"
+                   data-bb-title="Categorías"
+                   data-bb-url="{{ url('/admin/categoriaservicios') }}?modal=1"
+                   class="flex items-center gap-3 p-3 rounded-xl text-[14px] font-medium transition-all duration-300
+                          {{ request()->is('admin/categoriaservicios*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Categorías</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ url('/admin/productos') }}"
+                   data-bb-modal="1"
+                   data-bb-title="Productos"
+                   data-bb-url="{{ url('/admin/productos') }}?modal=1"
+                   class="flex items-center gap-3 p-3 rounded-xl text-[14px] font-medium transition-all duration-300
+                          {{ request()->is('admin/productos*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+                    <i class="fas fa-box"></i>
+                    <span>Productos</span>
+                </a>
+            </li>
+        </ul>
     </li>
 
     <!-- Clientes (modal) -->
     <li>
         <a href="{{ url('/admin/clientes') }}"
-           data-bb-modal
+           data-bb-modal="1"
            data-bb-title="Clientes"
            data-bb-url="{{ url('/admin/clientes') }}?modal=1"
            class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
@@ -68,7 +119,7 @@
     <!-- Empleados (modal) -->
     <li>
         <a href="{{ url('/admin/empleados') }}"
-           data-bb-modal
+           data-bb-modal="1"
            data-bb-title="Empleados"
            data-bb-url="{{ url('/admin/empleados') }}?modal=1"
            class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
@@ -81,7 +132,7 @@
     <!-- Reportes (modal) -->
     <li>
         <a href="{{ url('/admin/reportes') }}"
-           data-bb-modal
+           data-bb-modal="1"
            data-bb-title="Reportes"
            data-bb-url="{{ url('/admin/reportes') }}?modal=1"
            class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300

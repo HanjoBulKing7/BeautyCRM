@@ -17,16 +17,17 @@ class CategoriaServicioController extends Controller
 
     public function create()
     {
-        return view('admin.categoriaservicios.create');
+        $categoria = new CategoriaServicio();
+        return view('admin.categoriaservicios.create', compact('categoria'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:100|unique:categorias_servicios,nombre',
+            'nombre' => 'required|string|max:120|unique:categorias_servicios,nombre',
             'descripcion' => 'nullable|string',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'estado' => 'required|in:activa,inactiva'
+            'estado' => 'required|in:activo,inactivo'
         ]);
 
         $data = $request->all();
@@ -60,7 +61,7 @@ class CategoriaServicioController extends Controller
             'nombre' => 'required|string|max:100|unique:categorias_servicios,nombre,' . $categoria->id_categoria . ',id_categoria',
             'descripcion' => 'nullable|string',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'estado' => 'required|in:activa,inactiva'
+            'estado' => 'required|in:activo,inactivo'
         ]);
 
         $data = $request->all();
@@ -103,7 +104,7 @@ class CategoriaServicioController extends Controller
     }
     public function home()
     {
-        $categorias = CategoriaServicio::where('estado', 'activa')->get();
+        $categorias = CategoriaServicio::where('estado', 'activo')->get();
         return view('home', compact('categorias'));
     }
 }
