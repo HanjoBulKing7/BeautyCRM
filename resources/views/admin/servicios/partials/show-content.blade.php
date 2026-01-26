@@ -55,7 +55,7 @@
                     <div class="space-y-2 text-gray-700">
                         <p>
                             <span class="font-medium text-gray-800">Categoría:</span>
-                            {{ $servicio->categoria ?? 'No especificada' }}
+                            {{ $servicio->categoria->nombre ?? 'No especificada' }}
                         </p>
 
                         <p>
@@ -123,10 +123,12 @@
             ];
 
             $horariosPorDia = ($servicio->horarios ?? collect())
-                ->sortBy(['dia_semana', 'hora_inicio'])
+                ->sortBy([
+                    ['dia_semana', 'asc'],
+                    ['hora_inicio', 'asc'],
+                ])
                 ->groupBy('dia_semana');
 
-            // Solo días con rangos
             $diasConHorario = $horariosPorDia->keys()->sort()->values();
 
             $fmt = fn($t) => $t ? \Carbon\Carbon::parse($t)->format('H:i') : '';
@@ -144,7 +146,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @foreach($diasConHorario as $numDia)
                         @php
-                            $rangos = $horariosPorDia->get($numDia, collect());
+                            $rangos   = $horariosPorDia->get($numDia, collect());
                             $labelDia = $dias[$numDia] ?? ('Día ' . $numDia);
                         @endphp
 
@@ -177,8 +179,6 @@
                                                 </span>
                                             @endif
                                         </div>
-
-                                        <span class="text-xs text-gray-400">#{{ $h->id }}</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -188,12 +188,14 @@
             @endif
         </div>
 
-
         <!-- Botones de acción -->
         <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
 
-            <!-- Editar (dorado tipo dashboard) -->
-            <a href="{{ route('admin.servicios.edit', $servicio->id_servicio) }}"
+            <!-- Editar -->
+            <a
+               href="{{ route('admin.servicios.edit', $servicio->id_servicio) }}"
+               data-bb-modal="1"
+               data-bb-title="Editar Servicio"
                class="px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
                style="
                     background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
@@ -208,7 +210,7 @@
                 Editar Servicio
             </a>
 
-            <!-- Eliminar (mantener rojo UX) -->
+            <!-- Eliminar (POST normal; el loader lo intercepta por submit y refresca contenido) -->
             <form action="{{ route('admin.servicios.destroy', $servicio->id_servicio) }}" method="POST" class="inline">
                 @csrf
                 @method('DELETE')
@@ -221,8 +223,11 @@
                 </button>
             </form>
 
-            <!-- Volver -->
-            <a href="{{ route('admin.servicios.index') }}"
+            <!-- Volver a listado -->
+            <a
+               href="{{ route('admin.servicios.index') }}"
+               data-bb-modal="1"
+               data-bb-title="Servicios"
                class="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
                       flex items-center justify-center gap-2 transition">
                 <i class="fas fa-arrow-left" style="color: rgba(17,24,39,.70)"></i>
