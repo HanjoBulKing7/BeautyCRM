@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use App\Models\CategoriaServicio;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage; // ✅ NUEVO
 
 class ProductoController extends Controller
 {
@@ -30,15 +31,23 @@ class ProductoController extends Controller
             'descripcion'  => 'nullable|string',
             'id_categoria' => 'required|exists:categorias_servicios,id_categoria',
             'estado'       => 'required|in:activo,inactivo',
+            'imagen'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // ✅ NUEVO
         ]);
 
-        Producto::create($request->only([
+        $data = $request->only([
             'nombre',
             'precio',
             'descripcion',
             'id_categoria',
             'estado',
-        ]));
+        ]);
+
+        // ✅ Guardar imagen
+        if ($request->hasFile('imagen')) {
+            $data['imagen'] = $request->file('imagen')->store('productos', 'public');
+        }
+
+        Producto::create($data);
 
         return redirect()->route('admin.productos.index')
             ->with('success', 'Producto creado correctamente');
@@ -64,15 +73,26 @@ class ProductoController extends Controller
             'descripcion'  => 'nullable|string',
             'id_categoria' => 'required|exists:categorias_servicios,id_categoria',
             'estado'       => 'required|in:activo,inactivo',
+            'imagen'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // ✅ NUEVO
         ]);
 
-        $producto->update($request->only([
+        $data = $request->only([
             'nombre',
             'precio',
             'descripcion',
             'id_categoria',
             'estado',
-        ]));
+        ]);
+
+        // ✅ Reemplazar imagen (borrar anterior y guardar nueva)
+        if ($request->hasFile('imagen')) {
+            if ($producto->imagen) {
+                Storage::disk('public')->delete($producto->imagen);
+            }
+            $data['imagen'] = $request->file('imagen')->store('productos', 'public');
+        }
+
+        $producto->update($data);
 
         return redirect()->route('admin.productos.index')
             ->with('success', 'Producto actualizado correctamente');
@@ -80,6 +100,11 @@ class ProductoController extends Controller
 
     public function destroy(Producto $producto)
     {
+        // ✅ Borrar imagen del storage si existe
+        if ($producto->imagen) {
+            Storage::disk('public')->delete($producto->imagen);
+        }
+
         $producto->delete();
 
         return redirect()->route('admin.productos.index')

@@ -3,22 +3,23 @@
         <h2 class="bb-menu__title">Explora nuestros servicios</h2>
 
         @php
-            // Por si alguna vista incluye este partial sin pasar $grupos
-            $grupos = $grupos ?? collect();
+            // ✅ Nuevo: ahora la página manda $categorias
+            // ✅ Fallback: si alguna vista antigua manda $grupos, también funciona
+            $categorias = $categorias ?? $grupos ?? collect();
         @endphp
 
         <nav class="bb-menu__chips" aria-label="Menú de servicios">
-            @foreach($grupos as $grupo)
+            @foreach($categorias as $categoria)
 
                 {{-- ✅ Si NO tiene servicios, no lo mostramos --}}
-                @continue($grupo->servicios->isEmpty())
+                @continue($categoria->servicios->isEmpty())
 
                 @php
-                    $id = \Illuminate\Support\Str::slug($grupo->nombre);
+                    $id = \Illuminate\Support\Str::slug($categoria->nombre);
                 @endphp
 
                 <a class="bb-chip" href="#{{ $id }}">
-                    {{ $grupo->nombre }}
+                    {{ $categoria->nombre }}
                 </a>
             @endforeach
         </nav>

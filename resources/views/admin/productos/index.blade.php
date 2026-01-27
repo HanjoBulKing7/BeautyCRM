@@ -53,22 +53,34 @@
                     @forelse($productos as $p)
                         <tr class="bb-row">
                             <td class="px-4 py-3">
-                                <div class="flex items-start gap-3">
-                                    <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
-                                        <i class="fas fa-box" style="color: rgba(201,162,74,.92)"></i>
-                                    </span>
+                                <div class="flex items-center gap-3">
+
+                                    {{-- ✅ Thumbnail idéntico a Categorías --}}
+                                    @if(!empty($p->imagen))
+                                        <div class="w-30 h-20 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm shrink-0">
+                                            <img
+                                                src="{{ asset('storage/' . $p->imagen) }}"
+                                                alt="Foto del producto"
+                                                class="w-full h-full object-cover"
+                                                loading="lazy"
+                                            >
+                                        </div>
+                                    @else
+                                        <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
+                                            <i class="fas fa-box" style="color: rgba(201,162,74,.92)"></i>
+                                        </span>
+                                    @endif
 
                                     <div>
                                         <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                                            {{ $p->nombre }}
+                                            {{ $p->nombre ?? 'Producto' }}
                                         </div>
+                                        <div class="text-xs text-gray-500">ID: #{{ $p->id }}</div>
 
                                         @if(!empty($p->descripcion))
                                             <div class="text-xs text-gray-500 mt-1 line-clamp-2">
                                                 {{ $p->descripcion }}
                                             </div>
-                                        @else
-                                            <div class="text-xs text-gray-400 mt-1">Sin descripción</div>
                                         @endif
                                     </div>
                                 </div>
@@ -86,18 +98,18 @@
                                 </span>
                             </td>
 
-                            <td class="px-4 py-3">
-                                @php $isActivo = ($p->estado ?? 'activo') === 'activo'; @endphp
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
-                                             {{ $isActivo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <i class="fas fa-circle text-[8px] mr-2"></i>
-                                    {{ $isActivo ? 'Activo' : 'Inactivo' }}
+                            {{-- ✅ Estado idéntico a Categorías (verde/rojo) --}}
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                                    {{ ($p->estado ?? 'activo') == 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ ucfirst($p->estado ?? 'activo') }}
                                 </span>
                             </td>
 
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-2">
 
+                                    <!-- Ver -->
                                     <a href="{{ route('admin.productos.show', $p->id) }}"
                                        class="bb-action text-gray-700 dark:text-gray-200"
                                        title="Ver">
@@ -109,6 +121,7 @@
                                         </svg>
                                     </a>
 
+                                    <!-- Editar -->
                                     <a href="{{ route('admin.productos.edit', $p->id) }}"
                                        class="bb-action bb-action-edit"
                                        title="Editar">
@@ -118,6 +131,7 @@
                                         </svg>
                                     </a>
 
+                                    <!-- Eliminar -->
                                     <form action="{{ route('admin.productos.destroy', $p->id) }}" method="POST"
                                           onsubmit="return confirm('¿Eliminar este producto?');">
                                         @csrf
@@ -136,11 +150,11 @@
                     @empty
                         <tr>
                             <td colspan="5" class="px-4 py-10 text-center">
-                                <div class="text-gray-500">
+                                <div class="text-gray-500 dark:text-gray-300">
                                     <div class="mx-auto bb-icon-pill" style="width:56px;height:56px;border-radius:18px;">
                                         <span class="text-2xl">✨</span>
                                     </div>
-                                    <p class="font-semibold mt-3 text-gray-800">No hay productos registrados</p>
+                                    <p class="font-semibold mt-3 text-gray-800 dark:text-white">No hay productos registrados</p>
                                     <p class="text-sm">Crea tu primer producto para comenzar</p>
                                 </div>
                             </td>
@@ -151,7 +165,7 @@
         </div>
 
         @if($productos->hasPages())
-            <div class="px-4 py-3 border-t border-gray-200">
+            <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
                 {{ $productos->links() }}
             </div>
         @endif

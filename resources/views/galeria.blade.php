@@ -7,6 +7,7 @@
 @endpush
 
 @section('content')
+    @include('beauty.partials.whatsApp-icon')
     @include('beauty.partials.header')
     @include('beauty.scrollGaleriaHero-module')
     @include('beauty.scrollHorizontal-module')

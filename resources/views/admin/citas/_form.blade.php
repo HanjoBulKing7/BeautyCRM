@@ -6,7 +6,7 @@
     $cita = $cita ?? null;
 
     // Prefill cliente seleccionado (para el input visible)
-    $selectedClienteId = old('id_cliente', $cita->id_cliente ?? '');
+    $selectedClienteId = old('cliente_id', $cita->cliente_id ?? '');
     $selectedCliente   = $selectedClienteId
         ? ($clientes->firstWhere('id', (int) $selectedClienteId) ?? null)
         : null;
@@ -42,7 +42,7 @@
             </label>
 
             {{-- Valor real --}}
-            <input type="hidden" name="id_cliente" id="id_cliente" value="{{ $selectedClienteId }}" required>
+            <input type="hidden" name="cliente_id" id="cliente_id" value="{{ $selectedClienteId }}" required>
 
             {{-- Input visible --}}
             <div class="relative">
@@ -67,11 +67,12 @@
                 <div id="cliente_results" class="max-h-60 overflow-auto"></div>
             </div>
 
-            @error('id_cliente')
+            @error('cliente_id')
                 <p class="text-red-500 text-sm mt-2 flex items-center">
                     <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
                 </p>
             @enderror
+
         </div>
 
         {{-- FECHA --}}
@@ -761,7 +762,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const input    = document.getElementById('cliente_search');
     const dropdown = document.getElementById('cliente_dropdown');
     const results  = document.getElementById('cliente_results');
-    const hidden   = document.getElementById('id_cliente');
+    const hidden = document.getElementById('cliente_id');
 
     function hideResults() {
         dropdown.classList.add('hidden');

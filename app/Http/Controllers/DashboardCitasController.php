@@ -17,7 +17,6 @@ class DashboardCitasController extends Controller
             return redirect('/login')->with('error', 'No tienes permisos para acceder a esta sección.');
         }
 
-
         // ✅ Fecha seleccionada (GET ?fecha=YYYY-MM-DD)
         $fecha = $request->filled('fecha')
             ? Carbon::parse($request->input('fecha'))->toDateString()
@@ -39,13 +38,12 @@ class DashboardCitasController extends Controller
             ->where('estado_cita', 'confirmada')
             ->count();
 
-        // ✅ En vez de Pendientes -> Completadas
         $completadas = DB::table('citas')
             ->whereDate('fecha_cita', $fecha)
             ->where('estado_cita', 'completada')
             ->count();
 
-        // "Generado": suma de ventas pagadas asociadas a citas de ese día
+        // "Generado": suma de ventas pagadas del día (por fecha_venta)
         $generado = DB::table('ventas')
             ->whereDate('fecha_venta', $fecha)
             ->where('estado_venta', 'pagada')
@@ -55,19 +53,19 @@ class DashboardCitasController extends Controller
         // LISTADO: citas del día
         // =========================
 
-        // 1) Traemos citas + cliente + empleado + venta_total (subquery)
+        // venta_total por cita (subquery)
         $ventasPorCita = DB::table('ventas')
             ->select('id_cita', DB::raw("SUM(CASE WHEN estado_venta != 'cancelada' THEN total ELSE 0 END) AS venta_total"))
             ->groupBy('id_cita');
 
+        // ✅ OJO: columnas correctas en citas: cliente_id, empleado_id
+        // ✅ YA NO EXISTE c.id_servicio (servicios vienen del pivot)
         $citas = DB::table('citas as c')
-            ->join('clientes as cl', 'cl.id', '=', 'c.id_cliente')
-            ->leftJoin('empleados as e', 'e.id', '=', 'c.id_empleado')
+            ->join('clientes as cl', 'cl.id', '=', 'c.cliente_id')
+            ->leftJoin('empleados as e', 'e.id', '=', 'c.empleado_id')
             ->leftJoinSub($ventasPorCita, 'vp', function ($join) {
                 $join->on('vp.id_cita', '=', 'c.id_cita');
             })
-            // Servicio principal (fallback) por si no hay pivot
-            ->leftJoin('servicios as sp', 'sp.id_servicio', '=', 'c.id_servicio')
             ->whereDate('c.fecha_cita', $fecha)
             ->orderBy('c.hora_cita')
             ->select([
@@ -81,11 +79,6 @@ class DashboardCitasController extends Controller
                 'cl.email  as cliente_email',
 
                 DB::raw("CONCAT(COALESCE(e.nombre,''),' ',COALESCE(e.apellido,'')) as empleado_nombre"),
-
-                // fallback service
-                'sp.nombre_servicio as servicio_principal_nombre',
-                'sp.precio as servicio_principal_precio',
-
                 DB::raw("COALESCE(vp.venta_total, 0) as venta_total"),
             ])
             ->get();
@@ -112,9 +105,8 @@ class DashboardCitasController extends Controller
         $citas = $citas->map(function ($cita) use ($serviciosPivot) {
             $pivot = $serviciosPivot->get($cita->id_cita);
 
-            // Si hay pivot, usamos ese total / label; si no, usamos servicio principal
-            $label = $pivot?->servicios_label ?? ($cita->servicio_principal_nombre ?? '—');
-            $total = (float) ($pivot?->servicios_total ?? ($cita->servicio_principal_precio ?? 0));
+            $label = $pivot?->servicios_label ?? '—';
+            $total = (float) ($pivot?->servicios_total ?? 0);
 
             $descuento = (float) ($cita->descuento ?? 0);
             $totalFinal = max(0, $total - $descuento);
@@ -123,13 +115,13 @@ class DashboardCitasController extends Controller
             $cita->servicios_total = $totalFinal;
 
             // limpia espacios doble en empleado
-            $cita->empleado_nombre = trim($cita->empleado_nombre) ?: '—';
+            $cita->empleado_nombre = trim((string)$cita->empleado_nombre) ?: '—';
 
             return $cita;
         });
 
         return view('admin.dashboard', [
-            'fecha'       => Carbon::parse($fecha), // para format() en blade
+            'fecha'       => Carbon::parse($fecha),
             'prevDate'    => $prevDate,
             'nextDate'    => $nextDate,
             'todayDate'   => $todayDate,

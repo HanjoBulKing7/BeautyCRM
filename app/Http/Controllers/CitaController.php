@@ -473,7 +473,6 @@ class CitaController extends Controller
             'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
             'observaciones'=> ['nullable', 'string'],
             'descuento'    => ['nullable', 'numeric', 'min:0'],
-            'metodo_pago'  => ['nullable', Rule::in(['efectivo','transferencia','tarjeta'])],
 
             'servicios'                     => ['required', 'array', 'min:1'],
             'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
@@ -529,7 +528,6 @@ class CitaController extends Controller
             'duracion_total_minutos'=> $totalDuracion,
             'descuento'             => $validated['descuento'] ?? 0,
             'estado_cita'           => $validated['estado_cita'],
-            'metodo_pago'           => $validated['metodo_pago'] ?? null,
             'observaciones'         => $validated['observaciones'] ?? null,
             'synced_with_google'    => false,
         ]);
@@ -674,7 +672,6 @@ class CitaController extends Controller
             'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
             'observaciones'=> ['nullable', 'string'],
             'descuento'    => ['nullable', 'numeric', 'min:0'],
-            'metodo_pago'  => ['nullable', Rule::in(['efectivo','transferencia','tarjeta'])],
 
             'servicios'                     => ['required', 'array', 'min:1'],
             'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
@@ -730,7 +727,6 @@ class CitaController extends Controller
             'duracion_total_minutos'=> $totalDuracion,
             'descuento'             => $validated['descuento'] ?? 0,
             'estado_cita'           => $validated['estado_cita'],
-            'metodo_pago'           => $validated['metodo_pago'] ?? null,
             'observaciones'         => $validated['observaciones'] ?? null,
         ]);
 
