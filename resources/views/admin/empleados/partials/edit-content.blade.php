@@ -55,17 +55,16 @@
                 </button>
 
                 <!-- Cancelar (modalizado) -->
-                <a
-                   href="{{ route('admin.empleados.index', ['modal' => 1]) }}"
-                   data-bb-modal="1"
-                   data-bb-title="Empleados"
-                   data-bb-url="{{ route('admin.empleados.index', ['modal' => 1]) }}"
-                   class="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
-                          flex items-center justify-center gap-2 transition"
-                >
-                    <i class="fas fa-times" style="color: rgba(17,24,39,.70)"></i>
-                    Cancelar
-                </a>
+                <button type="button"
+                onclick="
+                    document.getElementById('bb-modal-close')?.click();
+                    document.querySelector('#bbModal [data-bb-close]')?.click();
+                "
+                class="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
+                        flex items-center justify-center gap-2 transition">
+                <i class="fas fa-times" style="color: rgba(17,24,39,.70)"></i>
+                Cancelar
+                </button>
             </div>
         </form>
     </div>

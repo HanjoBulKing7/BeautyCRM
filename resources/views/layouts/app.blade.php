@@ -163,8 +163,9 @@
       inset: 0;
       display: none;
       z-index: 9999;
-      padding: 16px;
+      padding: 7px; /* 👈 más ancho visual */
     }
+
     .bb-modal.open{
       display: flex;
       align-items: center;
@@ -172,8 +173,8 @@
     }
 
     .bb-modal-card{
-      width: min(1100px, 96vw);
-      height: min(84vh, 900px);
+      width: min(1400px, 120vw);   /* 👈 más ancho */
+      height: min(88vh, 980px);   /* 👈 opcional: un poco más alto */
       background: rgba(255,255,255,.88);
       backdrop-filter: blur(18px) saturate(140%);
       -webkit-backdrop-filter: blur(18px) saturate(140%);
@@ -570,6 +571,30 @@
         bbRunInits(bbModalBody);
       }
     }
+    
+    async function bbLoadModalOnly(href, title = 'Módulo') {
+    const url = new URL(href, window.location.href);
+
+    // forzar partial
+    url.searchParams.set('modal', '1');
+
+    if (bbModalTitle) bbModalTitle.textContent = title;
+    if (bbModalBody) bbSetLoading(bbModalBody);
+    bbOpenModal();
+
+    const res = await fetch(url.href, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+    });
+
+    if (res.redirected) return bbLoadModalOnly(res.url, title);
+
+    const html = await res.text();
+    if (bbModalBody) {
+      bbRenderHtmlInto(bbModalBody, html);
+      bbRunInits(bbModalBody);
+    }
+  }
 
     const isDashboardPage = !!bbHost && window.location.pathname === '/admin/home';
 
@@ -582,19 +607,30 @@
       const hasFlag = a.hasAttribute('data-bb-modal') || a.getAttribute('data-bb-modal') === '1';
       if (!hasFlag) return;
 
-      // ✅ SOLO interceptar en /admin/home
-      if (!isDashboardPage) return;
-
       const href = a.getAttribute('data-bb-url') || a.getAttribute('data-url') || a.getAttribute('href');
       if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
 
       e.preventDefault();
 
-      const title = a.getAttribute('data-bb-title') || a.getAttribute('data-title') || (a.textContent || '').trim() || 'Módulo';
+      const title = a.getAttribute('data-bb-title')
+        || a.getAttribute('data-title')
+        || (a.textContent || '').trim()
+        || 'Módulo';
+
+      // ✅ NUEVO: si el link pide modal forzado, úsalo aunque exista bbHost
+      const forceModal = a.getAttribute('data-bb-open') === 'modal';
+      if (forceModal) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation(); // ✅ clave: evita que otro listener también se ejecute
+        return bbLoadModalOnly(href, title);
+      }
+
       bbLoadModule(href, title);
+
     });
 
-    // 2) Links internos dentro del módulo (host o modal)
+
     function bbAttachInternalNav(containerGetter) {
       document.addEventListener('click', (e) => {
         const container = containerGetter();
@@ -602,6 +638,14 @@
 
         const a = e.target.closest('a');
         if (!a) return;
+
+        // ✅ IMPORTANTÍSIMO: si el link es modal, NO lo navegues dentro del host.
+        const wantsModal =
+          a.getAttribute('data-bb-open') === 'modal' ||
+          a.getAttribute('data-bb-modal') === '1' ||
+          a.hasAttribute('data-bb-modal');
+
+        if (wantsModal) return;
 
         if (a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
@@ -612,24 +656,10 @@
 
         if (!href) return;
 
-        const url = new URL(href, window.location.href);
-        const isSameOrigin = url.origin === window.location.origin;
-        const isAdminPath  = isSameOrigin && url.pathname.startsWith('/admin');
-
-        if (!isAdminPath) return;
-
-        // ✅ Si es dashboard, no lo metas al host (solo vuelve)
-        if (bbHost && url.pathname === '/admin/home') {
-          e.preventDefault();
-          bbExitModuleView();
-          history.pushState({}, '', url.pathname + url.search);
-          return;
-        }
-
-        e.preventDefault();
-        bbLoadModule(url.href, bbModalTitle?.textContent || 'Módulo');
+        ...
       }, true);
     }
+
 
     bbAttachInternalNav(() => bbHost);
     bbAttachInternalNav(() => bbModalBody);
