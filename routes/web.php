@@ -28,10 +28,15 @@ Route::get('/servicio', [ServiciosPublicController::class, 'index'])
     ->name('servicio.public');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/agendar-cita', [CitaController::class, 'create'])
-        ->name('citas.create');
-    Route::post('/agendar-cita', [CitaController::class, 'store'])
-        ->name('citas.store');
+    Route::get('/agendar-cita', [AgendarCitaPublicController::class, 'create'])
+        ->name('agendarcita.create');
+
+    Route::post('/agendar-cita', [AgendarCitaPublicController::class, 'store'])
+        ->name('agendarcita.store');
+
+    // (Opcional) si quieres que el front pida horas disponibles por AJAX
+    Route::get('/agendar-cita/horas-disponibles', [AgendarCitaPublicController::class, 'horasDisponibles'])
+        ->name('agendarcita.horasDisponibles');
 });
 
 

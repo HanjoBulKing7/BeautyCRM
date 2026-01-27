@@ -20,8 +20,8 @@
                                 <h4 class="bb-svcCard__name">{{ $servicio->nombre_servicio }}</h4>
 
                                 <a class="bb-svcCard__link"
-                                   href="{{ route('citas.create', ['servicio' => $servicio->id_servicio]) }}">
-                                    Agendar
+                                    href="{{ route('agendarcita.create', ['servicio' => $servicio->id_servicio]) }}">
+                                        Agendar
                                 </a>
                             </article>
                         @endforeach

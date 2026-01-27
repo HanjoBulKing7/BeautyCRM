@@ -33,12 +33,24 @@ class ClienteController extends Controller
     {
         $request->validate([
             'nombre'   => 'required|string|max:255',
-            'email'    => 'required|email|unique:clientes,email',
+            'email'    => 'required|email|unique:users,email', // 👈 ahora el email “manda” en users
             'telefono' => 'required|string|max:20',
             'direccion'=> 'nullable|string|max:255',
         ]);
-
-        Cliente::create($request->only(['nombre','email','telefono','direccion']));
+D       B::transaction(function () use ($request) {
+            $user = User::create([
+                'role_id'  => 1, // CLIENTE
+                'name'     => $request->nombre,
+                'email'    => $request->email,
+                'password' => Hash::make(Str::random(32)), // o lo que uses para invitación/login
+        ]);
+        Cliente::create([
+            'user_id'   => $user->id,
+            'nombre'    => $request->nombre,
+            'email'     => $request->email,
+            'telefono'  => $request->telefono,
+            'direccion' => $request->direccion,
+        ]);
 
         if ($request->boolean('modal') || $request->ajax()) {
             $clientes = Cliente::latest()->paginate(10);
@@ -71,12 +83,22 @@ class ClienteController extends Controller
     {
         $request->validate([
             'nombre'   => 'required|string|max:255',
-            'email'    => 'required|email|unique:clientes,email,' . $cliente->getKey() . ',' . $cliente->getKeyName(),
+            'email'    => 'required|email|unique:users,email', // 👈 ahora el email “manda” en users
             'telefono' => 'required|string|max:20',
             'direccion'=> 'nullable|string|max:255',
         ]);
 
+        DB::transaction(function () use ($request, $cliente) {
+
         $cliente->update($request->only(['nombre','email','telefono','direccion']));
+
+            if ($cliente->user_id) {
+                User::where('id', $cliente->user_id)->update([
+                    'name'  => $request->nombre,
+                    'email' => $request->email,
+                ]);
+            }
+        });
 
         if ($request->boolean('modal') || $request->ajax()) {
             $clientes = Cliente::latest()->paginate(10);

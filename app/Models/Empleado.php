@@ -22,9 +22,18 @@ class Empleado extends Model
         'informacion_legal',
     ];
 
-
     protected $casts = [
         'fecha_contratacion' => 'date',
         'estatus' => 'string'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function citas()
+    {
+        return $this->hasMany(Cita::class, 'empleado_id');
+    }
 }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Cita;
 use App\Models\User;
 use App\Models\Servicio;
+use App\Models\CategoriaServicio;
 use App\Services\GoogleCalendarService;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CitaConfirmadaMail;
@@ -137,16 +138,15 @@ class CitaController extends Controller
 
         if ($empIds->isNotEmpty()) {
             $citas = Cita::whereDate('fecha_cita', $fecha->format('Y-m-d'))
-                ->whereIn('id_empleado', $empIds)
+                ->whereIn('empleado_id', $empIds)
                 ->where('estado_cita', '!=', 'cancelada')
-                ->get(['id_empleado', 'hora_cita', 'duracion_total_minutos']);
+                ->get(['empleado_id', 'hora_cita', 'duracion_total_minutos']);
 
             $slots = array_values(array_filter($slots, function ($slot) use ($citas, $totalMin) {
                 $start = Carbon::createFromFormat('H:i', $slot['value']);
                 $end   = $start->copy()->addMinutes($totalMin);
 
                 foreach ($citas as $c) {
-                    // hora_cita normalmente viene "HH:MM:SS"
                     $cStart = Carbon::createFromFormat('H:i:s', $c->hora_cita);
                     $dur    = (int)($c->duracion_total_minutos ?? 60);
                     $cEnd   = $cStart->copy()->addMinutes(max(1, $dur));
@@ -159,7 +159,6 @@ class CitaController extends Controller
 
         return response()->json($slots);
     }
-
 
     /**
      * Devuelve ventanas permitidas por servicio para esa fecha.
@@ -176,17 +175,15 @@ class CitaController extends Controller
             ->where('dia_semana', $dow)
             ->get(['servicio_id','hora_inicio','hora_fin']);
 
-        // Agrupar por servicio
-        $byService = $horarios->groupBy('id_servicio');
+        // ✅ Agrupar por servicio_id (correcto)
+        $byService = $horarios->groupBy('servicio_id');
 
-        // Si algún servicio no tiene horario ese día => no hay horas
         foreach ($servicioIds as $sid) {
             if (empty($byService->get($sid)) || $byService->get($sid)->isEmpty()) {
                 return [];
             }
         }
 
-        // Convierte cada servicio a ventanas [start,end] (solo parte que cae en la fecha)
         $serviceWindows = [];
         foreach ($servicioIds as $sid) {
             $windows = [];
@@ -194,12 +191,10 @@ class CitaController extends Controller
                 $start = \Carbon\Carbon::parse($fecha.' '.$h->hora_inicio);
                 $end   = \Carbon\Carbon::parse($fecha.' '.$h->hora_fin);
 
-                // Si cruza medianoche (ej 22:00 -> 12:30), end queda "antes"
                 if ($end->lte($start)) {
-                    $end->addDay(); // ventana real cruza al día siguiente
+                    $end->addDay();
                 }
 
-                // Para el selector de ESTE día, nos quedamos con la parte que cae en [fecha 00:00, fecha 23:59:59]
                 $dayStart = \Carbon\Carbon::parse($fecha.' 00:00:00');
                 $dayEnd   = \Carbon\Carbon::parse($fecha.' 23:59:59');
 
@@ -213,7 +208,6 @@ class CitaController extends Controller
             $serviceWindows[] = $windows;
         }
 
-        // INTERSECCIÓN de ventanas entre servicios
         $intersection = array_shift($serviceWindows);
         foreach ($serviceWindows as $wins) {
             $intersection = $this->intersectWindows($intersection, $wins);
@@ -223,7 +217,6 @@ class CitaController extends Controller
         return $intersection;
     }
 
-    /** Intersección de dos listas de ventanas */
     private function intersectWindows(array $a, array $b): array
     {
         $out = [];
@@ -237,15 +230,11 @@ class CitaController extends Controller
         return $out;
     }
 
-    /**
-     * Intervalos ocupados en esa fecha, usando duracion_total_minutos de cada cita.
-     * (Excluye citaId si vienes de edit)
-     */
     private function getBusyIntervalsForDate(string $fecha, $excludeCitaId = null): array
     {
         $q = \App\Models\Cita::query()
             ->whereDate('fecha_cita', $fecha)
-            ->whereIn('estado_cita', ['pendiente','confirmada','completada']); // decide tu regla
+            ->whereIn('estado_cita', ['pendiente','confirmada','completada']);
 
         if ($excludeCitaId) {
             $q->where('id_cita', '!=', (int)$excludeCitaId);
@@ -263,25 +252,70 @@ class CitaController extends Controller
         return $busy;
     }
 
+    /**
+     * ✅ Regla “responsable”:
+     * - Más servicios (count)
+     * - Empate -> mayor duración total (total)
+     * - Empate -> mayor servicio individual (maxSingle)
+     */
+    private function resolverEmpleadoResponsable(array $serviciosInput, $serviciosDb): ?int
+    {
+        $stats = []; // [empId => ['count'=>, 'total'=>, 'maxSingle'=>]]
+
+        foreach ($serviciosInput as $item) {
+            $emp = !empty($item['id_empleado']) ? (int) $item['id_empleado'] : null;
+            if (!$emp) continue;
+
+            $idSrv = (int) ($item['id_servicio'] ?? 0);
+            $srv   = $serviciosDb->get($idSrv);
+
+            $dur = (isset($item['duracion_snapshot']) && $item['duracion_snapshot'] !== '')
+                ? (int) $item['duracion_snapshot']
+                : (int) ($srv->duracion_minutos ?? 0);
+
+            if (!isset($stats[$emp])) {
+                $stats[$emp] = ['count' => 0, 'total' => 0, 'maxSingle' => 0];
+            }
+
+            $stats[$emp]['count']++;
+            $stats[$emp]['total'] += max(0, $dur);
+            $stats[$emp]['maxSingle'] = max($stats[$emp]['maxSingle'], max(0, $dur));
+        }
+
+        if (empty($stats)) return null;
+
+        uksort($stats, function ($a, $b) use ($stats) {
+            $A = $stats[$a]; $B = $stats[$b];
+
+            if ($A['count'] !== $B['count']) return $B['count'] <=> $A['count'];
+            if ($A['total'] !== $B['total']) return $B['total'] <=> $A['total'];
+            if ($A['maxSingle'] !== $B['maxSingle']) return $B['maxSingle'] <=> $A['maxSingle'];
+            return $a <=> $b;
+        });
+
+        return (int) array_key_first($stats);
+    }
 
     public function empleadosPorServicio(Request $request)
     {
         $servicioId = (int) $request->query('servicio_id', 0);
         if ($servicioId <= 0) return response()->json([]);
 
-        $servicio = Servicio::query()->where('id_servicio', $servicioId)->first();
+        // ✅ ahora usamos relación categoria (id_categoria) -> categorias_servicios.nombre
+        $servicio = Servicio::with('categoria')->where('id_servicio', $servicioId)->first();
         if (!$servicio) return response()->json([]);
 
-        $cat = trim((string) ($servicio->categoria ?? ''));
+        $cat = trim((string) ($servicio->categoria->nombre ?? ''));
         $catLower = mb_strtolower($cat);
 
-        // 1) Base: activos
-        $base = Empleado::query();
+        $base = Empleado::query()
+            ->join('users', 'users.id', '=', 'empleados.user_id')
+            ->where('users.role_id', 2);
+
         if (Schema::hasColumn('empleados', 'estatus')) {
             $base->whereRaw('LOWER(TRIM(estatus)) = ?', ['activo']);
         }
 
-        // 2) Si hay categoría, intentamos filtrar por match
         $q = (clone $base);
         if ($cat !== '') {
             $q->where(function ($qq) use ($catLower) {
@@ -294,11 +328,11 @@ class CitaController extends Controller
             });
         }
 
-        $empleados = $q->orderBy('nombre')->get(['id', 'nombre', 'apellido']);
+        $empleados = $q->orderBy('empleados.nombre')->get(['empleados.id', 'empleados.nombre', 'empleados.apellido']);
 
-        // 3) Fallback: si no hubo match, devolvemos todos los activos
         if ($empleados->isEmpty()) {
-            $empleados = $base->orderBy('nombre')->get(['id', 'nombre', 'apellido']);
+            $empleados = $base->orderBy('empleados.nombre')
+                ->get(['empleados.id', 'empleados.nombre', 'empleados.apellido']);
         }
 
         return response()->json(
@@ -311,58 +345,71 @@ class CitaController extends Controller
 
     public function index()
     {
-        $citas = Cita::with(['cliente', 'servicio', 'empleado'])
+        // ✅ ya no existe 'servicio' directo en cita; ahora es 'servicios' (pivot)
+        $citas = Cita::with(['cliente', 'empleado', 'servicios'])
             ->orderBy('fecha_cita', 'desc')
             ->orderBy('hora_cita', 'desc')
             ->get();
 
-        // Crear arreglo de eventos para el calendario
         $calendarEvents = $citas->map(function ($cita) {
-            // formatear fecha y hora a ISO 8601
             $start = \Carbon\Carbon::parse($cita->fecha_cita->format('Y-m-d') . ' ' . $cita->hora_cita);
+
+            $firstServicio = $cita->servicios->first();
 
             return [
                 'id'    => $cita->id_cita,
-                'title' => $cita->servicio->nombre ?? 'Cita',
+                'title' => $firstServicio->nombre_servicio ?? 'Cita',
                 'start' => $start->format('Y-m-d\TH:i:s'),
-                // Opcional: si quieres duración fija de 1h
                 'end'   => $start->copy()->addHour()->format('Y-m-d\TH:i:s'),
             ];
         })->values();
 
-        $clientes = User::where('role_id', 1)->get();
+        $clientes = Cliente::latest()->get();
         $servicios = Servicio::all();
-        $empleados = User::where('role_id', 2)->get();
+        $empleados = Empleado::latest()->get();
+
         $isGoogleConnected = GoogleToken::where('user_id', auth()->id())->exists();
-        
-        // Verificar conexión con Google Calendar de forma segura
+
+        // ✅ MANTENEMOS tal cual tu lógica defensiva duplicada
         try {
-            $isConnected = class_exists('App\Models\GoogleToken') && 
+            $isConnected = class_exists('App\Models\GoogleToken') &&
                         \App\Models\GoogleToken::where('user_id', auth()->id())->exists();
         } catch (\Exception $e) {
             $isConnected = false;
         }
 
-        return view('admin.citas.index', compact('citas', 'clientes', 'servicios', 'empleados', 'isConnected','isGoogleConnected', 'calendarEvents'));
+        return view('admin.citas.index', compact(
+            'citas',
+            'clientes',
+            'servicios',
+            'empleados',
+            'isConnected',
+            'isGoogleConnected',
+            'calendarEvents'
+        ));
     }
 
     public function create(Request $request)
     {
         $clientes = Cliente::select('id', 'nombre', 'email')->get();
-        $servicios = Servicio::all();
 
-        $empleados = User::query()
-            ->where('users.role_id', 2)
-            ->leftJoin('empleados', 'empleados.user_id', '=', 'users.id')
+        // ✅ servicios con categoria (relación)
+        $servicios = Servicio::with('categoria')->get();
+
+        // ✅ empleados igual que tu query actual
+        $empleados = Empleado::query()
+            ->leftJoin('users', 'users.id', '=', 'empleados.user_id')
+            ->where('users.role_id', 2) // ✅ SOLO EMPLEADOS
             ->select([
-                'users.id',
-                'users.name',
+                'empleados.id as id',
+                'empleados.nombre',
+                'empleados.apellido',
                 'users.email',
                 'empleados.departamento',
                 'empleados.puesto',
             ])
             ->orderByRaw('COALESCE(empleados.departamento, "") ASC')
-            ->orderBy('users.name')
+            ->orderBy('empleados.nombre')
             ->get();
 
         $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
@@ -376,35 +423,33 @@ class CitaController extends Controller
             ];
         })->values();
 
-        $categorias = Servicio::query()
-            ->whereNotNull('categoria')
-            ->where('categoria', '!=', '')
-            ->distinct()
-            ->orderBy('categoria')
-            ->pluck('categoria');
+        // ✅ categorías para el select (solo nombres, derivadas de servicios)
+        $serviciosForJs = $servicios->map(function ($s) {
+            $catName = $s->categoria->nombre ?? 'Sin categoría';
 
-        // ✅ NUEVO: leer date del querystring y normalizarlo a Y-m-d
+            return [
+                'id'       => (int) $s->id_servicio,
+                'nombre'   => (string) $s->nombre_servicio,
+                'categoria'=> (string) $catName,
+                'precio'   => (float) ($s->precio ?? 0),
+                'duracion' => (int) ($s->duracion_minutos ?? 0),
+            ];
+        })->values();
+
+        $categorias = $serviciosForJs->pluck('categoria')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
         $fechaPrefill = null;
         if ($request->filled('date')) {
             try {
                 $fechaPrefill = Carbon::parse($request->query('date'))->format('Y-m-d');
             } catch (\Exception $e) {
-                $fechaPrefill = null; // si viene algo raro, lo ignoramos
+                $fechaPrefill = null;
             }
         }
-
-        $serviciosForJs = Servicio::query()
-        ->selectRaw('
-            id_servicio as id,
-            nombre_servicio as nombre,
-            categoria as categoria,
-            precio as precio,
-            duracion_minutos as duracion
-        ')
-        ->orderBy('categoria')
-        ->orderBy('nombre_servicio')
-        ->get();
-
 
         return view('admin.citas.create', compact(
             'empleadosPorDepto',
@@ -418,16 +463,12 @@ class CitaController extends Controller
         ));
     }
 
-
-    // En el método store, después de $cita = Cita::create($validated);
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_cliente'   => ['required', 'exists:clientes,id'],
+            'cliente_id'   => ['required', 'exists:clientes,id'],
             'fecha_cita'   => ['required', 'date'],
             'hora_cita'    => ['required'],
-            // ❌ ya no lo pedimos global, se decide desde servicios[]
-            // 'id_empleado' => ['nullable', 'exists:empleados,id'],
 
             'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
             'observaciones'=> ['nullable', 'string'],
@@ -436,12 +477,11 @@ class CitaController extends Controller
 
             'servicios'                     => ['required', 'array', 'min:1'],
             'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
-            'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],   // ✅ NUEVO
+            'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],
             'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
             'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        // Traer servicios para fallback (evitar confiar en front)
         $ids = collect($validated['servicios'])
             ->pluck('id_servicio')
             ->map(fn($v) => (int) $v)
@@ -471,41 +511,31 @@ class CitaController extends Controller
             $pivotData[$id] = [
                 'precio_snapshot'   => $precio,
                 'duracion_snapshot' => $duracion,
-                'id_empleado'       => $idEmpleadoServicio, // ✅ NUEVO (pivot)
+                'id_empleado'       => $idEmpleadoServicio,
             ];
 
             $totalMonto += $precio;
             $totalDuracion += $duracion;
         }
 
-        // Para cumplir tu schema actual: id_servicio NO NULL
-        $primaryServiceId = array_key_first($pivotData);
-
-        // ✅ Empleado principal (para compatibilidad con citas/ventas/google)
-        $primaryEmpleadoId = collect($validated['servicios'])
-            ->pluck('id_empleado')
-            ->filter()
-            ->map(fn($v) => (int) $v)
-            ->first();
+        // ✅ Responsable según tu regla
+        $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
 
         $cita = Cita::create([
-            'id_cliente'             => $validated['id_cliente'],
-            'id_servicio'            => $primaryServiceId,
-            'id_empleado'            => $primaryEmpleadoId, // ✅ viene del primer row con empleado
-            'fecha_cita'             => $validated['fecha_cita'],
-            'hora_cita'              => $validated['hora_cita'],
-            'duracion_total_minutos' => $totalDuracion,
-            'descuento'              => $validated['descuento'] ?? 0,
-            'estado_cita'            => $validated['estado_cita'],
-            'metodo_pago'            => $validated['metodo_pago'] ?? null,
-            'observaciones'          => $validated['observaciones'] ?? null,
-            'synced_with_google'     => false,
+            'cliente_id'            => $validated['cliente_id'],
+            'empleado_id'           => $responsableId,
+            'fecha_cita'            => $validated['fecha_cita'],
+            'hora_cita'             => $validated['hora_cita'],
+            'duracion_total_minutos'=> $totalDuracion,
+            'descuento'             => $validated['descuento'] ?? 0,
+            'estado_cita'           => $validated['estado_cita'],
+            'metodo_pago'           => $validated['metodo_pago'] ?? null,
+            'observaciones'         => $validated['observaciones'] ?? null,
+            'synced_with_google'    => false,
         ]);
 
-        // ✅ sync pivot con snapshots + id_empleado
         $cita->servicios()->sync($pivotData);
 
-        // Enviar correo si está confirmada
         if ($cita->estado_cita === 'confirmada') {
             try {
                 Mail::to($cita->cliente->email)->send(new CitaConfirmadaMail($cita));
@@ -514,7 +544,7 @@ class CitaController extends Controller
             }
         }
 
-        // Google Calendar
+        // ✅ MANTENEMOS tu bloque Google tal cual
         $token = GoogleToken::first();
         if ($token) {
             try {
@@ -543,7 +573,6 @@ class CitaController extends Controller
             }
         }
 
-        // Si entra como completada, crea la venta
         if ($cita->estado_cita === 'completada') {
             $this->crearVentaDesdeCita($cita);
         }
@@ -551,104 +580,86 @@ class CitaController extends Controller
         return redirect()->route('admin.citas.index')->with('success', 'Cita creada correctamente.');
     }
 
-
-
-
-    // En CitaController.php - método show
     public function show(Cita $cita)
     {
-        // Cargar todas las relaciones necesarias
-        $cita->load(['cliente', 'servicio', 'empleado', 'venta']);
-        
+        $cita->load(['cliente', 'empleado', 'servicios', 'venta']);
         return view('admin.citas.show', compact('cita'));
     }
 
     public function edit(Cita $cita)
     {
-        $cita->load('servicios'); // 👈 importante para multi-servicio
+        // ✅ carga también categoria para poder armar "categoria" string en JS
+        $cita->load(['servicios.categoria']);
 
-        // ✅ Empleados = users(role_id=2) + join a empleados para traer "departamento"
-        $empleados = User::query()
-            ->where('users.role_id', 2)
-            ->leftJoin('empleados', 'empleados.user_id', '=', 'users.id')
+        $empleados = Empleado::query()
+            ->leftJoin('users', 'users.id', '=', 'empleados.user_id')
+            ->where('users.role_id', 2) // ✅ SOLO EMPLEADOS
             ->select([
-                'users.id',
-                'users.name',
+                'empleados.id as id',
+                'empleados.nombre',
+                'empleados.apellido',
                 'users.email',
                 'empleados.departamento',
                 'empleados.puesto',
             ])
             ->orderByRaw('COALESCE(empleados.departamento, "") ASC')
-            ->orderBy('users.name')
+            ->orderBy('empleados.nombre')
             ->get();
 
-            $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
+        $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
 
-            $clientes = Cliente::select('id', 'nombre', 'email')->get();
-            $servicios = Servicio::all();
-            $categorias = Servicio::query()
-            ->whereNotNull('categoria')
-            ->where('categoria', '!=', '')
-            ->distinct()
-            ->orderBy('categoria')
-            ->pluck('categoria');
+        $clientes = Cliente::select('id', 'nombre', 'email')->get();
 
-            $serviciosForJs = Servicio::query()
-                ->selectRaw('
-                    id_servicio as id,
-                    nombre_servicio as nombre,
-                    categoria as categoria,
-                    precio as precio,
-                    duracion_minutos as duracion
-                ')
-                ->orderBy('categoria')
-                ->orderBy('nombre_servicio')
-                ->get();
+        // ✅ servicios con categoria (para el form)
+        $servicios = Servicio::with('categoria')->get();
 
+        $serviciosForJs = $servicios->map(function ($s) {
+            $catName = $s->categoria->nombre ?? 'Sin categoría';
 
-          // ✅ Servicios seleccionados para precargar en edit
-            $serviciosSeleccionados = $cita->servicios->map(function ($s) {
-                return [
-                    'id_servicio'        => (int) $s->id_servicio,
-                    'nombre'             => $s->nombre_servicio,
-                    'categoria'           => $s->categoria ?? '',
-                    'precio_snapshot'    => (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0),
-                    'duracion_snapshot'  => (int) ($s->pivot->duracion_snapshot ?? $s->duracion_minutos ?? 0),
-                ];
-            })->values();
+            return [
+                'id'       => (int) $s->id_servicio,
+                'nombre'   => (string) $s->nombre_servicio,
+                'categoria'=> (string) $catName,
+                'precio'   => (float) ($s->precio ?? 0),
+                'duracion' => (int) ($s->duracion_minutos ?? 0),
+            ];
+        })->values();
 
-            // ✅ Fallback si es una cita vieja sin pivot
-            if ($serviciosSeleccionados->isEmpty() && !empty($cita->id_servicio)) {
-                $s = Servicio::where('id_servicio', $cita->id_servicio)->first();
-                if ($s) {
-                    $serviciosSeleccionados = collect([[
-                        'id_servicio'       => (int) $s->id_servicio,
-                        'nombre'            => $s->nombre_servicio,
-                        'categoria'          => $s->categoria ?? '',
-                        'precio_snapshot'   => (float) ($s->precio ?? 0),
-                        'duracion_snapshot' => (int) ($s->duracion_minutos ?? 0),
-                    ]]);
-                }
-            }
+        $categorias = $serviciosForJs->pluck('categoria')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
 
-            $totalServicios = (float) $serviciosSeleccionados->sum('precio_snapshot');
-            $duracionTotal  = (int) $serviciosSeleccionados->sum('duracion_snapshot');
+        $serviciosSeleccionados = $cita->servicios->map(function ($s) {
+            $catName = $s->categoria->nombre ?? 'Sin categoría';
 
-            return view('admin.citas.edit', compact(
-                'empleadosPorDepto',
-                'cita',
-                'clientes',
-                'servicios',
-                'empleados',
-                'categorias',
-                'serviciosForJs',
-                'serviciosSeleccionados',
-                'totalServicios',
-                'duracionTotal'
-            ));
-        }
-    
+            return [
+                'id_servicio'        => (int) $s->id_servicio,
+                'nombre'             => $s->nombre_servicio,
+                'categoria'          => (string) $catName,
+                'precio_snapshot'    => (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0),
+                'duracion_snapshot'  => (int) ($s->pivot->duracion_snapshot ?? $s->duracion_minutos ?? 0),
+                'id_empleado'        => $s->pivot->id_empleado ?? null,
+            ];
+        })->values();
 
+        $totalServicios = (float) $serviciosSeleccionados->sum('precio_snapshot');
+        $duracionTotal  = (int) $serviciosSeleccionados->sum('duracion_snapshot');
+
+        return view('admin.citas.edit', compact(
+            'empleadosPorDepto',
+            'cita',
+            'clientes',
+            'servicios',
+            'empleados',
+            'categorias',
+            'serviciosForJs',
+            'serviciosSeleccionados',
+            'totalServicios',
+            'duracionTotal'
+        ));
+    }
 
     public function update(Request $request, $id)
     {
@@ -656,11 +667,9 @@ class CitaController extends Controller
         $oldEstado = $cita->estado_cita;
 
         $validated = $request->validate([
-            'id_cliente'   => ['required', 'exists:clientes,id'],
+            'cliente_id'   => ['required', 'exists:clientes,id'],
             'fecha_cita'   => ['required', 'date'],
             'hora_cita'    => ['required'],
-            // ❌ ya no lo pedimos global
-            // 'id_empleado' => ['nullable', 'exists:empleados,id'],
 
             'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
             'observaciones'=> ['nullable', 'string'],
@@ -669,7 +678,7 @@ class CitaController extends Controller
 
             'servicios'                     => ['required', 'array', 'min:1'],
             'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
-            'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],  // ✅ NUEVO
+            'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],
             'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
             'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
         ]);
@@ -703,39 +712,30 @@ class CitaController extends Controller
             $pivotData[$idSrv] = [
                 'precio_snapshot'   => $precio,
                 'duracion_snapshot' => $duracion,
-                'id_empleado'       => $idEmpleadoServicio, // ✅ NUEVO (pivot)
+                'id_empleado'       => $idEmpleadoServicio,
             ];
 
             $totalMonto += $precio;
             $totalDuracion += $duracion;
         }
 
-        $primaryServiceId = array_key_first($pivotData);
-
-        // ✅ Empleado principal (para compatibilidad con citas/ventas/google)
-        $primaryEmpleadoId = collect($validated['servicios'])
-            ->pluck('id_empleado')
-            ->filter()
-            ->map(fn($v) => (int) $v)
-            ->first();
+        // ✅ Responsable según tu regla
+        $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
 
         $cita->update([
-            'id_cliente'             => $validated['id_cliente'],
-            'id_servicio'            => $primaryServiceId,
-            'id_empleado'            => $primaryEmpleadoId,
-            'fecha_cita'             => $validated['fecha_cita'],
-            'hora_cita'              => $validated['hora_cita'],
-            'duracion_total_minutos' => $totalDuracion,
-            'descuento'              => $validated['descuento'] ?? 0,
-            'estado_cita'            => $validated['estado_cita'],
-            'metodo_pago'            => $validated['metodo_pago'] ?? null,
-            'observaciones'          => $validated['observaciones'] ?? null,
+            'cliente_id'            => $validated['cliente_id'],
+            'empleado_id'           => $responsableId,
+            'fecha_cita'            => $validated['fecha_cita'],
+            'hora_cita'             => $validated['hora_cita'],
+            'duracion_total_minutos'=> $totalDuracion,
+            'descuento'             => $validated['descuento'] ?? 0,
+            'estado_cita'           => $validated['estado_cita'],
+            'metodo_pago'           => $validated['metodo_pago'] ?? null,
+            'observaciones'         => $validated['observaciones'] ?? null,
         ]);
 
-        // sync pivot
         $cita->servicios()->sync($pivotData);
 
-        // Google Calendar update (usa duración total)
         $token = GoogleToken::first();
         if ($token && $cita->google_event_id) {
             try {
@@ -758,7 +758,6 @@ class CitaController extends Controller
             }
         }
 
-        // Si pasa a completada, crea la venta (si no existía)
         if ($oldEstado !== 'completada' && $cita->estado_cita === 'completada') {
             $this->crearVentaDesdeCita($cita);
         }
@@ -766,68 +765,59 @@ class CitaController extends Controller
         return redirect()->route('admin.citas.index')->with('success', 'Cita actualizada correctamente.');
     }
 
-
-
     //=======================================================================
     //CREAR VENTA DESDE CITA FUNCIÓN ========================================
     private function crearVentaDesdeCita(Cita $cita): void
     {
-        // Cargar relaciones necesarias (multi-servicio o servicio principal)
-        $cita->loadMissing(['servicios', 'servicio']);
+        $cita->loadMissing(['servicios']);
 
-        // Si falta empleado o cliente, no podemos crear venta (ventas los requiere)
-        if (empty($cita->id_cliente) || empty($cita->id_empleado)) {
+        if (empty($cita->cliente_id) || empty($cita->empleado_id)) {
             \Log::warning('Cita completada sin cliente/empleado, no se creó venta', [
                 'id_cita' => $cita->id_cita,
-                'id_cliente' => $cita->id_cliente,
-                'id_empleado' => $cita->id_empleado,
+                'cliente_id' => $cita->cliente_id,
+                'empleado_id' => $cita->empleado_id,
             ]);
             return;
         }
 
-        // 1) Subtotal: suma snapshots del pivot (si existen) o fallback al servicio principal
+        $firstServicio = $cita->servicios->first();
+
         $subtotal = $cita->servicios->isNotEmpty()
             ? (float) $cita->servicios->sum(fn ($s) => (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0))
-            : (float) ($cita->servicio->precio ?? 0);
+            : (float) ($firstServicio->precio ?? 0);
 
-        // 2) Descuento y total
         $descuento = (float) ($cita->descuento ?? 0);
         $total = max($subtotal - $descuento, 0);
 
-        // 3) Fecha venta = fecha_cita + hora_cita
         $fecha = $cita->fecha_cita instanceof \Carbon\Carbon
             ? $cita->fecha_cita->format('Y-m-d')
             : (string) $cita->fecha_cita;
 
         $fechaVenta = Carbon::parse($fecha . ' ' . $cita->hora_cita);
 
-        // 4) Método de pago de CITA -> ENUM de VENTAS
-        // En citas: efectivo | transferencia | tarjeta
-        // En ventas: efectivo | tarjeta_credito | tarjeta_debito
         $metodo = strtolower((string) ($cita->metodo_pago ?? ''));
 
         $formaPago = match ($metodo) {
             'efectivo' => 'efectivo',
-            'tarjeta' => 'tarjeta_credito',         // si no distingues, mándalo a crédito
+            'tarjeta' => 'tarjeta_credito',
             'tarjeta_credito' => 'tarjeta_credito',
             'tarjeta_debito' => 'tarjeta_debito',
-            'transferencia' => 'efectivo',          // ventas no acepta transferencia (lo reportamos desde citas)
+            'transferencia' => 'efectivo',
             default => 'efectivo',
         };
 
-        // 5) Crear o actualizar venta (evita duplicados por id_cita)
         Venta::updateOrCreate(
             ['id_cita' => $cita->id_cita],
             [
-                'id_cliente' => $cita->id_cliente,      // ✅ OJO: debe apuntar a clientes.id (ver migración abajo)
-                'id_empleado' => $cita->id_empleado,    // ✅ users.id (role=2)
-                'id_servicio' => $cita->id_servicio,
+                'id_cliente' => $cita->cliente_id,
+                'id_empleado' => $cita->empleado_id,
+                'id_servicio' => $firstServicio->id_servicio ?? null,
                 'fecha_venta' => $fechaVenta,
                 'subtotal' => $subtotal,
                 'descuento' => $descuento,
                 'total' => $total,
                 'forma_pago' => $formaPago,
-                'estado_venta' => 'pagada',             // ✅ válido: pendiente|pagada|cancelada
+                'estado_venta' => 'pagada',
                 'observaciones' => $cita->observaciones,
             ]
         );
@@ -836,7 +826,6 @@ class CitaController extends Controller
     public function destroy(Cita $cita)
     {
         try {
-            // Eliminar de Google Calendar si existe
             try {
                 $tokenExists = \App\Models\GoogleToken::where('user_id', auth()->id())->exists();
                 if ($tokenExists && $cita->google_event_id) {
@@ -857,15 +846,11 @@ class CitaController extends Controller
         }
     }
 
-    /**
-     * Sincronizar cita específica con Google Calendar
-     */
-// Agrega estos métodos al CitaController
     public function syncWithGoogle(Cita $cita)
     {
         try {
             $event = $this->googleCalendar->createEventFromCita($cita);
-            
+
             $cita->update([
                 'google_event_id' => $event->getId(),
                 'synced_with_google' => true,

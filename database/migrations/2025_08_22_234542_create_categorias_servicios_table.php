@@ -15,9 +15,6 @@ return new class extends Migration
             $table->bigIncrements('id_categoria');
 
             $table->string('nombre', 120);
-            $table->string('slug', 140)->unique();
-
-            $table->text('descripcion')->nullable();
             $table->string('imagen', 255)->nullable();
 
             // puedes manejarlo como enum o string; dejo string para flexibilidad

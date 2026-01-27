@@ -13,19 +13,22 @@ return new class extends Migration
     {
         Schema::create('empleados', function (Blueprint $table) {
             $table->id();
-            
-            // Datos personales y de contacto
+
+            // ✅ Relación con users (login)
+            $table->unsignedBigInteger('user_id')->unique(); // 1 a 1
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+            // Perfil empleado
             $table->string('nombre', 100);
             $table->string('apellido', 100);
             $table->string('telefono', 20);
             $table->text('informacion_legal')->nullable();
-            
-            // Información laboral
+
             $table->string('puesto')->nullable();
             $table->string('departamento')->nullable();
             $table->date('fecha_contratacion')->nullable();
             $table->enum('estatus', ['activo', 'inactivo', 'vacaciones'])->default('activo');
-            
+
             $table->timestamps();
         });
     }

@@ -318,7 +318,7 @@
             return [
                 'id'       => $s->id_servicio,
                 'nombre'   => $s->nombre_servicio,
-                'categoria'=> $s->categoria,
+                'categoria'=> $s->categoria->nombre ?? 'Sin categoría',
                 'duracion' => $s->duracion_minutos,
                 'precio'   => $s->precio,
             ];

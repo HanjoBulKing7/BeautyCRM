@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\CategoriaServicio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class CategoriaServicioController extends Controller
 {
@@ -23,26 +22,21 @@ class CategoriaServicioController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nombre' => 'required|string|max:120|unique:categorias_servicios,nombre',
-            'descripcion' => 'nullable|string',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'estado' => 'required|in:activo,inactivo'
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'estado' => 'required|in:activo,inactivo',
         ]);
 
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->nombre);
-
-        // Manejar imagen
+        // Imagen
         if ($request->hasFile('imagen')) {
-            $imagePath = $request->file('imagen')->store('categorias-servicios', 'public');
-            $data['imagen'] = $imagePath;
+            $validated['imagen'] = $request->file('imagen')->store('categorias-servicios', 'public');
         }
 
-        CategoriaServicio::create($data);
+        CategoriaServicio::create($validated);
 
         return redirect()->route('admin.categoriaservicios.index')
-                         ->with('success', 'Categoría creada correctamente');
+            ->with('success', 'Categoría creada correctamente');
     }
 
     public function show(CategoriaServicio $categoria)
@@ -57,31 +51,24 @@ class CategoriaServicioController extends Controller
 
     public function update(Request $request, CategoriaServicio $categoria)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:100|unique:categorias_servicios,nombre,' . $categoria->id_categoria . ',id_categoria',
-            'descripcion' => 'nullable|string',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'estado' => 'required|in:activo,inactivo'
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:120|unique:categorias_servicios,nombre,' . $categoria->id_categoria . ',id_categoria',
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'estado' => 'required|in:activo,inactivo',
         ]);
 
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->nombre);
-
-        // Manejar imagen
+        // Imagen nueva (borra anterior si existe)
         if ($request->hasFile('imagen')) {
-            // Eliminar imagen anterior si existe
             if ($categoria->imagen) {
                 Storage::disk('public')->delete($categoria->imagen);
             }
-            
-            $imagePath = $request->file('imagen')->store('categorias-servicios', 'public');
-            $data['imagen'] = $imagePath;
+            $validated['imagen'] = $request->file('imagen')->store('categorias-servicios', 'public');
         }
 
-        $categoria->update($data);
+        $categoria->update($validated);
 
         return redirect()->route('admin.categoriaservicios.index')
-                         ->with('success', 'Categoría actualizada correctamente');
+            ->with('success', 'Categoría actualizada correctamente');
     }
 
     public function destroy(CategoriaServicio $categoria)
@@ -89,7 +76,7 @@ class CategoriaServicioController extends Controller
         // Verificar si hay servicios usando esta categoría
         if ($categoria->servicios()->count() > 0) {
             return redirect()->back()
-                             ->with('error', 'No se puede eliminar la categoría porque tiene servicios asociados.');
+                ->with('error', 'No se puede eliminar la categoría porque tiene servicios asociados.');
         }
 
         // Eliminar imagen si existe
@@ -100,8 +87,9 @@ class CategoriaServicioController extends Controller
         $categoria->delete();
 
         return redirect()->route('admin.categoriaservicios.index')
-                         ->with('success', 'Categoría eliminada correctamente');
+            ->with('success', 'Categoría eliminada correctamente');
     }
+
     public function home()
     {
         $categorias = CategoriaServicio::where('estado', 'activo')->get();

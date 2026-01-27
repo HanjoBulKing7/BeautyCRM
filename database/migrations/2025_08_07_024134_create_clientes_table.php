@@ -12,12 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('clientes', function (Blueprint $table) {
-            $table->id(); // ID autoincremental
-            $table->string('nombre'); // Campo obligatorio
-            $table->string('email')->unique(); // Email único
-            $table->string('telefono')->nullable(); // Opcional
-            $table->text('direccion')->nullable(); // Opcional
-            $table->timestamps(); // created_at y updated_at
+            $table->id();
+
+            // ✅ Relación con users (login)
+            $table->unsignedBigInteger('user_id')->unique(); // 1 a 1
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+            // Datos extra (perfil)
+            $table->string('nombre');             // si quieres duplicar/override del name
+            $table->string('email')->unique();    // si quieres guardar email aquí también
+            $table->string('telefono')->nullable();
+            $table->text('direccion')->nullable();
+
+            $table->timestamps();
         });
     }
 

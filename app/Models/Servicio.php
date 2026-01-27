@@ -33,28 +33,38 @@ class Servicio extends Model
         'updated_at' => 'datetime',
     ];
 
-    // ✅ Servicio pertenece a una categoría
     public function categoria()
     {
         return $this->belongsTo(CategoriaServicio::class, 'id_categoria', 'id_categoria');
     }
 
-    // ✅ Horarios (si existe tabla servicio_horarios con FK servicio_id)
     public function horarios()
     {
         return $this->hasMany(\App\Models\ServicioHorario::class, 'servicio_id', 'id_servicio');
     }
 
-    // ✅ Citas por pivot (cita_servicio = body)
+    // ✅ Citas por pivot (tabla real: cita_servicio)
     public function citas()
     {
         return $this->belongsToMany(
             \App\Models\Cita::class,
-            'cita_servicio',
+            'cita_servicio',   // ✅ CORREGIDO (antes estaba 'citas_servicio')
             'id_servicio',
             'id_cita'
         )
         ->withTimestamps()
-        ->withPivot(['precio_snapshot', 'duracion_snapshot']);
+        ->withPivot([
+            'id_empleado',
+            'precio_snapshot',
+            'duracion_snapshot',
+            'hora_inicio',
+            'hora_fin',
+            'orden',
+        ])
+        ->withPivot([
+            'id_empleado','precio_snapshot','duracion_snapshot','hora_inicio','hora_fin','orden',
+        ])
+        ->orderByPivot('orden');
+
     }
 }

@@ -13,36 +13,33 @@ return new class extends Migration
     {
         Schema::create('citas', function (Blueprint $table) {
             $table->id('id_cita');
-            $table->unsignedBigInteger('id_cliente');
-            $table->unsignedBigInteger('id_servicio');
-            $table->unsignedBigInteger('id_empleado')->nullable();
+
+            // ✅ Ahora citamos tablas “perfil”
+            $table->unsignedBigInteger('cliente_id');
+            $table->unsignedBigInteger('empleado_id')->nullable();
+
             $table->date('fecha_cita');
             $table->time('hora_cita');
             $table->enum('estado_cita', ['pendiente', 'confirmada', 'cancelada', 'completada'])->default('pendiente');
             $table->text('observaciones')->nullable();
-            
-            // Campos de Google Calendar - SIN ->after()
+
+            // Google Calendar
             $table->string('google_event_id')->nullable();
             $table->boolean('synced_with_google')->default(false);
             $table->timestamp('last_sync_at')->nullable();
-            
-            $table->foreign('id_cliente')
-                ->references('id')
-                ->on('users')
+
+            $table->foreign('cliente_id')
+                ->references('id')->on('clientes')
                 ->onDelete('cascade');
-                
-            $table->foreign('id_servicio')
-                ->references('id_servicio')
-                ->on('servicios')
-                ->onDelete('cascade');
-                
-            $table->foreign('id_empleado')
-                ->references('id')
-                ->on('users')
+
+            $table->foreign('empleado_id')
+                ->references('id')->on('empleados')
                 ->onDelete('set null');
-                
+
             $table->timestamps();
         });
+
+
     }
 
     /**

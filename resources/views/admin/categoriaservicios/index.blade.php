@@ -51,9 +51,7 @@
                 <thead class="bb-thead">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Categoría</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Slug</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Estado</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Descripción</th>
                         <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
@@ -92,22 +90,10 @@
                             </td>
 
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="text-sm text-gray-700 dark:text-gray-200">
-                                    {{ $categoria->slug ?? '—' }}
-                                </span>
-                            </td>
-
-                            <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="px-2.5 py-1 text-xs font-semibold rounded-full
                                     {{ ($categoria->estado ?? 'activo') == 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                     {{ ucfirst($categoria->estado ?? 'activo') }}
                                 </span>
-                            </td>
-
-                            <td class="px-4 py-3">
-                                <p class="text-sm text-gray-700 dark:text-gray-200 line-clamp-2">
-                                    {{ $categoria->descripcion ?? '—' }}
-                                </p>
                             </td>
 
                             <td class="px-4 py-3 whitespace-nowrap">

@@ -26,22 +26,6 @@
         @enderror
     </div>
 
-    <!-- Slug preview (solo visual, no se envía; tu controller lo genera con Str::slug) -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-link mr-2" style="color: rgba(201,162,74,.92)"></i>
-            Slug (auto)
-        </label>
-        <input
-            type="text"
-            id="catSlugPreview"
-            value="{{ old('slug', $categoria->slug ?? '') }}"
-            class="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-700"
-            readonly
-        >
-        <p class="text-xs text-gray-500 mt-2">Se genera automáticamente a partir del nombre.</p>
-    </div>
-
     <!-- Estado (solo en edit) -->
     @if($showEstado)
         <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
@@ -68,25 +52,6 @@
         <!-- En create tu controller exige estado, entonces lo mandamos hidden -->
         <input type="hidden" name="estado" value="{{ old('estado', 'activo') }}">
     @endif
-
-    <!-- Descripción -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-align-left mr-2" style="color: rgba(201,162,74,.92)"></i>
-            Descripción
-        </label>
-        <textarea
-            name="descripcion"
-            rows="3"
-            class="w-full border border-gray-300 rounded-lg p-3 transition
-                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
-            placeholder="Descripción de la categoría"
-        >{{ old('descripcion', $categoria->descripcion ?? '') }}</textarea>
-
-        @error('descripcion')
-            <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-        @enderror
-    </div>
 
     <!-- Imagen -->
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
@@ -143,31 +108,6 @@ document.addEventListener('DOMContentLoaded', function () {
             preview.src = url;
             preview.classList.remove('hidden');
         });
-    }
-
-    // Slug preview (solo visual)
-    const nombre = document.getElementById('catNombre');
-    const slugPreview = document.getElementById('catSlugPreview');
-
-    const slugify = (str) => (str || '')
-        .toString()
-        .trim()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
-
-    if (nombre && slugPreview) {
-        nombre.addEventListener('input', () => {
-            slugPreview.value = slugify(nombre.value);
-        });
-
-        if (!slugPreview.value && nombre.value) {
-            slugPreview.value = slugify(nombre.value);
-        }
     }
 });
 </script>

@@ -57,10 +57,6 @@
                     </h3>
 
                     <div class="space-y-2 text-gray-700">
-                        <p>
-                            <span class="font-medium text-gray-800">Slug:</span>
-                            {{ $categoria->slug ?? '—' }}
-                        </p>
 
                         <p class="flex items-center gap-2">
                             <span class="font-medium text-gray-800">Estado:</span>
@@ -78,26 +74,6 @@
                 </div>
             </div>
 
-            <!-- Descripción -->
-            <div class="space-y-4">
-                @if($categoria->descripcion)
-                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                        <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                            <i class="fas fa-align-left" style="color: rgba(201,162,74,.92)"></i>
-                            Descripción
-                        </h3>
-                        <p class="text-gray-600 leading-relaxed">{{ $categoria->descripcion }}</p>
-                    </div>
-                @else
-                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                        <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                            <i class="fas fa-align-left" style="color: rgba(201,162,74,.92)"></i>
-                            Descripción
-                        </h3>
-                        <p class="text-gray-600 leading-relaxed">—</p>
-                    </div>
-                @endif
-            </div>
 
         </div>
 
