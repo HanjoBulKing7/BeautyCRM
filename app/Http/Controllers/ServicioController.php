@@ -32,9 +32,10 @@ class ServicioController extends Controller
         // ✅ Para el <select> de categoría (del pull)
         $categorias = CategoriaServicio::orderBy('nombre')->get();
 
-        if ($this->isFragment($request)) {
-            return view('admin.servicios.partials.create-content', compact('servicio', 'categorias'));
-        }
+            if ($this->isFragment($request)) {
+                return view('admin.servicios.create', compact('servicio','categorias'));
+            }
+
 
         return view('admin.servicios.create', compact('servicio', 'categorias'));
     }
@@ -77,15 +78,18 @@ class ServicioController extends Controller
     {
         if ($r = $this->redirectIfModalInBrowser($request)) return $r;
 
-        // ✅ incluir categoria (del pull) + horarios (tu lógica)
-        $servicio->load('horarios', 'categoria');
+        $servicio->load(['horarios', 'categoria']);
 
         if ($this->isFragment($request)) {
+            // ✅ para modal/loader (sin layout)
             return view('admin.servicios.partials.show-content', compact('servicio'));
+            // (si NO quieres partials, puedes regresar admin.servicios.show y listo,
+            // pero lo ideal es partial para evitar layout dentro del modal)
         }
 
         return view('admin.servicios.show', compact('servicio'));
     }
+
 
     public function edit(Request $request, Servicio $servicio)
     {
@@ -96,9 +100,9 @@ class ServicioController extends Controller
         // ✅ Para el <select> de categoría (del pull)
         $categorias = CategoriaServicio::orderBy('nombre')->get();
 
-        if ($this->isFragment($request)) {
-            return view('admin.servicios.partials.edit-content', compact('servicio', 'categorias'));
-        }
+            if ($this->isFragment($request)) {
+                return view('admin.servicios.create', compact('servicio','categorias'));
+            }
 
         return view('admin.servicios.edit', compact('servicio', 'categorias'));
     }
@@ -237,9 +241,9 @@ class ServicioController extends Controller
 
     private function isFragment(Request $request): bool
     {
-        // Fragment = lo que usará el loader
-        return $request->ajax() || $request->boolean('modal');
+        return $request->ajax(); // el loader siempre manda X-Requested-With
     }
+
 
     private function redirectIfModalInBrowser(Request $request)
     {

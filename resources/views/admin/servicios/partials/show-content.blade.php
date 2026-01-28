@@ -191,49 +191,42 @@
         <!-- Botones de acción -->
         <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
 
-            <!-- Editar -->
-            <a
-               href="{{ route('admin.servicios.edit', $servicio->id_servicio) }}"
-               data-bb-modal="1"
-               data-bb-title="Editar Servicio"
-               class="px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
-               style="
-                    background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
-                    border: 1px solid rgba(201,162,74,.35);
-                    box-shadow: 0 10px 22px rgba(201,162,74,.18);
-                    color: #111827;
-               "
-               onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
-               onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
-            >
-                <i class="fas fa-edit" style="color: rgba(17,24,39,.90)"></i>
-                Editar Servicio
-            </a>
+        <!-- Editar -->
+        <a
+            href="{{ route('admin.servicios.edit', $servicio->id_servicio) }}"
+            data-bb-modal="1"
+            data-bb-title="Editar Servicio"
+            class="h-12 px-6 rounded-lg font-semibold inline-flex items-center justify-center gap-2 transition"
+            style="
+            background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
+            border: 1px solid rgba(201,162,74,.35);
+            box-shadow: 0 10px 22px rgba(201,162,74,.18);
+            color: #111827;
+            "
+            onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
+            onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
+        >
+            <i class="fas fa-edit" style="color: rgba(17,24,39,.90)"></i>
+            Editar Servicio
+        </a>
 
-            <!-- Eliminar (POST normal; el loader lo intercepta por submit y refresca contenido) -->
-            <form action="{{ route('admin.servicios.destroy', $servicio->id_servicio) }}" method="POST" class="inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                        class="px-6 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold
-                               flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
-                        onclick="return confirm('¿Estás seguro de eliminar este servicio?')">
-                    <i class="fas fa-trash"></i>
-                    Eliminar
-                </button>
-            </form>
+        <!-- Eliminar -->
+        <form action="{{ route('admin.servicios.destroy', $servicio->id_servicio) }}"
+                method="POST"
+                class="m-0 inline-flex">
+            @csrf
+            @method('DELETE')
 
-            <!-- Volver a listado -->
-            <a
-               href="{{ route('admin.servicios.index') }}"
-               data-bb-modal="1"
-               data-bb-title="Servicios"
-               class="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
-                      flex items-center justify-center gap-2 transition">
-                <i class="fas fa-arrow-left" style="color: rgba(17,24,39,.70)"></i>
-                Volver
-            </a>
+            <button type="submit"
+            class="h-12 px-6 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold
+                    inline-flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
+            onclick="return confirm('¿Estás seguro de eliminar este servicio?')">
+            <i class="fas fa-trash"></i>
+            Eliminar
+            </button>
+        </form>
         </div>
+
 
     </div>
 </div>

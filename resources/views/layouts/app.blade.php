@@ -43,150 +43,376 @@
 
   @stack('styles')
 
-  <style>
-    :root{
-      --bb-gold: #C9A24A;
-      --bb-gold-2: #E7D7A1;
-      --bb-ink: #111827;
-      --bb-muted: #6B7280;
-      --bb-border: rgba(17,24,39,.10);
-      --bb-glass: rgba(255,255,255,.72);
-      --bb-glass-strong: rgba(255,255,255,.85);
-      --bb-shadow: 0 10px 30px rgba(17,24,39,.08);
-    }
+<style>
+  :root{
+    --bb-gold: #C9A24A;
+    --bb-gold-2: #E7D7A1;
+    --bb-ink: #111827;
+    --bb-muted: #6B7280;
+    --bb-border: rgba(17,24,39,.10);
+    --bb-glass: rgba(255,255,255,.72);
+    --bb-glass-strong: rgba(255,255,255,.85);
+    --bb-shadow: 0 10px 30px rgba(17,24,39,.08);
+  }
 
-    body{
-      overflow-x:hidden;
-      color: var(--bb-ink);
-      background:
-        radial-gradient(1200px 600px at 15% 10%, rgba(201,162,74,.18), transparent 60%),
-        radial-gradient(900px 500px at 90% 20%, rgba(231,215,161,.20), transparent 55%),
-        linear-gradient(180deg, #fbfbfb 0%, #f3f4f6 100%);
-    }
+  body{
+    overflow-x:hidden;
+    color: var(--bb-ink);
+    background:
+      radial-gradient(1200px 600px at 15% 10%, rgba(201,162,74,.18), transparent 60%),
+      radial-gradient(900px 500px at 90% 20%, rgba(231,215,161,.20), transparent 55%),
+      linear-gradient(180deg, #fbfbfb 0%, #f3f4f6 100%);
+  }
 
-    .overlay{
-      display:none;
-      position:fixed;
-      inset:0;
-      background: rgba(17,24,39,.45);
-      z-index:30;
-    }
+  /* ============ Overlay ============ */
+  .overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background: rgba(17,24,39,.45);
+    z-index:30;
+  }
 
+  /* ============ Sidebar ============ */
+  .sidebar{
+    position:fixed;
+    top:0; left:0;
+    height:100vh;
+    width:16rem;
+    overflow-y:auto;
+    flex-shrink:0;
+    transition:all .3s ease;
+    z-index:40;
+
+    background: var(--bb-glass-strong);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-right: 1px solid var(--bb-border);
+    box-shadow: 0 0 25px rgba(17,24,39,.06);
+  }
+
+  .sidebar::-webkit-scrollbar{ width:6px; }
+  .sidebar::-webkit-scrollbar-thumb{
+    background-color: rgba(17,24,39,.18);
+    border-radius: 999px;
+  }
+
+  /* Links */
+  .sidebar a{
+    display:flex;
+    align-items:center;
+    padding:.75rem 1rem;
+    border-radius:.95rem;
+    margin:.25rem .5rem;
+    text-decoration:none;
+    position:relative;
+    overflow:hidden;
+    transition: all .25s ease;
+    color: var(--bb-ink) !important;
+
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+
+    /* ✅ quitar “bordes” reales y visuales */
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;   /* <-- ESTA es la clave */
+  }
+
+
+  .sidebar a i{
+    width:1.5rem;
+    text-align:center;
+    margin-right:.75rem;
+    color: rgba(201,162,74,.95) !important;
+    transition: transform .25s ease, opacity .25s ease;
+    opacity:.95;
+  }
+
+  .sidebar a::before{
+    content:"";
+    position:absolute;
+    top:0; left:-120%;
+    width:120%;
+    height:100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+    transition: left .6s ease;
+  }
+  .sidebar a:hover::before{ left:120%; }
+
+  .sidebar a:hover{
+    transform: translateX(4px);
+    box-shadow: 0 10px 25px rgba(17,24,39,.08);
+    background: rgba(255,255,255,.55);
+  }
+  .sidebar a:hover i{ transform: scale(1.08); }
+
+  /* Active state dorado (cuando el backend pone bg-*-100) */
+  .sidebar a.bg-gray-200,
+  .sidebar a.bg-orange-100,
+  .sidebar a.bg-yellow-100,
+  .sidebar a.bg-blue-100,
+  .sidebar a.bg-purple-100,
+  .sidebar a.bg-red-100,
+  .sidebar a.bg-green-100,
+  .sidebar a.bg-pink-100,
+  .sidebar a.bg-teal-100,
+  .sidebar a.bg-green-50{
+    border: 0 !important;
+    outline: 0 !important;
+
+    /* 👇 si aquí también lo ves como “borde”, quítalo */
+    box-shadow: 0 12px 28px rgba(201,162,74,.18) !important; 
+    /* o si lo quieres 100% plano:
+    box-shadow: none !important;
+    */
+  }
+
+
+  .sidebar a.bg-gray-200::after,
+  .sidebar a.bg-orange-100::after,
+  .sidebar a.bg-yellow-100::after,
+  .sidebar a.bg-blue-100::after,
+  .sidebar a.bg-purple-100::after,
+  .sidebar a.bg-red-100::after,
+  .sidebar a.bg-green-100::after,
+  .sidebar a.bg-pink-100::after,
+  .sidebar a.bg-teal-100::after,
+  .sidebar a.bg-green-50::after{
+    content:"";
+    position:absolute;
+    right:0;
+    top:50%;
+    transform: translateY(-50%);
+    width:4px;
+    height:60%;
+    border-radius:999px;
+    background: var(--bb-gold);
+  }
+
+  .sidebar .text-gray-300,
+  .sidebar .text-gray-400,
+  .sidebar .text-gray-500,
+  .sidebar .text-gray-600,
+  .sidebar .text-gray-700{
+    color: var(--bb-muted) !important;
+  }
+
+  .sidebar .bb-logo-wrap{
+    border-bottom: 1px solid rgba(201,162,74,.18);
+    background: rgba(255,255,255,.35);
+  }
+
+  .sidebar .rounded-full.bg-orange-500{
+    background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2)) !important;
+    color: #111827 !important;
+    box-shadow: 0 10px 22px rgba(201,162,74,.22);
+  }
+
+  /* ============ Layout containers ============ */
+  main{ margin-left:16rem; transition: margin-left .3s ease; }
+
+  header{
+    position:fixed;
+    top:0; left:16rem; right:0;
+    height:4.5rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 0 2rem;
+    z-index:50;
+    transition:left .3s ease;
+
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border-bottom: 1px solid var(--bb-border);
+    box-shadow: 0 6px 20px rgba(17,24,39,.06);
+  }
+
+  /* Icon buttons */
+  .bb-icon-btn{
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: rgba(255,255,255,.65);
+    border: 1px solid rgba(201,162,74,.22);
+    box-shadow: 0 10px 22px rgba(17,24,39,.07);
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .bb-icon-btn:hover{
+    transform: translateY(-1px);
+    background: rgba(255,255,255,.80);
+    box-shadow: 0 16px 30px rgba(17,24,39,.09);
+  }
+  .bb-icon-btn i{ color: rgba(17,24,39,.85); }
+
+  .bb-notif-btn{
+    background: linear-gradient(135deg, rgba(201,162,74,.95), rgba(231,215,161,.95));
+    border: 1px solid rgba(201,162,74,.35);
+  }
+  .bb-notif-btn i{ color:#111827; }
+
+  #notifications-panel{
+    background: rgba(255,255,255,.78);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(201,162,74,.20);
+    box-shadow: 0 18px 45px rgba(17,24,39,.12);
+  }
+
+  /* Cards "glass" (si tu UI usa bg-white) */
+  .bg-white{
+    background: rgba(255,255,255,.72) !important;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    /*border: 1px solid rgba(255,255,255,.65) !important;*/
+    box-shadow: 0 10px 26px rgba(17,24,39,.06);
+    border-radius: 1rem;
+  }
+  
+  /* ===============================
+    Dark Mode (cuando body tiene .dark-mode)
+  ================================ */
+  body.dark-mode{
+    color: #E5E7EB;
+    background:
+      radial-gradient(1200px 600px at 15% 10%, rgba(201,162,74,.10), transparent 60%),
+      radial-gradient(900px 500px at 90% 20%, rgba(231,215,161,.10), transparent 55%),
+      linear-gradient(180deg, #0B1220 0%, #0A0F1A 100%);
+  }
+
+  body.dark-mode header{
+    background: rgba(17,24,39,.62);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+
+  body.dark-mode .sidebar{
+    background: rgba(17,24,39,.58);
+    border-right: 1px solid rgba(255,255,255,.08);
+  }
+
+  body.dark-mode .sidebar a{
+    background: rgba(17,24,39,.35);
+    color: #E5E7EB !important;
+  }
+
+  body.dark-mode .sidebar a i{
+    color: rgba(231,215,161,.95) !important;
+  }
+
+  body.dark-mode .bg-white{
+    background: rgba(17,24,39,.42) !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+  }
+
+
+  /* Responsive */
+  @media (max-width:1024px){
     .sidebar{
-      position:fixed;
-      top:0; left:0;
-      height:100vh;
-      width:16rem;
-      overflow-y:auto;
-      flex-shrink:0;
-      transition:all .3s ease;
-      z-index:40;
-
-      background: var(--bb-glass-strong);
-      backdrop-filter: blur(18px) saturate(140%);
-      -webkit-backdrop-filter: blur(18px) saturate(140%);
-      border-right: 1px solid var(--bb-border);
-      box-shadow: 0 0 25px rgba(17,24,39,.06);
-    }
-
-    main{ margin-left:16rem; transition: margin-left .3s ease; }
-
-    header{
-      position:fixed;
-      top:0; left:16rem; right:0;
-      height:4.5rem;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 0 2rem;
+      transform: translateX(-100%);
       z-index:50;
-      transition:left .3s ease;
+      box-shadow: 0 0 35px rgba(17,24,39,.12);
+      padding-bottom: 5rem;
+    }
+    .sidebar.open{ transform: translateX(0); }
+    .overlay.open{ display:block; }
+    main{ margin-left:0 !important; padding:1rem; }
+    .ml-64{ margin-left:0 !important; }
+    header{ left:0 !important; width:100% !important; padding:0 1rem; }
 
-      background: rgba(255,255,255,.70);
-      backdrop-filter: blur(16px) saturate(140%);
-      -webkit-backdrop-filter: blur(16px) saturate(140%);
-      border-bottom: 1px solid var(--bb-border);
-      box-shadow: 0 6px 20px rgba(17,24,39,.06);
+    .sidebar .p-4.border-t{
+      position: sticky;
+      bottom:0;
+      z-index:60;
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--bb-border);
     }
+    /* ===============================
+        Dark Mode (cuando body tiene .dark-mode)
+      ================================ */
+      body.dark-mode{
+        color: #E5E7EB;
+        background:
+          radial-gradient(1200px 600px at 15% 10%, rgba(201,162,74,.10), transparent 60%),
+          radial-gradient(900px 500px at 90% 20%, rgba(231,215,161,.10), transparent 55%),
+          linear-gradient(180deg, #0B1220 0%, #0A0F1A 100%);
+      }
 
-    .bb-icon-btn{
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: rgba(255,255,255,.65);
-      border: 1px solid rgba(201,162,74,.22);
-      box-shadow: 0 10px 22px rgba(17,24,39,.07);
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
-    }
-    .bb-icon-btn:hover{
-      transform: translateY(-1px);
-      background: rgba(255,255,255,.80);
-      box-shadow: 0 16px 30px rgba(17,24,39,.09);
-    }
+      body.dark-mode header{
+        background: rgba(17,24,39,.62);
+        border-bottom: 1px solid rgba(255,255,255,.08);
+      }
 
-    .bb-notif-btn{
-      background: linear-gradient(135deg, rgba(201,162,74,.95), rgba(231,215,161,.95));
-      border: 1px solid rgba(201,162,74,.35);
-    }
+      body.dark-mode .sidebar{
+        background: rgba(17,24,39,.58);
+        border-right: 1px solid rgba(255,255,255,.08);
+      }
 
-    #notifications-panel{
-      background: rgba(255,255,255,.78);
-      backdrop-filter: blur(16px) saturate(140%);
-      -webkit-backdrop-filter: blur(16px) saturate(140%);
-      border: 1px solid rgba(201,162,74,.20);
-      box-shadow: 0 18px 45px rgba(17,24,39,.12);
-    }
+      body.dark-mode .sidebar a{
+        background: rgba(17,24,39,.35);
+        color: #E5E7EB !important;
+      }
 
-    @media (max-width:1024px){
-      .sidebar{ transform: translateX(-100%); z-index:50; }
-      .sidebar.open{ transform: translateX(0); }
-      .overlay.open{ display:block; }
-      main{ margin-left:0 !important; padding:1rem; }
-      header{ left:0 !important; width:100% !important; padding:0 1rem; }
-    }
+      body.dark-mode .sidebar a i{
+        color: rgba(231,215,161,.95) !important;
+      }
 
-    /* ====== BeautyCRM Modal (fallback) ====== */
-    .bb-modal-backdrop{
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.45);
-      display: none;
-      z-index: 9998;
-    }
-    .bb-modal-backdrop.open{ display:block; }
+      body.dark-mode .bg-white{
+        background: rgba(17,24,39,.42) !important;
+        border: 1px solid rgba(255,255,255,.08) !important;
+      }
 
-    .bb-modal{
-      position: fixed;
-      inset: 0;
-      display: none;
-      z-index: 9999;
-      padding: 7px; /* 👈 más ancho visual */
-    }
+  }
 
-    .bb-modal.open{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  #theme-icon.fa-sun{ color: var(--bb-gold) !important; }
 
-    .bb-modal-card{
-      width: min(1400px, 120vw);   /* 👈 más ancho */
-      height: min(88vh, 980px);   /* 👈 opcional: un poco más alto */
-      background: rgba(255,255,255,.88);
-      backdrop-filter: blur(18px) saturate(140%);
-      -webkit-backdrop-filter: blur(18px) saturate(140%);
-      border: 1px solid rgba(255,255,255,.65);
-      border-radius: 18px;
-      box-shadow: 0 20px 70px rgba(17,24,39,.22);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    .bb-modal-body{ flex: 1; overflow: auto; }
-  </style>
+  /* ====== BeautyCRM Modal (fallback) ====== */
+  .bb-modal-backdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    z-index: 9998;
+  }
+  .bb-modal-backdrop.open{ display:block; }
+
+  .bb-modal{
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 9999;
+    padding: 7px;
+  }
+
+  .bb-modal.open{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bb-modal-card{
+    width: min(1400px, 120vw);
+    height: min(88vh, 980px);
+    background: rgba(255,255,255,.88);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255,255,255,.65);
+    border-radius: 18px;
+    box-shadow: 0 20px 70px rgba(17,24,39,.22);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .bb-modal-body{ flex: 1; overflow: auto; }
+</style>
+
 </head>
 
 <body class="min-h-screen flex transition-colors duration-300">
@@ -487,6 +713,61 @@
   }
 })();
 </script>
+<script>
+(() => {
+  const body = document.body;
+
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+
+  // =========================
+  // Sidebar móvil (si existe)
+  // =========================
+  sidebarToggle?.addEventListener('click', () => {
+    sidebar?.classList.toggle('open');
+    overlay?.classList.toggle('open');
+  });
+
+  overlay?.addEventListener('click', () => {
+    sidebar?.classList.remove('open');
+    overlay?.classList.remove('open');
+  });
+
+  // =========================
+  // Theme toggle (dark-mode)
+  // =========================
+  function applyTheme(isDark) {
+    // ✅ Para tu CSS propio
+    body.classList.toggle('dark-mode', isDark);
+
+    // ✅ Para que funcionen las clases Tailwind "dark:*"
+    document.documentElement.classList.toggle('dark', isDark);
+
+    if (themeIcon) {
+      themeIcon.classList.toggle('fa-moon', !isDark);
+      themeIcon.classList.toggle('fa-sun', isDark);
+    }
+
+    localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+  }
+
+
+  // cargar tema guardado
+  const saved = localStorage.getItem('darkMode');
+  applyTheme(saved === 'true');
+
+  // click botón
+  themeToggle?.addEventListener('click', () => {
+    const isDark = !body.classList.contains('dark-mode');
+    applyTheme(isDark);
+  });
+})();
+</script>
+
 
 </body>
 </html>
