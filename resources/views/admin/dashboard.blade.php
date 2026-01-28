@@ -4,6 +4,7 @@
 <div class="container mx-auto px-4 py-6">
 
   {{-- ✅ Tus estilos (idénticos) --}}
+  <!--
   <style>
     :root{
       --bb-gold: rgba(201,162,74,.95);
@@ -109,6 +110,18 @@
       transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
       white-space: nowrap;
     }
+    /* ✅ Icon-only actions (editar / eliminar) */
+    .bb-action-icon{
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      gap: 0;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .bb-action:hover{ transform: translateY(-1px); background: rgba(255,255,255,.70); box-shadow: 0 12px 24px rgba(17,24,39,.08); }
     .bb-action-gold{ color: var(--bb-gold) !important; border-color: rgba(201,162,74,.18) !important; }
     .bb-action-ink{ color: rgba(17,24,39,.85) !important; }
@@ -121,7 +134,7 @@
       .bb-show-md { display:none !important; }
     }
   </style>
-
+  -->
   {{-- ✅ Header --}}
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
     <div id="bb-dashboard-header">

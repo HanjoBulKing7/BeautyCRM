@@ -5,194 +5,143 @@ namespace App\Http\Controllers;
 use App\Models\Empleado;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use App\Notifications\EmployeeInvitationNotification;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Database\QueryException;
+
+
 
 class EmpleadoController extends Controller
 {
-    /**
-     * ✅ INDEX
-     */
-    public function index(Request $request)
+    // Listar empleados
+    public function index()
     {
-        $empleados = Empleado::latest()->paginate(10);
-
-        // Si viene desde Hub Loader (?modal=1) o AJAX => SOLO contenido
-        if ($request->boolean('modal') || $request->ajax()) {
-            return view('admin.empleados.partials.index-content', compact('empleados'));
-        }
-
-        // Vista normal
+        $empleados = Empleado::latest()->paginate(10); // ← CAMBIAR AQUÍ
         return view('admin.empleados.index', compact('empleados'));
     }
 
-    /**
-     * ✅ CREATE
-     */
-    public function create(Request $request)
+    // Mostrar formulario de creación
+    public function create()
     {
-        $empleado = new Empleado();
-
-        if ($request->boolean('modal') || $request->ajax()) {
-            return view('admin.empleados.partials.create-content', compact('empleado'));
-        }
-
+        $empleado = new Empleado(); // ← Crear instancia vacía
         return view('admin.empleados.create', compact('empleado'));
     }
 
-    /**
-     * ✅ STORE
-     */
+    // Almacenar nuevo empleado
     public function store(Request $request)
     {
         $request->validate([
-            'nombre'             => 'required|string|max:100',
-            'apellido'           => 'required|string|max:100',
-            'email'              => 'required|email|max:255|unique:empleados,email',
-            'telefono'           => 'required|string|max:20',
-            'puesto'             => 'nullable|string|max:100',
-            'departamento'       => 'nullable|string|max:100',
+            'nombre' => 'required|string|max:100',
+            'apellido' => 'required|string|max:100',
+            'email' => ['required','email','max:255', Rule::unique('users','email')],
+            'telefono' => 'required|string|max:20',
+            'puesto' => 'nullable|string|max:100',
+            'departamento' => 'nullable|string|max:100',
             'fecha_contratacion' => 'nullable|date',
-            'estatus'            => 'required|in:activo,inactivo,vacaciones',
-            'informacion_legal'  => 'nullable|string',
-        ]);
+            'estatus' => 'required|in:activo,inactivo,vacaciones',
+            'informacion_legal' => 'nullable|string',
+        ],[
+            'email.unique' => 'Este correo ya está registrado. Usa otro correo.',
+        ]
+        );
 
-        DB::transaction(function () use ($request) {
 
-            $user = User::create([
-                'role_id'  => 2, // EMPLEADO
-                'name'     => $request->nombre . ' ' . $request->apellido,
-                'email'    => $request->email,
-                'password' => Hash::make(Str::random(32)),
-            ]);
 
-            $empleado = Empleado::create([
-                'user_id'            => $user->id,
-                'nombre'             => $request->nombre,
-                'apellido'           => $request->apellido,
-                'email'              => $request->email,
-                'telefono'           => $request->telefono,
-                'puesto'             => $request->puesto,
-                'departamento'       => $request->departamento,
-                'fecha_contratacion' => $request->fecha_contratacion,
-                'estatus'            => $request->estatus,
-                'informacion_legal'  => $request->informacion_legal,
-            ]);
+        try {
+                    $user = User::create([
+                    'role_id' => 2,
+                    'name' => $request->nombre . ' ' . $request->apellido,
+                    'email' => $request->email,
+                    'password' => Hash::make(Str::random(32)), // no la usará si solo entra con Google
+                ]);
 
-            $inviteUrl = URL::temporarySignedRoute(
-                'invitation.employee',
-                now()->addDays(2),
-                ['user' => $user->id]
-            );
+                $empleado = Empleado::create([
+                    'user_id' => $user->id,
+                    'nombre' => $request->nombre,
+                    'apellido' => $request->apellido,
+                    'email' => $request->email,
+                    'telefono' => $request->telefono,
+                    'puesto' => $request->puesto,
+                    'departamento' => $request->departamento,
+                    'fecha_contratacion' => $request->fecha_contratacion,
+                    'estatus' => $request->estatus,
+                    'informacion_legal' => $request->informacion_legal,
+                ]);
 
-            $user->notify(new EmployeeInvitationNotification($inviteUrl));
-        });
+                $inviteUrl = URL::temporarySignedRoute(
+                    'invitation.employee',
+                    now()->addDays(2),
+                    ['user' => $user->id] // ✅ ahora sí, USER
+                );
 
-        // ✅ CLAVE: conservar modal=1 si venía del Hub Loader
-        return redirect()
-            ->route('admin.empleados.index', $this->modalParams($request))
+                $user->notify(new EmployeeInvitationNotification($inviteUrl));
+
+            } catch (QueryException $e) {
+                // por si se coló por carrera (1062 duplicate)
+                if (($e->errorInfo[1] ?? null) == 1062) {
+                    return back()
+                        ->withErrors(['email' => 'Ese correo ya está registrado. Usa otro.'])
+                        ->withInput();
+                }
+                throw $e;
+            }
+        return redirect()->route('admin.empleados.index')
             ->with('success', 'Empleado creado exitosamente.');
     }
 
-    /**
-     * ✅ SHOW (si lo usas)
-     */
-    public function show(Request $request, Empleado $empleado)
+    // Mostrar formulario de edición
+    public function edit(Empleado $empleado)
     {
-        if ($request->boolean('modal') || $request->ajax()) {
-            return view('admin.empleados.partials.show-content', compact('empleado'));
-        }
-
-        return view('admin.empleados.show', compact('empleado'));
-    }
-
-    /**
-     * ✅ EDIT
-     */
-    public function edit(Request $request, Empleado $empleado)
-    {
-        if ($request->boolean('modal') || $request->ajax()) {
-            return view('admin.empleados.partials.edit-content', compact('empleado'));
-        }
-
         return view('admin.empleados.edit', compact('empleado'));
     }
 
-    /**
-     * ✅ UPDATE
-     */
+    // Actualizar empleado
     public function update(Request $request, Empleado $empleado)
     {
         $request->validate([
-            'nombre'             => 'required|string|max:100',
-            'apellido'           => 'required|string|max:100',
-            'email'              => 'required|email|max:255|unique:empleados,email,' . $empleado->getKey(),
-            'telefono'           => 'required|string|max:20',
-            'puesto'             => 'nullable|string|max:100',
-            'departamento'       => 'nullable|string|max:100',
+            'nombre' => 'required|string|max:100',
+            'apellido' => 'required|string|max:100',
+            'email' => ['required','email','max:255', Rule::unique('users','email')->ignore($empleado->user_id)],
+            'telefono' => 'required|string|max:20',
+            'puesto' => 'nullable|string|max:100',
+            'departamento' => 'nullable|string|max:100',
             'fecha_contratacion' => 'nullable|date',
-            'estatus'            => 'required|in:activo,inactivo,vacaciones',
-            'informacion_legal'  => 'nullable|string',
+            'estatus' => 'required|in:activo,inactivo,vacaciones',
+            'informacion_legal' => 'nullable|string',
+        ],[
+            'email.unique' => 'Este correo ya está registrado. Usa otro correo.',
         ]);
 
-        DB::transaction(function () use ($request, $empleado) {
+        // actualiza EMPLEADO
+        $empleado->update($request->only([
+            'nombre','apellido','email','telefono','puesto','departamento',
+            'fecha_contratacion','estatus','informacion_legal',
+        ]));
 
-            $empleado->update($request->only([
-                'nombre',
-                'apellido',
-                'email',
-                'telefono',
-                'puesto',
-                'departamento',
-                'fecha_contratacion',
-                'estatus',
-                'informacion_legal',
-            ]));
+        // actualiza USER relacionado
+        \App\Models\User::where('id', $empleado->user_id)->update([
+            'name'  => $request->nombre . ' ' . $request->apellido,
+            'email' => $request->email,
+        ]);
 
-            // ✅ mantener sincronizado User ligado
-            if ($empleado->user_id) {
-                User::where('id', $empleado->user_id)->update([
-                    'name'  => $request->nombre . ' ' . $request->apellido,
-                    'email' => $request->email,
-                ]);
-            }
-        });
-
-        return redirect()
-            ->route('admin.empleados.index', $this->modalParams($request))
+        return redirect()->route('admin.empleados.index')
             ->with('success', 'Empleado actualizado exitosamente.');
     }
-
-    /**
-     * ✅ DESTROY
-     */
-    public function destroy(Request $request, Empleado $empleado)
+    // Eliminar empleado
+    public function destroy(Empleado $empleado)
     {
-        DB::transaction(function () use ($empleado) {
-            $userId = $empleado->user_id;
-            $empleado->delete();
+        $empleado->delete();
 
-            // opcional (si quieres borrar el user también)
-            if ($userId) {
-                User::where('id', $userId)->delete();
-            }
-        });
-
-        return redirect()
-            ->route('admin.empleados.index', $this->modalParams($request))
+        return redirect()->route('admin.empleados.index') // ← CAMBIAR
             ->with('success', 'Empleado eliminado exitosamente.');
     }
 
-    /**
-     * Helpers
-     */
-    private function modalParams(Request $request): array
+    // Mostrar empleado individual (opcional)
+    public function show(Empleado $empleado)
     {
-        return ($request->boolean('modal') || $request->ajax())
-            ? ['modal' => 1]
-            : [];
+        return view('empleados.show', compact('empleado'));
     }
 }

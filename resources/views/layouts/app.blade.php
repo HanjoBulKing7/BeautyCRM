@@ -321,392 +321,173 @@
   @stack('scripts')
   @yield('scripts')
 
-  <script>
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    const notificationsToggle = document.getElementById('notifications-toggle');
-    const notificationsPanel = document.getElementById('notifications-panel');
-    const body = document.body;
+<script>
+(() => {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    sidebarToggle?.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('open');
-    });
-    overlay?.addEventListener('click', () => {
-      sidebar.classList.remove('open');
-      overlay.classList.remove('open');
-    });
+  const bbHost = document.getElementById('bb-module-host'); // si existe (dashboard)
+  const bbModal = document.getElementById('bb-modal');
+  const bbModalBackdrop = document.getElementById('bb-modal-backdrop');
+  const bbModalTitle = document.getElementById('bb-modal-title');
+  const bbModalBody = document.getElementById('bb-modal-body');
+  const bbModalClose = document.getElementById('bb-modal-close');
 
-    function toggleTheme() {
-      body.classList.toggle('dark-mode');
-      const isDark = body.classList.contains('dark-mode');
+  function bbOpenModal(){
+    if(!bbModal) return;
+    bbModal.classList.add('open');
+    bbModalBackdrop?.classList.add('open');
+    bbModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
 
-      if (isDark) {
-        themeIcon.classList.remove('fa-moon');
-        themeIcon.classList.add('fa-sun');
-      } else {
-        themeIcon.classList.remove('fa-sun');
-        themeIcon.classList.add('fa-moon');
-      }
-      localStorage.setItem('darkMode', isDark);
+  function bbCloseModal(){
+    if(!bbModal) return;
+    bbModal.classList.remove('open');
+    bbModalBackdrop?.classList.remove('open');
+    bbModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  bbModalClose?.addEventListener('click', bbCloseModal);
+  bbModalBackdrop?.addEventListener('click', bbCloseModal);
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape') bbCloseModal(); });
+
+  function bbSetLoading(el){
+    if(!el) return;
+    el.innerHTML = `<div class="bg-white p-4 rounded-xl">
+      <div class="text-sm text-gray-500">Cargando…</div>
+    </div>`;
+  }
+
+  function bbRenderHtmlInto(targetEl, html){
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    // intenta tomar el <main> del layout
+    const main = doc.querySelector('main');
+    targetEl.innerHTML = main ? main.innerHTML : html;
+  }
+
+  // =========================
+  // ABRIR LINK EN MODAL
+  // =========================
+  async function bbLoadModalOnly(href, title = 'Módulo'){
+    if(!bbModalBody){
+      // si no existe modal en esta página, navega normal
+      window.location.href = href;
+      return;
     }
 
-    const savedTheme = localStorage.getItem('darkMode');
-    if (savedTheme === 'true') {
-      body.classList.add('dark-mode');
-      themeIcon.classList.remove('fa-moon');
-      themeIcon.classList.add('fa-sun');
-    }
-    themeToggle?.addEventListener('click', toggleTheme);
-
-    notificationsToggle?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      notificationsPanel.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!notificationsToggle?.contains(e.target) && !notificationsPanel?.contains(e.target)) {
-        notificationsPanel?.classList.add('hidden');
-      }
-    });
-
-    function loadNotifications() {
-      const notificationsList = document.getElementById('notifications-list');
-      if (notificationsList) {
-        notificationsList.innerHTML = `
-          <div class="p-3 border-b border-gray-200">
-            <p class="text-sm text-gray-700">No hay notificaciones nuevas</p>
-            <p class="text-xs text-gray-500">Todo está al día</p>
-          </div>
-        `;
-      }
-    }
-    notificationsToggle?.addEventListener('click', loadNotifications);
-
-    // ======================================================
-    // ✅ INITs globales de módulos (para HTML inyectado)
-    // ======================================================
-    window.BB = window.BB || {};
-
-    // Citas calendar (busca #citas-calendar con data-events)
-    window.BB.initCitasCalendar = function(root = document){
-      const el = root.querySelector('#citas-calendar');
-      if(!el || typeof FullCalendar === 'undefined') return;
-
-      const raw = el.getAttribute('data-events') || '[]';
-      let events = [];
-      try{ events = JSON.parse(raw); }catch(e){ events = []; }
-
-      if (el._bbCalendar) {
-        try { el._bbCalendar.destroy(); } catch(e) {}
-        el._bbCalendar = null;
-      }
-
-      const calendar = new FullCalendar.Calendar(el, {
-        locale: 'es',
-        firstDay: 1,
-        initialView: 'dayGridMonth',
-        height: 'auto',
-        nowIndicator: true,
-        selectable: true,
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-        },
-        buttonText: {
-          today: 'Hoy',
-          month: 'Mes',
-          week: 'Semana',
-          day: 'Día',
-          list: 'Agenda'
-        },
-        events,
-      });
-
-      el._bbCalendar = calendar;
-      calendar.render();
-      setTimeout(() => calendar.updateSize(), 50);
-    };
-
-    // Llama a todos los init que existan (crece a futuro)
-    function bbRunInits(root){
-      if (window.BB?.initCitasCalendar) window.BB.initCitasCalendar(root);
-    }
-
-    // ======================================================
-    // BeautyCRM Hub Loader:
-    // - Si existe #bb-module-host => carga dentro del dashboard y OCULTA #bb-dashboard-only
-    // - Si NO existe => abre modal fallback
-    // ======================================================
-
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    const bbHost = document.getElementById('bb-module-host');              // solo dashboard
-    const bbDashboardOnly = document.getElementById('bb-dashboard-only');  // solo dashboard
-
-    const bbModal = document.getElementById('bb-modal');
-    const bbModalBackdrop = document.getElementById('bb-modal-backdrop');
-    const bbModalTitle = document.getElementById('bb-modal-title');
-    const bbModalBody = document.getElementById('bb-modal-body');
-    const bbModalClose = document.getElementById('bb-modal-close');
-    const bbDashboardHeader = document.getElementById('bb-dashboard-header');
-
-    function bbEnterModuleView(){
-      if (bbDashboardOnly) bbDashboardOnly.classList.add('hidden');
-      if (bbHost) bbHost.classList.remove('hidden');
-      if (bbDashboardHeader) bbDashboardHeader.classList.add('hidden');
-    }
-
-    function bbExitModuleView(){
-      if (bbHost){ bbHost.innerHTML = ''; bbHost.classList.add('hidden'); }
-      if (bbDashboardOnly) bbDashboardOnly.classList.remove('hidden');
-      if (bbDashboardHeader) bbDashboardHeader.classList.remove('hidden');
-    }
-
-    window.bbExitModuleView = bbExitModuleView;
-
-    function bbOpenModal() {
-      if (!bbModal) return;
-
-      bbModal.classList.remove('open');
-      bbModalBackdrop?.classList.remove('open');
-
-      bbModal.classList.add('open');
-      bbModalBackdrop?.classList.add('open');
-      bbModal.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function bbCloseModal() {
-      if (!bbModal) return;
-      bbModal.classList.remove('open');
-      bbModalBackdrop?.classList.remove('open');
-      bbModal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-    }
-
-    bbModalClose?.addEventListener('click', bbCloseModal);
-    bbModalBackdrop?.addEventListener('click', bbCloseModal);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') bbCloseModal(); });
-
-    function bbSetLoading(targetEl) {
-      if (!targetEl) return;
-      targetEl.innerHTML = `
-        <div class="bg-white p-4 rounded-xl">
-          <div class="text-sm text-gray-500">Cargando…</div>
-        </div>
-      `;
-    }
-
-    function bbRenderHtmlInto(targetEl, html) {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      const contentNode = doc.querySelector('main .max-w-6xl');
-      targetEl.innerHTML = contentNode ? contentNode.innerHTML : html;
-    }
-
-    async function bbLoadModule(href, title = 'Módulo') {
-      // cerrar modal si existiera
-      bbCloseModal();
-
-      const url = new URL(href, window.location.href);
-
-      // ✅ el dashboard NUNCA se carga dentro del host (evita anidado)
-      if (bbHost && url.pathname === '/admin/home') {
-        bbExitModuleView();
-        window.location.href = url.pathname + url.search;
-        return;
-      }
-
-      // cerrar sidebar móvil
-      sidebar?.classList.remove('open');
-      overlay?.classList.remove('open');
-
-      // forzar modo partial
-      url.searchParams.set('modal', '1');
-
-      // ✅ si estamos en dashboard => cargar en host
-      if (bbHost) {
-        bbEnterModuleView();
-        bbHost.innerHTML = '';
-        bbSetLoading(bbHost);
-
-        const res = await fetch(url.href, {
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
-          credentials: 'same-origin',
-        });
-
-        if (res.redirected) return bbLoadModule(res.url, title);
-
-        const html = await res.text();
-        bbRenderHtmlInto(bbHost, html);
-
-        // ✅ IMPORTANTE: inicializa JS del módulo (FullCalendar, etc.)
-        bbRunInits(bbHost);
-
-        bbHost.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return;
-      }
-
-      // ✅ fallback modal fuera del dashboard
-      if (bbModalTitle) bbModalTitle.textContent = title;
-      if (bbModalBody) bbSetLoading(bbModalBody);
-      bbOpenModal();
-
-      const res = await fetch(url.href, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        credentials: 'same-origin',
-      });
-
-      if (res.redirected) return bbLoadModule(res.url, title);
-
-      const html = await res.text();
-      if (bbModalBody) {
-        bbRenderHtmlInto(bbModalBody, html);
-
-        // ✅ IMPORTANTE: inicializa JS del módulo
-        bbRunInits(bbModalBody);
-      }
-    }
-    
-    async function bbLoadModalOnly(href, title = 'Módulo') {
     const url = new URL(href, window.location.href);
-
-    // forzar partial
     url.searchParams.set('modal', '1');
 
-    if (bbModalTitle) bbModalTitle.textContent = title;
-    if (bbModalBody) bbSetLoading(bbModalBody);
+    if(bbModalTitle) bbModalTitle.textContent = title;
+    bbSetLoading(bbModalBody);
     bbOpenModal();
 
     const res = await fetch(url.href, {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'text/html',
+      },
       credentials: 'same-origin',
     });
 
-    if (res.redirected) return bbLoadModalOnly(res.url, title);
-
     const html = await res.text();
-    if (bbModalBody) {
-      bbRenderHtmlInto(bbModalBody, html);
-      bbRunInits(bbModalBody);
+
+    // Si el server truena (500), muestra mensaje y loggea en consola
+    if(res.status >= 500){
+      console.error('Error 500 al cargar modal:', url.href, html);
+      bbModalBody.innerHTML = `
+        <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
+          Ocurrió un error al cargar este formulario. Revisa la consola y laravel.log.
+        </div>`;
+      return;
     }
+
+    bbRenderHtmlInto(bbModalBody, html);
   }
 
-    const isDashboardPage = !!bbHost && window.location.pathname === '/admin/home';
+  // =========================
+  // INTERCEPTAR CLICKS (CAPTURE)
+  // =========================
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('a[data-bb-open="modal"], a[data-bb-modal], a[data-bb-modal="1"], [data-bb-modal="1"]');
+    if(!trigger) return;
 
-    document.addEventListener('click', (e) => {
-      const a = e.target.closest('a,[data-bb-modal="1"]');
-      if (!a) return;
+    if(trigger.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
-      if (a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const href =
+      trigger.getAttribute('data-bb-url') ||
+      trigger.getAttribute('data-url') ||
+      trigger.getAttribute('href');
 
-      const hasFlag = a.hasAttribute('data-bb-modal') || a.getAttribute('data-bb-modal') === '1';
-      if (!hasFlag) return;
+    if(!href || href.startsWith('#') || href.startsWith('javascript:')) return;
 
-      const href = a.getAttribute('data-bb-url') || a.getAttribute('data-url') || a.getAttribute('href');
-      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    const title =
+      trigger.getAttribute('data-bb-title') ||
+      trigger.getAttribute('data-title') ||
+      (trigger.textContent || '').trim() ||
+      'Módulo';
 
-      e.preventDefault();
+    e.preventDefault();
+    e.stopPropagation();
 
-      const title = a.getAttribute('data-bb-title')
-        || a.getAttribute('data-title')
-        || (a.textContent || '').trim()
-        || 'Módulo';
+    bbLoadModalOnly(href, title);
+  }, true);
 
-      // ✅ NUEVO: si el link pide modal forzado, úsalo aunque exista bbHost
-      const forceModal = a.getAttribute('data-bb-open') === 'modal';
-      if (forceModal) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation(); // ✅ clave: evita que otro listener también se ejecute
-        return bbLoadModalOnly(href, title);
-      }
+  // =========================
+  // SUBMITS DENTRO DEL MODAL
+  // =========================
+  async function bbHandleSubmit(container, e){
+    const form = e.target;
+    if(!(form instanceof HTMLFormElement)) return;
+    if(!container || !container.contains(form)) return;
 
-      bbLoadModule(href, title);
+    e.preventDefault();
 
+    const action = form.getAttribute('action') || window.location.href;
+    const fd = new FormData(form);
+    if(!fd.has('modal')) fd.append('modal', '1');
+
+    const res = await fetch(action, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'text/html',
+        ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+      },
+      credentials: 'same-origin',
+      body: fd,
     });
 
+    const finalUrl = new URL(res.url, window.location.href);
+    const html = await res.text();
 
-    function bbAttachInternalNav(containerGetter) {
-      document.addEventListener('click', (e) => {
-        const container = containerGetter();
-        if (!container || !container.contains(e.target)) return;
-
-        const a = e.target.closest('a');
-        if (!a) return;
-
-        // ✅ IMPORTANTÍSIMO: si el link es modal, NO lo navegues dentro del host.
-        const wantsModal =
-          a.getAttribute('data-bb-open') === 'modal' ||
-          a.getAttribute('data-bb-modal') === '1' ||
-          a.hasAttribute('data-bb-modal');
-
-        if (wantsModal) return;
-
-        if (a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
-        const href =
-          a.getAttribute('data-bb-url') ||
-          a.getAttribute('data-url') ||
-          a.getAttribute('href');
-
-        if (!href) return;
-
-        ...
-      }, true);
-    }
-
-
-    bbAttachInternalNav(() => bbHost);
-    bbAttachInternalNav(() => bbModalBody);
-
-    // 3) Submits dentro del módulo (host o modal)
-    async function bbHandleSubmit(container, e) {
-      const form = e.target;
-      if (!(form instanceof HTMLFormElement)) return;
-      if (!container || !container.contains(form)) return;
-
-      e.preventDefault();
-
-      const action = form.getAttribute('action') || window.location.href;
-      const method = (form.getAttribute('method') || 'POST').toUpperCase();
-      const fd     = new FormData(form);
-
-      // forzar modo partial
-      if (!fd.has('modal')) fd.append('modal', '1');
-
-      if (method === 'GET') {
-        const u = new URL(action, window.location.href);
-        for (const [k, v] of fd.entries()) u.searchParams.set(k, String(v));
-        return bbLoadModule(u.href, bbModalTitle?.textContent || 'Módulo');
+    // ✅ Si el submit venía del MODAL:
+    if(container === bbModalBody){
+      // Éxito: terminó en el index (misma pantalla de detrás)
+      if(finalUrl.pathname === window.location.pathname){
+        bbCloseModal();
+        window.location.reload();
+        return;
       }
 
-      const res = await fetch(action, {
-        method: 'POST',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
-        },
-        credentials: 'same-origin',
-        body: fd,
-      });
-
-      if (res.redirected) return bbLoadModule(res.url, bbModalTitle?.textContent || 'Módulo');
-
-      const html = await res.text();
-      bbRenderHtmlInto(container, html);
-
-      // ✅ IMPORTANTE: re-inicializa JS del módulo (por ejemplo, si regresas a citas index)
-      bbRunInits(container);
+      // Error: volvió a create/edit con errores → renderiza form con errores en el modal
+      bbRenderHtmlInto(bbModalBody, html);
+      return;
     }
 
-    document.addEventListener('submit', (e) => { if (bbHost) bbHandleSubmit(bbHost, e); }, true);
-    document.addEventListener('submit', (e) => { if (bbModalBody) bbHandleSubmit(bbModalBody, e); }, true);
-  </script>
+    // host/dashboard (si lo usas en otras pantallas)
+    bbRenderHtmlInto(container, html);
+  }
+
+  document.addEventListener('submit', (e) => { if(bbModalBody) bbHandleSubmit(bbModalBody, e); }, true);
+  if(bbHost){
+    document.addEventListener('submit', (e) => bbHandleSubmit(bbHost, e), true);
+  }
+})();
+</script>
+
 </body>
 </html>
 ```
