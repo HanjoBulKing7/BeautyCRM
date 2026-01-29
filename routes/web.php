@@ -24,6 +24,7 @@ Route::get('/home', [HomeController::class, 'index'])
     ->name('cliente.home');
 
 Route::view('/galeria', 'galeria')->name('galeria');
+Route::view('/nosotros', 'nosotros')->name('nosotros');
 
 Route::get('/servicio', [ServiciosPublicController::class, 'index'])
     ->name('servicio.public');

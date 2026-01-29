@@ -8,7 +8,7 @@
             <div class="Normal-header-container">
 
                 {{-- Logo (izquierda) --}}
-                <a href="{{ url('/') }}" class="Normal-brand" aria-label="Beauty Bonita - Inicio">
+                <a href="{{ url('/home') }}" class="Normal-brand" aria-label="Beauty Bonita - Inicio">
                     <img src="{{ asset('iconos/logo.png') }}" alt="Beauty Bonita Logo">
                 </a>
 
@@ -24,7 +24,7 @@
                 {{-- MENU (mobile full screen + desktop inline) --}}
                 <div class="Normal-menu" aria-hidden="true">
                     <div class="Normal-menu-header">
-                        <a href="{{ url('/') }}" class="Normal-brand" aria-label="Beauty Bonita - Inicio">
+                        <a href="{{ url('/home') }}" class="Normal-brand" aria-label="Beauty Bonita - Inicio">
                             <img src="{{ asset('iconos/logo.png') }}" alt="Beauty Bonita Logo">
                         </a>
 
@@ -42,10 +42,13 @@
                             <a href="{{ url('/servicio') }}" class="Normal-menu-link">Servicios</a>
                         </li>
                         <li class="Normal-menu-item">
-                            <a href="#section-02" class="Normal-menu-link">Nosotros</a>
+                            <a href="{{ url('/nosotros') }}" class="Normal-menu-link">Nosotros</a>
                         </li>
                         <li class="Normal-menu-item">
                             <a href="{{ url('/galeria') }}" class="Normal-menu-link">Galería</a>
+                        </li>
+                        <li class="Normal-menu-item">
+                            <a href="{{ url('/productos') }}" class="Normal-menu-link">Productos</a>
                         </li>
                     </ul>
 
