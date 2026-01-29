@@ -14,6 +14,7 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AgendarCitaPublicController;
 use App\Http\Controllers\CategoriaServicioController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ProductosPublicController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardCitasController;
 
@@ -26,6 +27,11 @@ Route::view('/galeria', 'galeria')->name('galeria');
 
 Route::get('/servicio', [ServiciosPublicController::class, 'index'])
     ->name('servicio.public');
+    
+    // routes/web.php
+Route::get('/productos', [ProductosPublicController::class, 'index'])
+    ->name('productos.public');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/agendar-cita', [AgendarCitaPublicController::class, 'create'])

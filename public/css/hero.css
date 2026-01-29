@@ -408,3 +408,142 @@ video {
     max-width: 105px;
   }
 }
+/* ===========================
+   FIX: SOLO MÓVIL (<= 991.98px)
+   - logo izq / burger der
+   - menú full-screen 100%
+   =========================== */
+@media (max-width: 991.98px){
+
+  /* Header: logo izquierda, burger derecha */
+  .Normal-navbar .Normal-header-container{
+    justify-content: space-between; /* SOLO móvil */
+  }
+
+  .Normal-burger{
+    order: 0;            /* ya no "order:-1" */
+    margin-right: 0;
+    margin-left: 16px;
+  }
+
+  /* Menú móvil FULL SCREEN */
+  .Normal-menu{
+    width: 100vw;        /* antes 320px */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-110%); /* oculto */
+  }
+
+  /* Links */
+  .Normal-menu-inner{
+    width: 100%;
+    padding: 22px;
+    row-gap: 18px;
+  }
+
+  /* Footer al fondo */
+  .Normal-menu-footer{
+    margin-top: auto;
+    width: 100%;
+    padding: 18px 22px 26px;
+    border-top: 1px solid rgba(184, 134, 11, 0.18);
+  }
+
+  .Normal-menu-footer-cta{
+    display: inline-flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    color: #374151;
+    border: 1px solid rgba(184, 134, 11, 0.28);
+    background: rgba(255,255,255,.92);
+    transition: 0.2s ease;
+  }
+  .Normal-menu-footer-cta:hover{
+    color: var(--normal-gold);
+    border-color: rgba(184, 134, 11, 0.40);
+  }
+
+  /* En móvil ocultamos el CTA desktop (el de arriba derecha) */
+  .Normal-menu-block{ display: none !important; }
+}
+
+/* Desktop: NO TOCAR (pero aseguramos que el footer móvil no aparezca) */
+@media (min-width: 992px){
+  .Normal-menu-footer{ display:none !important; }
+}
+/* ===========================
+   MÓVIL: layout centrado como tu screenshot
+   =========================== */
+@media (max-width: 991.98px){
+
+  /* Header del menú (top bar) */
+  .Normal-menu-header{
+    position: relative;
+    height: 72px;
+    padding: 14px 18px;
+    justify-content: flex-end; /* solo para mantener la tacha a la derecha */
+  }
+
+  /* Tacha (close) arriba derecha */
+  .Normal-close-menu{
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    margin: 0;
+  }
+
+  /* Logo: centrado y más abajo que la tacha */
+  .Normal-menu-header .Normal-brand{
+    position: absolute;
+    left: 50%;
+    top: 44px;                 /* 👈 baja el logo */
+    transform: translateX(-50%);
+    margin: 0;
+  }
+  .Normal-menu-header .Normal-brand img{
+    height: 44px;              /* ajusta si lo quieres más grande */
+    width: auto;
+  }
+
+  /* Links centrados y más hacia el centro de la pantalla */
+  .Normal-menu-inner{
+    padding: 0 22px;
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    /* 👇 coloca el bloque de links más “al centro” */
+    padding-top: 180px;
+    row-gap: 22px;
+  }
+
+  .Normal-menu-link{
+    display: inline-block;
+    font-size: 18px;
+  }
+
+  /* CTA (login/admin): más arriba, como parte del menú */
+  .Normal-menu-footer{
+    margin-top: 32px;          /* separación respecto a links */
+    border-top: none;          /* ya no se ve como “footer” */
+    padding: 0 22px 26px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .Normal-menu-footer-cta{
+    width: auto;               /* que no se vea como botón gigante */
+    min-width: 220px;
+    border-radius: 14px;
+    padding: 12px 18px;
+  }
+}

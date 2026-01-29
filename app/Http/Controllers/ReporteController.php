@@ -7,12 +7,13 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class ReporteController extends Controller
 {
     public function index(Request $request)
     {
-        // Tab principal del módulo (el que ya traes: dashboard/servicios/productividad/asistencia/citas/ventas)
+        // Tab principal del módulo (dashboard/servicios/productividad/asistencia/citas/ventas)
         $tab = $request->query('tab', 'ventas');
 
         // Periodo (sub-tabs dentro de ventas)
@@ -30,7 +31,7 @@ class ReporteController extends Controller
         return view('admin.reportes.index', [
             'tab'   => $tab,
             'tipo'  => $tipo,
-            'fecha' => $fechaNormalizada, // se usa en inputs
+            'fecha' => $fechaNormalizada,
             'rango' => ['inicio' => $inicio, 'fin' => $fin],
             'stats' => $stats,
         ]);
@@ -64,22 +65,22 @@ class ReporteController extends Controller
         $startDate = $inicio->toDateString();
         $endDate   = $fin->toDateString();
 
-        // ✅ Validación mínima
-        if (!Schema::hasTable('ventas')) {
+        // ✅ Validación mínima (tablas base)
+        if (!Schema::hasTable('citas')) {
             return ['ok' => false, 'mensaje' => 'No existe la tabla "citas".'];
         }
 
-        // Columnas reales
-        $citaPk     = 'id_cita';
-        $fechaCol   = 'fecha_cita';
-        $horaCol    = 'hora_cita';
-        $estadoCol  = Schema::hasColumn('citas', 'estado_cita') ? 'estado_cita' : null;
-        $empleadoCol= Schema::hasColumn('citas', 'id_empleado') ? 'id_empleado' : null;
-        $pagoCol    = Schema::hasColumn('citas', 'metodo_pago') ? 'metodo_pago' : null;
-        $descCol    = Schema::hasColumn('citas', 'descuento') ? 'descuento' : null;
+        // Columnas reales (tu esquema)
+        $citaPk      = 'id_cita';
+        $fechaCol    = 'fecha_cita';
+        $horaCol     = 'hora_cita';
+        $estadoCol   = Schema::hasColumn('citas', 'estado_cita') ? 'estado_cita' : null;
+        $empleadoCol = Schema::hasColumn('citas', 'id_empleado') ? 'id_empleado' : null;
+        $pagoCol     = Schema::hasColumn('citas', 'metodo_pago') ? 'metodo_pago' : null;
+        $descCol     = Schema::hasColumn('citas', 'descuento') ? 'descuento' : null;
 
         // Estados que cuentan como "venta realizada"
-        $estadosRealizados = ['completada','COMPLETADA','finalizada','FINALIZADA'];
+        $estadosRealizados = ['completada', 'COMPLETADA', 'finalizada', 'FINALIZADA'];
 
         // ==========================
         // 1) Stats de citas
@@ -98,20 +99,40 @@ class ReporteController extends Controller
 
             $citas['canceladas'] = DB::table('citas')
                 ->whereBetween($fechaCol, [$startDate, $endDate])
-                ->whereIn($estadoCol, ['cancelada','CANCELADA'])
+                ->whereIn($estadoCol, ['cancelada', 'CANCELADA'])
                 ->count();
         }
 
         // ==========================
-        // 2) Subquery por CITA (subtotal por cita usando snapshots)
-        //    - evita duplicar descuento por pivot
+        // 2) Subquery por CITA (subtotal por cita usando pivot + snapshots)
+        //    IMPORTANTE: ya NO usamos c.id_servicio porque ya no existe
         // ==========================
-        $hasPivot = Schema::hasTable('cita_servicio') && Schema::hasTable('servicios');
+        $pivotExiste = Schema::hasTable('cita_servicio');
+        $serviciosExiste = Schema::hasTable('servicios');
 
-        $sub = DB::table('citas as c')
-            ->leftJoin('cita_servicio as cs', 'cs.id_cita', '=', "c.$citaPk")
-            ->leftJoin('servicios as sp', 'sp.id_servicio', '=', 'cs.id_servicio')  // servicio por pivot
-            ->leftJoin('servicios as sc', 'sc.id_servicio', '=', 'c.id_servicio')   // fallback si no hay pivot
+        $sub = DB::table('citas as c');
+
+        if ($pivotExiste) {
+            $sub->leftJoin('cita_servicio as cs', 'cs.id_cita', '=', "c.$citaPk");
+        } else {
+            // Si no existe pivot, no podemos calcular subtotal correctamente.
+            // Igual dejamos el query armado para que no truene, pero subtotal será 0.
+            $sub->leftJoin(DB::raw('(select 0 as id_cita) as cs'), DB::raw('1'), '=', DB::raw('0'));
+        }
+
+        if ($pivotExiste && $serviciosExiste) {
+            $sub->leftJoin('servicios as sp', 'sp.id_servicio', '=', 'cs.id_servicio');
+        }
+
+        // Expresión de subtotal:
+        // - prioridad: SUM(cs.precio_snapshot)
+        // - fallback: SUM(sp.precio)
+        // - si no hay pivot/servicios: 0
+        $subtotalExpr = ($pivotExiste && $serviciosExiste)
+            ? "COALESCE(SUM(cs.precio_snapshot), SUM(sp.precio), 0)"
+            : "0";
+
+        $sub = $sub
             ->whereBetween("c.$fechaCol", [$startDate, $endDate])
             ->selectRaw("
                 c.$citaPk as id_cita,
@@ -121,12 +142,7 @@ class ReporteController extends Controller
                 " . ($pagoCol ? "c.$pagoCol as metodo_pago," : "NULL as metodo_pago,") . "
                 " . ($estadoCol ? "c.$estadoCol as estado_cita," : "NULL as estado_cita,") . "
                 " . ($descCol ? "COALESCE(c.$descCol,0) as descuento," : "0 as descuento,") . "
-                COALESCE(
-                    SUM(cs.precio_snapshot),
-                    SUM(sp.precio),
-                    MAX(sc.precio),
-                    0
-                ) as subtotal
+                $subtotalExpr as subtotal
             ")
             ->groupBy(
                 "c.$citaPk",
@@ -156,113 +172,107 @@ class ReporteController extends Controller
             ")
             ->first();
 
-            $montoTotal     = (float) ($agg->monto_total ?? 0);
-            $totalVentas    = (int) ($agg->total_ventas ?? 0);
-            $ticketPromedio = (float) ($agg->ticket_promedio ?? 0);
+        $montoTotal     = (float) ($agg->monto_total ?? 0);
+        $totalVentas    = (int) ($agg->total_ventas ?? 0);
+        $ticketPromedio = (float) ($agg->ticket_promedio ?? 0);
 
-        // ========================== 
-        // 4) Métodos de pago (desde citas)
         // ==========================
-        $metodosPago = DB::table('ventas as v')
-            ->whereBetween('v.fecha_venta', [$inicio, $fin])
-            ->selectRaw("
-                COALESCE(v.forma_pago, 'sin_definir') as metodo,
-                COUNT(*) as cantidad,
-                COALESCE(SUM(v.total), 0) as monto
-            ")
-            ->groupBy('v.forma_pago')
-            ->orderByDesc('cantidad')
-            ->get();
+        // 4) Métodos de pago (desde ventas)
+        // ==========================
+        $metodosPago = collect();
+        if (Schema::hasTable('ventas')) {
+            $metodosPago = DB::table('ventas as v')
+                ->whereBetween('v.fecha_venta', [$inicio, $fin])
+                ->selectRaw("
+                    COALESCE(v.forma_pago, 'sin_definir') as metodo,
+                    COUNT(*) as cantidad,
+                    COALESCE(SUM(v.total), 0) as monto
+                ")
+                ->groupBy('v.forma_pago')
+                ->orderByDesc('cantidad')
+                ->get();
 
-            //Labels para estandarizar los metodos de pago 
-                    $labelsPago = [
-            'efectivo'        => 'Efectivo',
-            'transferencia'   => 'Transferencia',
-            'tarjeta_credito' => 'Tarjeta crédito',
-            'tarjeta_debito'  => 'Tarjeta débito',
-            'tarjeta'         => 'Tarjeta',
-            'mixto'           => 'Mixto',
-            'sin_definir'     => 'Sin definir',
+            $labelsPago = [
+                'efectivo'        => 'Efectivo',
+                'transferencia'   => 'Transferencia',
+                'tarjeta_credito' => 'Tarjeta crédito',
+                'tarjeta_debito'  => 'Tarjeta débito',
+                'tarjeta'         => 'Tarjeta',
+                'mixto'           => 'Mixto',
+                'sin_definir'     => 'Sin definir',
+            ];
+
+            $metodosPago = $metodosPago->map(function ($r) use ($labelsPago) {
+                $key = (string) ($r->metodo ?? 'sin_definir');
+                $r->metodo_label = $labelsPago[$key] ?? Str::title(str_replace('_', ' ', $key));
+                return $r;
+            });
+        }
+
+        // ==========================
+        // 4.B) Resumen para gráfica (3 barras) + extras (mixto/otros)
+        // ==========================
+        $bucket = [
+            'efectivo' => ['monto' => 0.0, 'cantidad' => 0],
+            'transferencia' => ['monto' => 0.0, 'cantidad' => 0],
+            'tarjeta' => ['monto' => 0.0, 'cantidad' => 0],
+            'mixto' => ['monto' => 0.0, 'cantidad' => 0],
+            'otros' => ['monto' => 0.0, 'cantidad' => 0],
         ];
 
-        $metodosPago = $metodosPago->map(function ($r) use ($labelsPago) {
-            $key = (string) ($r->metodo ?? 'sin_definir');
+        foreach ($metodosPago as $row) {
+            $metodo = (string) ($row->metodo ?? 'sin_definir');
+            $monto  = (float) ($row->monto ?? 0);
+            $cant   = (int)   ($row->cantidad ?? 0);
 
-            // label "bonito"
-            $r->metodo_label = $labelsPago[$key]
-                ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
-
-            return $r;
-        });
-
-
-
-            // ==========================
-            // 4.B) Resumen para gráfica (3 barras) + extras (mixto/otros)
-            // ==========================
-            $bucket = [
-                'efectivo' => ['monto' => 0.0, 'cantidad' => 0],
-                'transferencia' => ['monto' => 0.0, 'cantidad' => 0],
-                'tarjeta' => ['monto' => 0.0, 'cantidad' => 0],
-                'mixto' => ['monto' => 0.0, 'cantidad' => 0],
-                'otros' => ['monto' => 0.0, 'cantidad' => 0],
-            ];
-
-            foreach ($metodosPago as $row) {
-                $metodo = (string) ($row->metodo ?? 'sin_definir');
-                $monto  = (float) ($row->monto ?? 0);
-                $cant   = (int)   ($row->cantidad ?? 0);
-
-                if ($metodo === 'efectivo') {
-                    $bucket['efectivo']['monto'] += $monto;
-                    $bucket['efectivo']['cantidad'] += $cant;
-                    continue;
-                }
-
-                if ($metodo === 'transferencia') {
-                    $bucket['transferencia']['monto'] += $monto;
-                    $bucket['transferencia']['cantidad'] += $cant;
-                    continue;
-                }
-
-                if ($metodo === 'tarjeta_credito' || $metodo === 'tarjeta_debito' || $metodo === 'tarjeta') {
-                    $bucket['tarjeta']['monto'] += $monto;
-                    $bucket['tarjeta']['cantidad'] += $cant;
-                    continue;
-                }
-
-                if ($metodo === 'mixto') {
-                    $bucket['mixto']['monto'] += $monto;
-                    $bucket['mixto']['cantidad'] += $cant;
-                    continue;
-                }
-
-                $bucket['otros']['monto'] += $monto;
-                $bucket['otros']['cantidad'] += $cant;
+            if ($metodo === 'efectivo') {
+                $bucket['efectivo']['monto'] += $monto;
+                $bucket['efectivo']['cantidad'] += $cant;
+                continue;
             }
 
-            $resumenPagos = [
-                'efectivo' => $bucket['efectivo'],
-                'transferencia' => $bucket['transferencia'],
-                'tarjeta' => $bucket['tarjeta'],
-                'mixto' => $bucket['mixto'],
-                'otros' => $bucket['otros'],
-                'total' => [
-                    'monto' => ($bucket['efectivo']['monto'] + $bucket['transferencia']['monto'] + $bucket['tarjeta']['monto'] + $bucket['mixto']['monto'] + $bucket['otros']['monto']),
-                    'cantidad' => ($bucket['efectivo']['cantidad'] + $bucket['transferencia']['cantidad'] + $bucket['tarjeta']['cantidad'] + $bucket['mixto']['cantidad'] + $bucket['otros']['cantidad']),
-                ],
-            ];
+            if ($metodo === 'transferencia') {
+                $bucket['transferencia']['monto'] += $monto;
+                $bucket['transferencia']['cantidad'] += $cant;
+                continue;
+            }
 
-            // Datos específicos para la gráfica (3 barras)
-            $resumenChart = [
-                'labels' => ['Efectivo', 'Transferencia', 'Tarjeta'],
-                'values' => [
-                    round($bucket['efectivo']['monto'], 2),
-                    round($bucket['transferencia']['monto'], 2),
-                    round($bucket['tarjeta']['monto'], 2),
-                ],
-            ];
+            if ($metodo === 'tarjeta_credito' || $metodo === 'tarjeta_debito' || $metodo === 'tarjeta') {
+                $bucket['tarjeta']['monto'] += $monto;
+                $bucket['tarjeta']['cantidad'] += $cant;
+                continue;
+            }
 
+            if ($metodo === 'mixto') {
+                $bucket['mixto']['monto'] += $monto;
+                $bucket['mixto']['cantidad'] += $cant;
+                continue;
+            }
+
+            $bucket['otros']['monto'] += $monto;
+            $bucket['otros']['cantidad'] += $cant;
+        }
+
+        $resumenPagos = [
+            'efectivo' => $bucket['efectivo'],
+            'transferencia' => $bucket['transferencia'],
+            'tarjeta' => $bucket['tarjeta'],
+            'mixto' => $bucket['mixto'],
+            'otros' => $bucket['otros'],
+            'total' => [
+                'monto' => ($bucket['efectivo']['monto'] + $bucket['transferencia']['monto'] + $bucket['tarjeta']['monto'] + $bucket['mixto']['monto'] + $bucket['otros']['monto']),
+                'cantidad' => ($bucket['efectivo']['cantidad'] + $bucket['transferencia']['cantidad'] + $bucket['tarjeta']['cantidad'] + $bucket['mixto']['cantidad'] + $bucket['otros']['cantidad']),
+            ],
+        ];
+
+        $resumenChart = [
+            'labels' => ['Efectivo', 'Transferencia', 'Tarjeta'],
+            'values' => [
+                round($bucket['efectivo']['monto'], 2),
+                round($bucket['transferencia']['monto'], 2),
+                round($bucket['tarjeta']['monto'], 2),
+            ],
+        ];
 
         // ==========================
         // 5) Top empleados (desde citas)
@@ -283,9 +293,11 @@ class ReporteController extends Controller
                 ->get();
         }
 
-            // ==========================
-            // 6) Top servicios (desde pivot)
-            // ==========================
+        // ==========================
+        // 6) Top servicios (desde pivot)
+        // ==========================
+        $topServicios = collect();
+        if (Schema::hasTable('cita_servicio') && Schema::hasTable('servicios') && Schema::hasTable('ventas')) {
             $topServicios = DB::table('cita_servicio as cs')
                 ->join('citas as c', 'c.id_cita', '=', 'cs.id_cita')
                 ->join('ventas as v', 'v.id_cita', '=', 'c.id_cita')
@@ -301,8 +313,7 @@ class ReporteController extends Controller
                 ->orderByDesc('ingresos_estimados')
                 ->limit(10)
                 ->get();
-
-
+        }
 
         // ==========================
         // 7) Últimas "ventas" (últimas citas completadas)
@@ -319,7 +330,7 @@ class ReporteController extends Controller
                 DB::raw("COALESCE(NULLIF(x.metodo_pago,''),'sin_definir') as forma_pago"),
             ]);
 
-        // Clientes nuevos (sigues usando users role_id=1)
+        // Clientes nuevos (users role_id=1)
         $clientesNuevos = 0;
         if (Schema::hasTable('users') && Schema::hasColumn('users', 'role_id')) {
             $clientesNuevos = DB::table('users')
@@ -336,9 +347,8 @@ class ReporteController extends Controller
                 'ticket_promedio' => $ticketPromedio,
                 'metodos_pago'    => $metodosPago,
                 'ultimas'         => $ultimasVentas,
-                'resumen_pagos' => $resumenPagos,
-                'resumen_chart' => $resumenChart,
-
+                'resumen_pagos'   => $resumenPagos,
+                'resumen_chart'   => $resumenChart,
             ],
             'citas' => $citas,
             'empleados' => ['top' => $topEmpleados],
@@ -347,10 +357,9 @@ class ReporteController extends Controller
         ];
     }
 
-
+    // (helpers que ya traías; los dejo por si los usas después)
     private function guessCitasFechaColumn(): string
     {
-        // Ajusta aquí si tu columna real se llama diferente
         $candidates = ['fecha', 'fecha_cita', 'fecha_hora', 'start', 'created_at'];
         foreach ($candidates as $col) {
             if (Schema::hasColumn('citas', $col)) return $col;

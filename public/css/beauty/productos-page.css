@@ -1,0 +1,15 @@
+/* ===== AJUSTES DE PÁGINA: PRODUCTOS ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ajusta el “offset” al saltar por #slug */
+.bb-cat {
+  scroll-margin-top: 110px; /* súbelo/bájalo según tu header */
+}
+
+/* Si quieres un poco de aire extra entre menú y categorías */
+#menu-productos {
+  position: relative;
+  z-index: 1;
+}
