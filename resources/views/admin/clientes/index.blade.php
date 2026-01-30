@@ -34,7 +34,10 @@
         data-bb-open="modal"
         data-bb-title="Nuevo Cliente"
         data-bb-url="{{ route('admin.clientes.create') }}?modal=1"
-        class="bb-btn-gold">
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                border border-[rgba(201,162,74,.35)]
+                bg-[rgba(201,162,74,.12)] hover:bg-[rgba(201,162,74,.18)]
+                text-gray-900 font-semibold shadow-sm hover:shadow transition">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
