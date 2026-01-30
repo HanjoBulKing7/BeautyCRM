@@ -132,8 +132,7 @@
                   @method('DELETE')
                   <button type="submit"
                           class="inline-flex items-center justify-center w-9 h-9 rounded-xl
-                                bg-white/70 hover:bg-white border border-gray-200
-                                shadow-sm hover:shadow transition leading-none"
+                                bg-white/70 hover:bg-white"
                           title="Eliminar">
                     <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

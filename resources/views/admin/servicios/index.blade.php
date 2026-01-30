@@ -44,7 +44,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Precio</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Duración</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Descripción</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-[120px]">Acciones</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-[140px]">Acciones</th>
                     </tr>
                 </thead>
 
@@ -104,8 +104,6 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <!-- Ver -->
                                     @php $sid = $servicio->id_servicio ?? $servicio->id; @endphp
-
-                                    <td class="px-4 py-3 whitespace-nowrap align-middle w-[120px]">
                                     <div class="flex items-center justify-end gap-2">
 
                                         <!-- Ver -->
@@ -113,11 +111,9 @@
                                         data-bb-open="modal"
                                         data-bb-title="Servicio"
                                         data-bb-url="{{ route('admin.servicios.show', $sid) }}?modal=1"
-                                        class="bb-action inline-flex items-center justify-center w-9 h-9 rounded-xl
-                                                bg-white/70 hover:bg-white border border-gray-200
-                                                shadow-sm hover:shadow transition leading-none shrink-0"
+                                        class="bb-action inline-flex items-center justify-center w-9 h-9 leading-none"
                                         title="Ver">
-                                        <svg class="w-4 h-4 block -translate-y-[0.5px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -130,11 +126,9 @@
                                         data-bb-open="modal"
                                         data-bb-title="Editar Servicio"
                                         data-bb-url="{{ route('admin.servicios.edit', $sid) }}?modal=1"
-                                        class="bb-action bb-action-edit inline-flex items-center justify-center w-9 h-9 rounded-xl
-                                                bg-white/70 hover:bg-white border border-gray-200
-                                                shadow-sm hover:shadow transition leading-none shrink-0"
+                                        class="bb-action bb-action-edit inline-flex items-center justify-center w-9 h-9 leading-none"
                                         title="Editar">
-                                        <svg class="w-4 h-4 block -translate-y-[0.5px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l9.586-9.586z"/>
                                         </svg>
@@ -148,12 +142,11 @@
                                         @csrf
                                         @method('DELETE')
                                         <input type="hidden" name="modal" value="1">
+
                                         <button type="submit"
-                                                class="bb-action bb-action-del inline-flex items-center justify-center w-9 h-9 rounded-xl
-                                                        bg-white/70 hover:bg-white border border-gray-200
-                                                        shadow-sm hover:shadow transition leading-none shrink-0"
+                                                class="bb-action bb-action-del inline-flex items-center justify-center w-9 h-9 leading-none shrink-0"
                                                 title="Eliminar">
-                                            <svg class="w-4 h-4 block -translate-y-[0.5px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m2 0V5a2 2 0 012-2h2a2 2 0 012 2v2"/>
                                             </svg>
@@ -161,8 +154,7 @@
                                         </form>
 
                                     </div>
-                                    </td>
-
+                                </td>
                         </tr>
                     @empty
                         <tr>
