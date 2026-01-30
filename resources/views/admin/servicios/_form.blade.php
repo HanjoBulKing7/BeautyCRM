@@ -283,9 +283,11 @@
 
 
 </div>
-
+<!--
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("SCRIPT FORM SERVICIOS CARGADO ✅");
+
     const input = document.getElementById("imagenInput");
     const preview = document.getElementById("imagenPreview");
 
@@ -294,22 +296,31 @@ document.addEventListener("DOMContentLoaded", () => {
         preview.classList.remove("hidden");
     }
 
-    if (!input) return;
+    const input = document.getElementById("imagenInput");
+    const preview = document.getElementById("imagenPreview");
 
+    if (preview && preview.getAttribute("src")) {
+    preview.classList.remove("hidden");
+    }
+
+    if (input) {
     input.addEventListener("change", (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
 
         if (!file.type.startsWith("image/")) {
-            alert("Selecciona un archivo de imagen válido.");
-            input.value = "";
-            return;
+        alert("Selecciona un archivo de imagen válido.");
+        input.value = "";
+        return;
         }
 
         const url = URL.createObjectURL(file);
         preview.src = url;
         preview.classList.remove("hidden");
     });
+    }
+// 👇 aquí YA NO hay return y el código de horarios sí corre
+
 
         // ==========================
     // Horarios del servicio (UI)
@@ -373,3 +384,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
+-->

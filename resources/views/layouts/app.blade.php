@@ -547,6 +547,86 @@
   @stack('scripts')
   @yield('scripts')
 
+
+  <script>
+window.bbInitServicioForm = function(root = document) {
+  // ===== Preview imagen =====
+  const input = root.querySelector("#imagenInput");
+  const preview = root.querySelector("#imagenPreview");
+
+  if (preview && preview.getAttribute("src")) {
+    preview.classList.remove("hidden");
+  }
+
+  if (input && !input.dataset.bbBound) {
+    input.dataset.bbBound = "1";
+    input.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        alert("Selecciona un archivo de imagen válido.");
+        input.value = "";
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.classList.remove("hidden");
+    });
+  }
+
+  // ===== Horarios =====
+  const horariosWrapper = root.querySelector('#bb-horarios-wrapper');
+  if (!horariosWrapper) return;
+
+  if (horariosWrapper.dataset.bbBound) return;
+  horariosWrapper.dataset.bbBound = "1";
+
+  const nextIndexForDay = (day) => {
+    const dayWrap = horariosWrapper.querySelector(`[data-dia-wrap="${day}"]`);
+    return dayWrap ? dayWrap.querySelectorAll('[data-horario-row]').length : 0;
+  };
+
+  horariosWrapper.addEventListener('click', (e) => {
+    const addBtn = e.target.closest('[data-add-horario]');
+    if (addBtn) {
+      const day = addBtn.getAttribute('data-dia');
+      const dayWrap = horariosWrapper.querySelector(`[data-dia-wrap="${day}"]`);
+      if (!dayWrap) return;
+
+      const i = nextIndexForDay(day);
+
+      const row = document.createElement('div');
+      row.className = 'flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-gray-50 rounded-lg p-2';
+      row.setAttribute('data-horario-row', '');
+      row.innerHTML = `
+        <div class="flex gap-2 items-center w-full sm:w-auto">
+          <label class="text-xs text-gray-600 w-16">Inicio</label>
+          <input type="time" name="horarios[${day}][${i}][hora_inicio]"
+                 class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
+        </div>
+
+        <div class="flex gap-2 items-center w-full sm:w-auto">
+          <label class="text-xs text-gray-600 w-16">Fin</label>
+          <input type="time" name="horarios[${day}][${i}][hora_fin]"
+                 class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
+        </div>
+
+        <button type="button"
+                class="ml-auto text-xs px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                data-remove-horario>Quitar</button>
+      `;
+      dayWrap.appendChild(row);
+      return;
+    }
+
+    const removeBtn = e.target.closest('[data-remove-horario]');
+    if (removeBtn) removeBtn.closest('[data-horario-row]')?.remove();
+  });
+};
+</script>
+
 <script>
 (() => {
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -597,6 +677,8 @@
   // ABRIR LINK EN MODAL
   // =========================
   async function bbLoadModalOnly(href, title = 'Módulo'){
+    if(!bbModalBody){ window.location.href = href; return; }
+
     if(!bbModalBody){
       // si no existe modal en esta página, navega normal
       window.location.href = href;
@@ -631,6 +713,7 @@
     }
 
     bbRenderHtmlInto(bbModalBody, html);
+    window.bbInitServicioForm?.(bbModalBody);
   }
 
   // =========================
@@ -699,7 +782,10 @@
       }
 
       // Error: volvió a create/edit con errores → renderiza form con errores en el modal
-      bbRenderHtmlInto(bbModalBody, html);
+      bbRenderHtmlInto(container, html);
+      window.bbInitServicioForm?.(container);
+
+      window.bbInitServicioForm?.(bbModalBody);
       return;
     }
 
@@ -713,6 +799,9 @@
   }
 })();
 </script>
+
+
+
 <script>
 (() => {
   const body = document.body;

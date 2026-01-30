@@ -10,32 +10,18 @@ use Illuminate\Support\Facades\Storage;
 
 class ServicioController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        if ($r = $this->redirectIfModalInBrowser($request)) return $r;
-
         $servicios = Servicio::latest()->paginate(10);
-
-        if ($this->isFragment($request)) {
-            return view('admin.servicios.partials.index-content', compact('servicios'));
-        }
-
         return view('admin.servicios.index', compact('servicios'));
     }
 
-    public function create(Request $request)
+    public function create()
     {
-        if ($r = $this->redirectIfModalInBrowser($request)) return $r;
-
         $servicio = new Servicio();
 
-        // ✅ Para el <select> de categoría (del pull)
+        // ✅ Para el <select> de categoría
         $categorias = CategoriaServicio::orderBy('nombre')->get();
-
-            if ($this->isFragment($request)) {
-                return view('admin.servicios.create', compact('servicio','categorias'));
-            }
-
 
         return view('admin.servicios.create', compact('servicio', 'categorias'));
     }
@@ -74,35 +60,18 @@ class ServicioController extends Controller
         return redirect()->route('admin.servicios.index')->with('success', 'Servicio creado correctamente');
     }
 
-    public function show(Request $request, Servicio $servicio)
+    public function show(Servicio $servicio)
     {
-        if ($r = $this->redirectIfModalInBrowser($request)) return $r;
-
-        $servicio->load(['horarios', 'categoria']);
-
-        if ($this->isFragment($request)) {
-            // ✅ para modal/loader (sin layout)
-            return view('admin.servicios.partials.show-content', compact('servicio'));
-            // (si NO quieres partials, puedes regresar admin.servicios.show y listo,
-            // pero lo ideal es partial para evitar layout dentro del modal)
-        }
-
+        $servicio->load('horarios', 'categoria');
         return view('admin.servicios.show', compact('servicio'));
     }
 
-
-    public function edit(Request $request, Servicio $servicio)
+    public function edit(Servicio $servicio)
     {
-        if ($r = $this->redirectIfModalInBrowser($request)) return $r;
-
         $servicio->load('horarios');
 
-        // ✅ Para el <select> de categoría (del pull)
+        // ✅ Para el <select> de categoría
         $categorias = CategoriaServicio::orderBy('nombre')->get();
-
-            if ($this->isFragment($request)) {
-                return view('admin.servicios.create', compact('servicio','categorias'));
-            }
 
         return view('admin.servicios.edit', compact('servicio', 'categorias'));
     }
@@ -114,7 +83,7 @@ class ServicioController extends Controller
             'descripcion'       => 'nullable|string',
             'precio'            => 'required|numeric|min:0',
             'duracion_minutos'  => 'required|integer|min:1',
-            'id_categoria'      => 'nullable|exists:categorias_servicios,id_categoria',
+            'id_categoria'      => 'nullable|exists:categorias_servicios,id_categoria', // ✅ antes decía 'categoria'
             'estado'            => 'required|in:activo,inactivo',
             'descuento'         => 'nullable|numeric|min:0',
             'caracteristicas'   => 'nullable|string',
@@ -155,10 +124,6 @@ class ServicioController extends Controller
         return redirect()->route('admin.servicios.index')->with('success', 'Servicio eliminado correctamente');
     }
 
-    // ============================
-    // Horarios helpers
-    // ============================
-
     private function validateHorariosOrFail(?array $horarios): void
     {
         if (!$horarios) return;
@@ -177,7 +142,7 @@ class ServicioController extends Controller
                 if (!$hi || !$hf) continue;
 
                 if ($hi >= $hf) {
-                    $errores[] = "Día {$dia}: el rango #" . ($idx + 1) . " tiene hora_inicio ({$hi}) mayor o igual a hora_fin ({$hf}).";
+                    $errores[] = "Día {$dia}: el rango #".($idx+1)." tiene hora_inicio ({$hi}) mayor o igual a hora_fin ({$hf}).";
                     continue;
                 }
 
@@ -205,9 +170,13 @@ class ServicioController extends Controller
         }
     }
 
-    private function syncHorariosServicio(Servicio $servicio, ?array $horarios): void
+    private function syncHorariosServicio(\App\Models\Servicio $servicio, ?array $horarios): void
     {
-        if (!$horarios) return;
+        // Si NO viene el campo "horarios", no tocamos nada
+        if ($horarios === null) return;
+
+        // Si viene (aunque venga vacío), se interpreta como "reemplazar"
+        $servicioId = $servicio->getKey(); // ✅ evita depender de id_servicio vs id
 
         $servicio->horarios()->delete();
 
@@ -222,7 +191,7 @@ class ServicioController extends Controller
                 if (!$hi || !$hf) continue;
 
                 $rows[] = [
-                    'servicio_id' => $servicio->id_servicio,
+                    'servicio_id' => $servicioId,
                     'dia_semana'  => (int)$dia,
                     'hora_inicio' => $hi,
                     'hora_fin'    => $hf,
@@ -232,28 +201,7 @@ class ServicioController extends Controller
             }
         }
 
-        if ($rows) ServicioHorario::insert($rows);
+        if ($rows) \App\Models\ServicioHorario::insert($rows);
     }
 
-    // ============================
-    // Loader helpers (como antes)
-    // ============================
-
-    private function isFragment(Request $request): bool
-    {
-        return $request->ajax(); // el loader siempre manda X-Requested-With
-    }
-
-
-    private function redirectIfModalInBrowser(Request $request)
-    {
-        // Si alguien abre ?modal=1 directo (NO ajax), lo mandamos a la página normal
-        if ($request->boolean('modal') && !$request->ajax()) {
-            $query = $request->except('modal');
-            $url = $request->url() . (count($query) ? ('?' . http_build_query($query)) : '');
-            return redirect()->to($url);
-        }
-
-        return null;
-    }
 }
