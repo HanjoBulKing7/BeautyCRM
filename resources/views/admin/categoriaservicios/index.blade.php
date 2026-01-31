@@ -23,7 +23,14 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <a href="{{ route('admin.categoriaservicios.create') }}" class="bb-btn-gold">
+            <a href="{{ route('admin.categoriaservicios.create') }}"
+                data-bb-open="modal"
+                data-bb-title="Nueva Categoría"
+                data-bb-url="{{ route('admin.categoriaservicios.create') }}?modal=1"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                border border-[rgba(201,162,74,.35)]
+                bg-[rgba(201,162,74,.12)] hover:bg-[rgba(201,162,74,.18)]
+                text-gray-900 font-semibold shadow-sm hover:shadow transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -144,7 +151,15 @@
                             <td colspan="5" class="px-4 py-10 text-center">
                                 <div class="text-gray-500 dark:text-gray-300">
                                     <div class="mx-auto bb-icon-pill" style="width:56px;height:56px;border-radius:18px;">
-                                        <span class="text-2xl">✨</span>
+                                        <!-- icon: layers (igual que cabecera) -->
+                                        <svg class="w-5 h-5 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M12 2l9 5-9 5-9-5 9-5z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M3 12l9 5 9-5" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M3 17l9 5 9-5" />
+                                        </svg>
                                     </div>
                                     <p class="font-semibold mt-3 text-gray-800 dark:text-white">No hay categorías registradas</p>
                                     <p class="text-sm">Crea tu primera categoría para comenzar</p>

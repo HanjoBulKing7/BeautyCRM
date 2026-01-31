@@ -43,6 +43,27 @@
         <span>Servicios</span>
     </a>
 </li>
+
+<!-- Categorías de Servicios -->
+<li>
+    <a href="{{ url('/admin/categoriaservicios') }}"
+       class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+              {{ request()->is('admin/categoriaservicios*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+        <i class="fas fa-tags mr-3 text-lg"></i>
+        <span>Categorías</span>
+    </a>
+</li>
+
+<!-- Productos -->
+<li>
+    <a href="{{ url('/admin/productos') }}"
+       class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+              {{ request()->is('admin/productos*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+        <i class="fas fa-boxes-stacked mr-3 text-lg"></i>
+        <span>Productos</span>
+    </a>
+</li>
+
 <!-- Clientes -->
 <li>
         <a href="{{ url('/admin/clientes') }}"
