@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardCitasController;
 
 
+
+// ✅ ROOT: siempre manda a Home pública
+Route::get('/', function () {
+    return redirect()->route('cliente.home'); // /home
+})->name('root');
+
 // Rutas Públicas (Cliente)
 Route::get('/home', [HomeController::class, 'index'])
     ->name('cliente.home');
