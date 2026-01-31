@@ -21,9 +21,9 @@ class VentaController extends Controller
         
         // **CAMBIO IMPORTANTE**: Obtener citas completadas que tengan venta
         $query = Cita::with([
-            'servicio',
-            'cliente:id,name,email',
-            'empleado:id,name',
+            'servicios',
+            'cliente:id,nombre,email',
+            'empleado:id,nombre',
             'venta' // Incluir la relación venta
         ])->where('estado_cita', 'completada');
         
@@ -74,25 +74,24 @@ class VentaController extends Controller
     // En VentaController.php - método show
     public function show($id)
     {
-        // Buscar la venta con todas las relaciones necesarias
+        // 1) Intentar por ID de venta
         $venta = Venta::with([
-            'cita.servicio',
+            'cita.servicios',   // ✅ plural
             'cita.cliente',
-            'cita.empleado'
-        ])->findOrFail($id);
-        
-        // Si no existe la venta, redirigir a la cita completada
-        if (!$venta) {
-            // Buscar la cita completada
-            $cita = Cita::with(['servicio', 'cliente', 'empleado'])
-                        ->where('id_cita', $id)
-                        ->where('estado_cita', 'completada')
-                        ->firstOrFail();
-            
-            return view('admin.ventas.cita-detalle', compact('cita'));
+            'cita.empleado',
+        ])->find($id);
+
+        if ($venta) {
+            return view('admin.ventas.show', compact('venta'));
         }
-        
-        return view('admin.ventas.show', compact('venta'));
+
+        // 2) Si no existe venta con ese ID, interpretarlo como ID de cita
+        $cita = Cita::with(['servicios', 'cliente', 'empleado', 'venta'])
+            ->where('id_cita', $id)
+            ->where('estado_cita', 'completada')
+            ->firstOrFail();
+
+        return view('admin.ventas.cita-detalle', compact('cita'));
     }
 
     /**
@@ -103,7 +102,7 @@ class VentaController extends Controller
         $fechaInicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
         $fechaFin = $request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d'));
         
-        $ventas = Venta::with(['cita.servicio', 'cita.empleado'])
+    $ventas = Venta::with(['cita.servicios', 'cita.empleado'])
             ->whereBetween('fecha_venta', [$fechaInicio, $fechaFin])
             ->orderBy('fecha_venta')
             ->get();

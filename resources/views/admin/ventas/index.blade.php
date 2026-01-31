@@ -285,12 +285,24 @@
                                 </td>
 
                                 <td class="px-4 py-3">
-                                    <div class="text-sm text-gray-900">{{ $cita->servicio->nombre_servicio ?? 'Servicio' }}</div>
-                                    <div class="text-xs text-gray-500">${{ number_format($cita->servicio->precio ?? 0, 2) }}</div>
+                                    <div class="space-y-1">
+                                    @forelse($cita->servicios as $s)
+                                        <div class="flex items-center justify-between gap-3">
+                                        <div class="text-sm text-gray-900 truncate">
+                                            {{ $s->nombre_servicio }}
+                                        </div>
+                                        <div class="text-xs text-gray-500 whitespace-nowrap">
+                                            ${{ number_format($s->pivot->precio_snapshot ?? $s->precio ?? 0, 2) }}
+                                        </div>
+                                        </div>
+                                    @empty
+                                        <div class="text-sm text-gray-500">Sin servicios</div>
+                                    @endforelse
+                                    </div>
                                 </td>
 
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $cita->empleado->name ?? 'No asignado' }}</div>
+                                    <div class="text-sm text-gray-900">{{ trim(($cita->empleado->nombre ?? '').' '.($cita->empleado->apellido ?? '')) ?: 'No asignado' }}</div>
                                 </td>
 
                                 <td class="px-4 py-3 whitespace-nowrap">
