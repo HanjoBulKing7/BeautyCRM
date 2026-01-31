@@ -211,17 +211,13 @@
 
             @php $metodoPagoSelected = old('metodo_pago', $cita->metodo_pago ?? ''); @endphp
 
-            <select
-                id="metodo_pago"
-                name="metodo_pago"
-                class="{{ $bbField }}"
-            >
-                <option value="">Seleccionar método</option>
-                <option value="efectivo" @selected($metodoPagoSelected === 'efectivo')>Efectivo</option>
-                <option value="transferencia" @selected($metodoPagoSelected === 'transferencia')>Transferencia</option>
-                <option value="tarjeta" @selected($metodoPagoSelected === 'tarjeta')>Tarjeta</option>
+            <select id="metodo_pago" name="metodo_pago" class="{{ $bbField }}">
+            <option value="">Seleccionar método</option>
+            <option value="efectivo" @selected($metodoPagoSelected === 'efectivo')>Efectivo</option>
+            <option value="tarjeta_credito" @selected($metodoPagoSelected === 'tarjeta_credito')>Tarjeta (crédito)</option>
+            <option value="tarjeta_debito" @selected($metodoPagoSelected === 'tarjeta_debito')>Tarjeta (débito)</option>
+            <option value="transferencia" @selected($metodoPagoSelected === 'transferencia')>Transferencia</option>
             </select>
-
             @error('metodo_pago')
                 <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
             @enderror

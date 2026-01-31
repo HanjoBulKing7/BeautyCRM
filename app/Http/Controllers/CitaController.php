@@ -19,6 +19,8 @@ use Carbon\Carbon;
 use App\Models\Venta;
 use App\Models\ServicioHorario;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
 
 class CitaController extends Controller
 {
@@ -465,6 +467,8 @@ class CitaController extends Controller
 
     public function store(Request $request)
     {
+
+
         $validated = $request->validate([
             'cliente_id'   => ['required', 'exists:clientes,id'],
             'fecha_cita'   => ['required', 'date'],
@@ -520,6 +524,8 @@ class CitaController extends Controller
         // ✅ Responsable según tu regla
         $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
 
+        $metodoPago = $validated['metodo_pago'] ?? null;
+
         $cita = Cita::create([
             'cliente_id'            => $validated['cliente_id'],
             'empleado_id'           => $responsableId,
@@ -572,8 +578,9 @@ class CitaController extends Controller
         }
 
         if ($cita->estado_cita === 'completada') {
-            $this->crearVentaDesdeCita($cita);
+            $this->crearVentaDesdeCita($cita, $metodoPago);
         }
+
 
         return redirect()->route('admin.citas.index')->with('success', 'Cita creada correctamente.');
     }
@@ -663,6 +670,8 @@ class CitaController extends Controller
     {
         $cita = Cita::findOrFail($id);
         $oldEstado = $cita->estado_cita;
+
+        $metodoPago = $validated['metodo_pago'] ?? null;
 
         $validated = $request->validate([
             'cliente_id'   => ['required', 'exists:clientes,id'],
@@ -754,69 +763,49 @@ class CitaController extends Controller
             }
         }
 
-        if ($oldEstado !== 'completada' && $cita->estado_cita === 'completada') {
-            $this->crearVentaDesdeCita($cita);
+        if ($cita->estado_cita === 'completada') {
+            $this->crearVentaDesdeCita($cita, $metodoPago);
         }
+
 
         return redirect()->route('admin.citas.index')->with('success', 'Cita actualizada correctamente.');
     }
 
     //=======================================================================
     //CREAR VENTA DESDE CITA FUNCIÓN ========================================
-    private function crearVentaDesdeCita(Cita $cita): void
+    private function crearVentaDesdeCita(Cita $cita, string $formaPago): Venta
     {
-        $cita->loadMissing(['servicios']);
+        return DB::transaction(function () use ($cita, $formaPago) {
 
-        if (empty($cita->cliente_id) || empty($cita->empleado_id)) {
-            \Log::warning('Cita completada sin cliente/empleado, no se creó venta', [
-                'id_cita' => $cita->id_cita,
-                'cliente_id' => $cita->cliente_id,
-                'empleado_id' => $cita->empleado_id,
-            ]);
-            return;
-        }
+            // Traer servicios con pivot
+            $cita->loadMissing(['servicios']);
 
-        $firstServicio = $cita->servicios->first();
+            // subtotal = suma de snapshots
+            $subtotal = (float) $cita->servicios->sum(function ($s) {
+                return (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0);
+            });
 
-        $subtotal = $cita->servicios->isNotEmpty()
-            ? (float) $cita->servicios->sum(fn ($s) => (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0))
-            : (float) ($firstServicio->precio ?? 0);
+            $descuento = (float) ($cita->descuento ?? 0);
+            $total = max($subtotal - $descuento, 0);
 
-        $descuento = (float) ($cita->descuento ?? 0);
-        $total = max($subtotal - $descuento, 0);
+            // ✅ Fecha + hora SIN "double time"
+            $fechaVenta = Carbon::parse($cita->fecha_cita)->setTimeFromTimeString($cita->hora_cita);
 
-        $fecha = $cita->fecha_cita instanceof \Carbon\Carbon
-            ? $cita->fecha_cita->format('Y-m-d')
-            : (string) $cita->fecha_cita;
-
-        $fechaVenta = Carbon::parse($fecha . ' ' . $cita->hora_cita);
-
-        $metodo = strtolower((string) ($cita->metodo_pago ?? ''));
-
-        $formaPago = match ($metodo) {
-            'efectivo' => 'efectivo',
-            'tarjeta' => 'tarjeta_credito',
-            'tarjeta_credito' => 'tarjeta_credito',
-            'tarjeta_debito' => 'tarjeta_debito',
-            'transferencia' => 'efectivo',
-            default => 'efectivo',
-        };
-
-        Venta::updateOrCreate(
-            ['id_cita' => $cita->id_cita],
-            [
-                'id_cliente' => $cita->cliente_id,
-                'id_empleado' => $cita->empleado_id,
-                'id_servicio' => $firstServicio->id_servicio ?? null,
-                'fecha_venta' => $fechaVenta,
-                'subtotal' => $subtotal,
-                'descuento' => $descuento,
-                'total' => $total,
-                'forma_pago' => $formaPago,
-                'estado_venta' => 'pagada',
-                'observaciones' => $cita->observaciones,
-            ]
-        );
+            // 1 venta por cita
+            return Venta::updateOrCreate(
+                ['id_cita' => $cita->id_cita],
+                [
+                    'fecha_venta'            => $fechaVenta,
+                    'total'                  => $total,
+                    'forma_pago'             => $formaPago,     // ✅ ya NO null
+                    'estado_venta'           => 'pagada',
+                    'metodo_pago_especifico' => null,
+                    'referencia_pago'        => null,
+                    'notas'                  => $cita->observaciones,
+                    'comision_empleado'      => 0,
+                ]
+            );
+        });
     }
 
     public function destroy(Cita $cita)
