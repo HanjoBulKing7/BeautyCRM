@@ -47,10 +47,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/agendar-cita', [AgendarCitaPublicController::class, 'store'])
         ->name('agendarcita.store');
 
-    // (Opcional) si quieres que el front pida horas disponibles por AJAX
     Route::get('/agendar-cita/horas-disponibles', [AgendarCitaPublicController::class, 'horasDisponibles'])
         ->name('agendarcita.horasDisponibles');
+
+    Route::get('/agendar-cita/availability-month', [AgendarCitaPublicController::class, 'availabilityMonth'])
+        ->name('agendarcita.availabilityMonth');
 });
+
 
 
 Route::get('/anticipo', function () {

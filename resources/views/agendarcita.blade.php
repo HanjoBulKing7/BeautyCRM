@@ -60,13 +60,16 @@
             <form id="bookingForm" method="POST" action="{{ route('agendarcita.store') }}">
                 @csrf
 
-                {{-- 1) Servicios seleccionados (principal + extras) --}}
+                {{-- 1) Servicios seleccionados --}}
                 <section class="bb-panel bb-selected">
                     <p class="bb-badge">Servicios seleccionados</p>
 
-                    <div class="bb-selectedList" id="selectedServicesList">
+                    {{-- IMPORTANTE: este contenedor lo va a controlar el JS (cards + empleado por servicio) --}}
+                    <div class="bb-selectedList" id="bbSelectedList">
+
+                        {{-- Si viene servicio principal, lo dejamos renderizado para mantener estética inicial --}}
                         @if($principal)
-                            <article class="bb-selectedCard" data-service-id="{{ $principal->id_servicio }}">
+                            <article class="bb-selectedCard" data-service-id="{{ $principal->id_servicio }}" data-order="1">
                                 <div class="bb-selectedCard__media">
                                     <img
                                         src="{{ $imgSrc }}"
@@ -83,6 +86,17 @@
                                         <li><strong>Desde:</strong> ${{ number_format($precioFinal, 2) }}</li>
                                         <li><strong>Incluye:</strong> {{ $features[0] ?? 'Servicio profesional con acabado duradero' }}</li>
                                     </ul>
+
+                                    {{-- ✅ Placeholder para selector de empleado (JS lo reemplaza/inyecta) --}}
+                                    <div class="bb-selectedCard__emp" style="margin-top:.75rem;">
+                                        <label class="bb-label" style="margin-bottom:.35rem;">Empleado</label>
+                                        <select class="bb-select" disabled>
+                                            <option>Selecciona empleado</option>
+                                        </select>
+                                        <p class="bb-hint" style="margin-top:.35rem;">
+                                            Selecciona un empleado para habilitar disponibilidad.
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <button type="button" class="bb-selectedCard__remove" disabled title="Servicio principal">
@@ -90,64 +104,67 @@
                                 </button>
                             </article>
 
-                            <input type="hidden" name="id_servicio" id="id_servicio_principal" value="{{ $principal->id_servicio }}">
                         @else
                             <p style="opacity:.7; margin: 0;">
-                                Selecciona un servicio desde la página de servicios para iniciar tu cita.
+                                Selecciona un servicio para iniciar tu cita.
                             </p>
                         @endif
-                        {{-- JS agregará extras + inputs hidden id_servicios[] --}}
                     </div>
+
+                    {{-- ✅ Aquí el JS inyecta los hidden inputs items[] para backend --}}
+                    <div id="bbItemsHidden"></div>
+
+                    <p class="bb-hint" style="margin-top: .75rem;">
+                        Selecciona un empleado para cada servicio para habilitar calendario y horas.
+                    </p>
                 </section>
 
-                {{-- 2) Agregar un nuevo servicio --}}
+                {{-- 2) Agregar un nuevo servicio (categorías -> cards) --}}
                 <section class="bb-panel bb-add">
                     <h3 class="bb-panel__title">Agregar otro servicio</h3>
 
-                    <div class="bb-formRow">
-                        <div>
-                            <label class="bb-label" for="extraService">Servicio</label>
-                            <select class="bb-select" id="extraService">
-                                <option value="">Selecciona un servicio</option>
-
-                                @foreach($servicios->groupBy(fn($s) => optional($s->grupo)->nombre ?? 'Otros') as $grupoNombre => $items)
-                                    <optgroup label="{{ $grupoNombre }}">
-                                        @foreach($items as $s)
-                                            @continue($principal && $s->id_servicio === $principal->id_servicio)
-                                            <option value="{{ $s->id_servicio }}">
-                                                {{ $s->nombre_servicio }}
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endforeach
-                            </select>
+                    {{-- Categorías como “pestañas/botones” (elegante) --}}
+                    <div class="bb-formRow" style="align-items:flex-start;">
+                        <div style="width:100%;">
+                            <p class="bb-label" style="margin-bottom:.5rem;">Pestañas</p>
+                            <div id="bbCategoryList" class="bb-cat__list"></div>
+                            <p class="bb-hint" style="margin-top:.5rem;">
+                                Selecciona una categoría para ver servicios.
+                            </p>
                         </div>
-
-                        <button type="button" class="bb-btn bb-btn--ghost" id="addServiceBtn">
-                            Añadir
-                        </button>
                     </div>
 
-                    <p class="bb-hint">Cada servicio agregado aparecerá arriba con su imagen e información.</p>
+                    {{-- Cards de servicios según categoría --}}
+                    <div style="margin-top: 1rem;">
+                        <div id="bbServiceCards" class="bb-svc__cards"></div>
+                    </div>
                 </section>
 
                 {{-- 3) Fecha y hora --}}
                 <section class="bb-panel bb-datetime">
                     <h3 class="bb-panel__title">Selecciona fecha y hora</h3>
 
-                    <div class="bb-grid2">
-                        <div class="bb-formCol">
-                            <label class="bb-label" for="date">Fecha</label>
-                            <input class="bb-input" type="date" id="date" name="fecha_cita" required />
-                        </div>
-
-                        <div class="bb-formCol">
-                            <label class="bb-label" for="time">Hora</label>
-                            <input class="bb-input" type="time" id="time" name="hora_cita" required />
-                        </div>
+                    {{-- Lock: hasta elegir empleado por servicio --}}
+                    <div id="bbDatetimeLock" class="bb-note" style="margin-bottom: 1rem;">
+                        Primero selecciona un empleado para cada servicio para poder ver disponibilidad.
                     </div>
 
-                    <p class="bb-hint">Te confirmaremos por correo si hay disponibilidad para ese horario.</p>
+                    {{-- Calendario mensual fijo --}}
+                    <div id="bbCalendar" class="bb-calendar"></div>
+
+                    {{-- Fecha (hidden) para POST --}}
+                    <input type="hidden" name="fecha_cita" id="bbDateInput" value="{{ old('fecha_cita', '') }}">
+
+                    {{-- Hora (select) para POST --}}
+                    <div class="bb-formCol" style="margin-top: 1rem;">
+                        <label class="bb-label" for="bbHourSelect">Hora</label>
+                        <select class="bb-select" id="bbHourSelect" name="hora_cita" disabled>
+                            <option value="">Selecciona una fecha</option>
+                        </select>
+                        <p class="bb-hint" style="margin-top:.5rem;">
+                            Solo se muestran horarios válidos según servicios, duración y disponibilidad.
+                        </p>
+                    </div>
                 </section>
 
                 {{-- 3.1) Observaciones (opcional) --}}
@@ -158,7 +175,7 @@
 
                 {{-- 4) Acción final --}}
                 <section class="bb-final">
-                    <button type="submit" class="bb-btn bb-btn--primary" id="submitBooking">
+                    <button type="submit" class="bb-btn bb-btn--primary" id="submitBooking" disabled>
                         Solicitar cita
                     </button>
                 </section>
@@ -167,9 +184,27 @@
         </div>
     </main>
 
-    {{-- ✅ Catálogo para JS (extras por ID) - SIN ParseError --}}
+    {{-- ✅ Contexto para JS (incluye URLs reales de tus rutas) --}}
     <script>
-        window.__SERVICIOS__ = @json($serviciosJs, JSON_UNESCAPED_UNICODE);
+        window.__BOOKING_CTX__ = {
+            servicioInicialId: {{ (int)($principal->id_servicio ?? 0) }},
+            servicios: @json($serviciosJs ?? new \stdClass(), JSON_UNESCAPED_UNICODE),
+            categorias: @json($categorias ?? [], JSON_UNESCAPED_UNICODE),
+            empleados: @json($empleados ?? [], JSON_UNESCAPED_UNICODE),
+
+            fallbackImg: @json($fallbackImg),
+            assetRoot: @json(rtrim(asset(''), '/')),
+            assetStorage: @json(rtrim(asset('storage'), '/')),
+
+            urls: {
+                horas: @json(route('agendarcita.horasDisponibles')),
+                month: @json(route('agendarcita.availabilityMonth')),
+            }
+        };
+
+
+        // Compatibilidad por si tu JS viejo aún usa __SERVICIOS__
+        window.__SERVICIOS__ = window.__BOOKING_CTX__.servicios;
     </script>
 
     @include('beauty.partials.footer')
