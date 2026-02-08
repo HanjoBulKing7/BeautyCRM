@@ -274,15 +274,370 @@ class AgendarCitaPublicController extends Controller
     }
 
     // ✅ AJUSTE: coincide con tu ruta /agendar-cita/horas-disponibles
-    public function horasDisponibles(Request $request)
-    {
-        // Luego lo completamos con slots reales (si quieres ya lo hago en el siguiente paso)
+// Devuelve horas de INICIO (HH:MM) válidas para la combinación:
+// fecha + items (servicios en orden) + empleados seleccionados.
+public function horasDisponibles(Request $request)
+{
+    $fechaYmd = (string) $request->query('fecha', '');
+    if (!$fechaYmd) {
         return response()->json(['ok' => true, 'horas' => []]);
     }
 
-    // ✅ Endpoint mensual (para deshabilitar días llenos)
-    public function availabilityMonth(Request $request)
-    {
+    try {
+        $fecha = Carbon::createFromFormat('Y-m-d', $fechaYmd)->startOfDay();
+    } catch (\Throwable $e) {
+        return response()->json(['ok' => true, 'horas' => []]);
+    }
+
+    // No fechas pasadas
+    if ($fecha->lt(Carbon::now()->startOfDay())) {
+        return response()->json(['ok' => true, 'horas' => []]);
+    }
+
+    $items = $this->parseItemsFromRequest($request); // Collection of [id_servicio,id_empleado,orden]
+    if ($items->isEmpty() || $items->contains(fn ($it) => empty($it['id_empleado']))) {
+        return response()->json(['ok' => true, 'horas' => []]);
+    }
+
+    $serviceIds = $items->pluck('id_servicio')->unique()->values();
+
+    // Duraciones
+    $serviciosDb = Servicio::query()
+        ->whereIn('id_servicio', $serviceIds)
+        ->get(['id_servicio', 'duracion_minutos'])
+        ->keyBy('id_servicio');
+
+    // Si falta algún servicio, sin horas
+    foreach ($serviceIds as $sid) {
+        if (!$serviciosDb->has($sid)) {
+            return response()->json(['ok' => true, 'horas' => []]);
+        }
+    }
+
+    $itemsConDur = $items->map(function ($it) use ($serviciosDb) {
+        $dur = max(1, (int) ($serviciosDb[$it['id_servicio']]->duracion_minutos ?? 0));
+        $it['duracion'] = $dur;
+        return $it;
+    })->values();
+
+    // Horarios del día (por servicio)
+    $diaSemana = $fecha->isoWeekday(); // 1-7 (L-D)
+
+    $horariosRows = DB::table('servicio_horarios')
+        ->whereIn('servicio_id', $serviceIds)
+        ->where('dia_semana', $diaSemana)
+        ->get(['servicio_id', 'hora_inicio', 'hora_fin']);
+
+    $horariosByService = [];
+    foreach ($horariosRows as $r) {
+        $sid = (int) $r->servicio_id;
+        $horariosByService[$sid][] = [
+            'ini' => substr((string) $r->hora_inicio, 0, 8),
+            'fin' => substr((string) $r->hora_fin, 0, 8),
+        ];
+    }
+
+    // Si algún servicio no tiene horario ese día, no hay horas
+    foreach ($serviceIds as $sid) {
+        if (empty($horariosByService[(int)$sid] ?? [])) {
+            return response()->json(['ok' => true, 'horas' => []]);
+        }
+    }
+
+    $windowsByService = $this->buildWindowsForDate($fechaYmd, $horariosByService);
+
+    // Ocupadas por empleado ese día
+    $empleadoIds = $itemsConDur->pluck('id_empleado')->unique()->values();
+    $busyRows = DB::table('cita_servicio as cs')
+        ->join('citas as c', 'c.id_cita', '=', 'cs.id_cita')
+        ->whereDate('c.fecha_cita', $fechaYmd)
+        ->whereIn('cs.id_empleado', $empleadoIds)
+        ->whereIn('c.estado_cita', ['pendiente', 'confirmada'])
+        ->whereNotNull('cs.hora_inicio')
+        ->whereNotNull('cs.hora_fin')
+        ->get(['cs.id_empleado', 'cs.hora_inicio', 'cs.hora_fin']);
+
+    $busyByEmpleado = $this->buildBusyForDate($fechaYmd, $busyRows);
+
+    $horas = $this->computeSlotsForDate($fechaYmd, $itemsConDur->all(), $windowsByService, $busyByEmpleado);
+
+    return response()->json(['ok' => true, 'horas' => $horas]);
+}
+
+// ✅ Endpoint mensual (para deshabilitar días sin disponibilidad)
+// Espera: ?month=YYYY-MM + items[...] (mismo formato que horasDisponibles)
+public function availabilityMonth(Request $request)
+{
+    $month = (string) $request->query('month', '');
+    if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
         return response()->json(['ok' => true, 'days' => new \stdClass()]);
     }
+
+    $items = $this->parseItemsFromRequest($request);
+    if ($items->isEmpty() || $items->contains(fn ($it) => empty($it['id_empleado']))) {
+        return response()->json(['ok' => true, 'days' => new \stdClass()]);
+    }
+
+    $start = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+    $end   = $start->copy()->endOfMonth();
+
+    $serviceIds = $items->pluck('id_servicio')->unique()->values();
+
+    // Duraciones
+    $serviciosDb = Servicio::query()
+        ->whereIn('id_servicio', $serviceIds)
+        ->get(['id_servicio', 'duracion_minutos'])
+        ->keyBy('id_servicio');
+
+    foreach ($serviceIds as $sid) {
+        if (!$serviciosDb->has($sid)) {
+            return response()->json(['ok' => true, 'days' => new \stdClass()]);
+        }
+    }
+
+    $itemsConDur = $items->map(function ($it) use ($serviciosDb) {
+        $dur = max(1, (int) ($serviciosDb[$it['id_servicio']]->duracion_minutos ?? 0));
+        $it['duracion'] = $dur;
+        return $it;
+    })->values();
+
+    // Horarios del mes (todos los días de la semana) por servicio
+    $horariosRows = DB::table('servicio_horarios')
+        ->whereIn('servicio_id', $serviceIds)
+        ->get(['servicio_id', 'dia_semana', 'hora_inicio', 'hora_fin']);
+
+    $horariosByServiceDay = []; // [sid][dow] => [[ini,fin],...]
+    foreach ($horariosRows as $r) {
+        $sid = (int) $r->servicio_id;
+        $dow = (int) $r->dia_semana;
+        $horariosByServiceDay[$sid][$dow][] = [
+            'ini' => substr((string) $r->hora_inicio, 0, 8),
+            'fin' => substr((string) $r->hora_fin, 0, 8),
+        ];
+    }
+
+    // Ocupadas del mes por empleado y por fecha
+    $empleadoIds = $itemsConDur->pluck('id_empleado')->unique()->values();
+
+    $busyRows = DB::table('cita_servicio as cs')
+        ->join('citas as c', 'c.id_cita', '=', 'cs.id_cita')
+        ->whereBetween('c.fecha_cita', [$start->toDateString(), $end->toDateString()])
+        ->whereIn('cs.id_empleado', $empleadoIds)
+        ->whereIn('c.estado_cita', ['pendiente', 'confirmada'])
+        ->whereNotNull('cs.hora_inicio')
+        ->whereNotNull('cs.hora_fin')
+        ->get(['c.fecha_cita', 'cs.id_empleado', 'cs.hora_inicio', 'cs.hora_fin']);
+
+    $busyByDate = []; // [Y-m-d][emp] => [[ini,fin],...]
+    foreach ($busyRows as $r) {
+        $ymd = Carbon::parse($r->fecha_cita)->toDateString();
+        $eid = (int) $r->id_empleado;
+        $busyByDate[$ymd][$eid][] = [
+            'ini' => substr((string) $r->hora_inicio, 0, 8),
+            'fin' => substr((string) $r->hora_fin, 0, 8),
+        ];
+    }
+
+    $days = [];
+
+    for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+        $ymd = $d->toDateString();
+        $dow = $d->isoWeekday();
+
+        // horarios de ese día
+        $horariosByService = [];
+        $hasAll = true;
+        foreach ($serviceIds as $sid) {
+            $wins = $horariosByServiceDay[(int)$sid][$dow] ?? [];
+            if (empty($wins)) { $hasAll = false; }
+            $horariosByService[(int)$sid] = $wins;
+        }
+
+        if (!$hasAll) {
+            $days[$ymd] = ['disabled' => true, 'slots' => 0];
+            continue;
+        }
+
+        $windowsByService = $this->buildWindowsForDate($ymd, $horariosByService);
+
+        // busy del día (convertido a Carbon)
+        $busyForDayRows = [];
+        if (!empty($busyByDate[$ymd] ?? [])) {
+            foreach ($busyByDate[$ymd] as $eid => $list) {
+                foreach ($list as $w) {
+                    $busyForDayRows[] = (object) [
+                        'id_empleado' => $eid,
+                        'hora_inicio' => $w['ini'],
+                        'hora_fin'    => $w['fin'],
+                    ];
+                }
+            }
+        }
+        $busyByEmpleado = $this->buildBusyForDate($ymd, $busyForDayRows);
+
+        $slots = $this->computeSlotsForDate($ymd, $itemsConDur->all(), $windowsByService, $busyByEmpleado);
+        $days[$ymd] = [
+            'disabled' => count($slots) === 0,
+            'slots'    => count($slots),
+        ];
+    }
+
+    return response()->json(['ok' => true, 'days' => $days]);
+}
+
+// =========================
+// Helpers
+// =========================
+
+private function parseItemsFromRequest(Request $request)
+{
+    $raw = $request->input('items', []);
+    if (!is_array($raw)) return collect();
+
+    return collect($raw)
+        ->map(function ($it) {
+            return [
+                'id_servicio' => (int) ($it['id_servicio'] ?? 0),
+                'id_empleado' => ((int) ($it['id_empleado'] ?? 0)) ?: null,
+                'orden'       => (int) ($it['orden'] ?? 0),
+            ];
+        })
+        ->filter(fn ($it) => $it['id_servicio'] > 0)
+        ->sortBy(fn ($it) => $it['orden'] > 0 ? $it['orden'] : 9999)
+        ->values()
+        ->map(function ($it, $i) {
+            $it['orden'] = $i + 1;
+            return $it;
+        });
+}
+
+private function ceilToStep(Carbon $dt, int $stepMinutes): Carbon
+{
+    $dt = $dt->copy();
+    $minute = (int) $dt->format('i');
+    $second = (int) $dt->format('s');
+
+    $mod = $minute % $stepMinutes;
+
+    // si ya está alineado (y sin segundos), no mover
+    if ($mod === 0 && $second === 0) {
+        return $dt->second(0);
+    }
+
+    $add = $stepMinutes - $mod;
+    $dt->second(0)->addMinutes($add);
+    return $dt;
+}
+
+// Convierte horarios tipo ['sid' => [['ini'=>'09:00:00','fin'=>'17:00:00'],...]] a Carbon windows
+private function buildWindowsForDate(string $fechaYmd, array $horariosByService): array
+{
+    $out = [];
+    foreach ($horariosByService as $sid => $wins) {
+        $sid = (int) $sid;
+        $out[$sid] = [];
+        foreach ($wins as $w) {
+            $ini = Carbon::parse($fechaYmd . ' ' . substr((string)($w['ini'] ?? ''), 0, 8));
+            $fin = Carbon::parse($fechaYmd . ' ' . substr((string)($w['fin'] ?? ''), 0, 8));
+
+            // ignora ventanas inválidas
+            if ($fin->lte($ini)) continue;
+
+            $out[$sid][] = [$ini, $fin];
+        }
+    }
+    return $out;
+}
+
+// Convierte rows con id_empleado,hora_inicio,hora_fin a Carbon intervals por empleado
+private function buildBusyForDate(string $fechaYmd, $rows): array
+{
+    $busy = [];
+    foreach ($rows as $r) {
+        $eid = (int) ($r->id_empleado ?? 0);
+        if (!$eid) continue;
+
+        $iniS = substr((string) ($r->hora_inicio ?? ''), 0, 8);
+        $finS = substr((string) ($r->hora_fin ?? ''), 0, 8);
+        if (!$iniS || !$finS) continue;
+
+        $ini = Carbon::parse($fechaYmd . ' ' . $iniS);
+        $fin = Carbon::parse($fechaYmd . ' ' . $finS);
+        if ($fin->lte($ini)) continue;
+
+        $busy[$eid][] = [$ini, $fin];
+    }
+    return $busy;
+}
+
+private function isCandidateOk(Carbon $start, array $items, array $windowsByService, array $busyByEmpleado): bool
+{
+    $cursor = $start->copy();
+
+    foreach ($items as $it) {
+        $sid = (int) ($it['id_servicio'] ?? 0);
+        $eid = (int) ($it['id_empleado'] ?? 0);
+        $dur = (int) ($it['duracion'] ?? 0);
+
+        if (!$sid || !$eid || $dur <= 0) return false;
+
+        $ini = $cursor->copy();
+        $fin = $cursor->copy()->addMinutes($dur);
+
+        // 1) dentro de ventana del servicio
+        $okWin = false;
+        foreach (($windowsByService[$sid] ?? []) as $win) {
+            [$wIni, $wFin] = $win;
+            if ($ini->gte($wIni) && $fin->lte($wFin)) { $okWin = true; break; }
+        }
+        if (!$okWin) return false;
+
+        // 2) no chocar con ocupado del empleado
+        foreach (($busyByEmpleado[$eid] ?? []) as $busy) {
+            [$bIni, $bFin] = $busy;
+            if ($ini->lt($bFin) && $fin->gt($bIni)) {
+                return false;
+            }
+        }
+
+        $cursor = $fin;
+    }
+
+    return true;
+}
+
+private function computeSlotsForDate(string $fechaYmd, array $items, array $windowsByService, array $busyByEmpleado): array
+{
+    $dayStart = Carbon::parse($fechaYmd . ' 00:00:00');
+    $dayEnd   = Carbon::parse($fechaYmd . ' 23:59:59');
+
+    // Hoy: no horas anteriores a "ahora - tolerancia"
+    $hoy = Carbon::now()->startOfDay();
+    if ($dayStart->equalTo($hoy)) {
+        $minPermitido = Carbon::now()->subMinutes(self::TOLERANCIA_MINUTOS);
+        $dayStart = $this->ceilToStep($minPermitido, self::SLOT_STEP_MINUTOS);
+
+        if ($dayStart->gt($dayEnd)) {
+            return [];
+        }
+    } else {
+        // Alinea al step
+        $dayStart = $this->ceilToStep($dayStart, self::SLOT_STEP_MINUTOS);
+    }
+
+    $slots = [];
+    $cursor = $dayStart->copy();
+
+    $maxIter = (int) ceil((24 * 60) / self::SLOT_STEP_MINUTOS) + 2; // ~98
+    for ($i = 0; $i < $maxIter && $cursor->lte($dayEnd); $i++) {
+        if ($this->isCandidateOk($cursor, $items, $windowsByService, $busyByEmpleado)) {
+            $slots[] = $cursor->format('H:i');
+        }
+        $cursor->addMinutes(self::SLOT_STEP_MINUTOS);
+    }
+
+    // unique por si acaso
+    return array_values(array_unique($slots));
+}
+
 }
