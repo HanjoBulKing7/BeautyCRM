@@ -40,6 +40,7 @@ Route::get('/productos', [ProductosPublicController::class, 'index'])
     ->name('productos.public');
 
 
+// Agendar cita
 Route::middleware('auth')->group(function () {
     Route::get('/agendar-cita', [AgendarCitaPublicController::class, 'create'])
         ->name('agendarcita.create');

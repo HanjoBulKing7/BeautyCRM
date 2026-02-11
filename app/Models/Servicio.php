@@ -67,4 +67,16 @@ class Servicio extends Model
         ->orderByPivot('orden');
 
     }
+
+    public function empleados()
+    {
+        return $this->belongsToMany(
+            \App\Models\Empleado::class,
+            'servicio_empleado',
+            'servicio_id',
+            'empleado_id',
+            'id_servicio',
+            'id'
+        )->withTimestamps();
+    }
 }

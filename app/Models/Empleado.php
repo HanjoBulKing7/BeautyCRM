@@ -36,4 +36,16 @@ class Empleado extends Model
     {
         return $this->hasMany(Cita::class, 'empleado_id');
     }
+
+    public function servicios()
+    {
+        return $this->belongsToMany(
+            \App\Models\Servicio::class,
+            'servicio_empleado',
+            'empleado_id',
+            'servicio_id',
+            'id',
+            'id_servicio'
+        )->withTimestamps();
+    }
 }

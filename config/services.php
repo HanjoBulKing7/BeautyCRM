@@ -39,5 +39,11 @@ return [
     'client_secret' => env('GOOGLE_CLIENT_SECRET'),
     'redirect' => env('GOOGLE_REDIRECT_LOGIN_URI'),
     ],
+    'stripe' => [
+    'secret' => env('STRIPE_SECRET'),
+    'key' => env('STRIPE_KEY'), // opcional (pk_)
+    'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'), // opcional
+],
+
 
 ];

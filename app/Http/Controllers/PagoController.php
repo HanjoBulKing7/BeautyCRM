@@ -1,55 +1,94 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\Venta;
 use Stripe\Stripe;
+use Stripe\Checkout\Session as StripeSession;
 
 class PagoController extends Controller
 {
     public function checkout(Request $request)
     {
+        $idCita = (int) $request->input('id_cita');
+        if (!$idCita) abort(400, 'Falta id_cita');
+
+        $anticipo = 200.00; // TODO: cámbialo por tu cálculo real
+
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        $session = \Stripe\Checkout\Session::create([
+        $session = StripeSession::create([
+            'mode' => 'payment',
             'payment_method_types' => ['card'],
+
             'line_items' => [[
                 'price_data' => [
-                    'currency' => 'usd',
+                    'currency' => 'usd', // TODO: si cobras en MXN cambia a 'mxn'
                     'product_data' => [
-                        'name' => 'Producto de ejemplo',
+                        'name' => 'Anticipo cita',
                     ],
-                    'unit_amount' => 1000, // $10.00 (en centavos)
+                    'unit_amount' => (int) round($anticipo * 100),
                 ],
                 'quantity' => 1,
             ]],
-            'mode' => 'payment',
+
+            'metadata' => [
+                'id_cita' => (string) $idCita,
+                'tipo' => 'anticipo',
+            ],
+
             'success_url' => route('success') . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('cancel'),
+            'cancel_url'  => route('cancel')  . '?id_cita=' . $idCita,
         ]);
 
         return redirect()->away($session->url);
     }
 
     public function success(Request $request)
-{
-    \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
-    
-    try {
-        $session = \Stripe\Checkout\Session::retrieve($request->get('session_id'));
-        
-        // Pasar los datos a la vista
-        return view('pagos.exito', [
-            'session' => $session,
-            'payment_intent' => \Stripe\PaymentIntent::retrieve($session->payment_intent)
-        ]);
-    } catch (\Exception $e) {
-        // Manejar errores (por ejemplo, si la sesión no existe)
-        return view('pagos.exito', ['error' => $e->getMessage()]);
-    }
-}
-
-    public function cancel()
     {
-        return view('pagos.cancelado');
+        $sessionId = $request->query('session_id');
+        if (!$sessionId) abort(400, 'Falta session_id');
+
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        $session = StripeSession::retrieve($sessionId);
+
+        if (($session->payment_status ?? null) !== 'paid') {
+            return response("Pago aún no confirmado (payment_status={$session->payment_status}).", 409);
+        }
+
+        $idCita = (int) ($session->metadata->id_cita ?? 0);
+        if (!$idCita) abort(500, 'Stripe session sin metadata id_cita');
+
+        $total = ((int) ($session->amount_total ?? 0)) / 100;
+        $referencia = $session->payment_intent ?? $session->id;
+
+        DB::transaction(function () use ($idCita, $total, $referencia, $sessionId) {
+            Venta::updateOrCreate(
+                ['referencia_pago' => $referencia],
+                [
+                    'id_cita' => $idCita,
+                    'fecha_venta' => now(),
+                    'total' => $total,
+                    'forma_pago' => 'tarjeta',
+                    'estado_venta' => 'pagado',
+                    'metodo_pago_especifico' => 'stripe_checkout',
+                    'notas' => "Anticipo confirmado por Stripe. session_id={$sessionId}",
+                    'comision_empleado' => 0,
+                ]
+            );
+        });
+
+        // Ajusta esta ruta si no existe
+        return redirect()->route('metodo.pago')
+  ->with('success', 'Pago confirmado. Anticipo registrado.');
+
+    }
+
+    public function cancel(Request $request)
+    {
+        return redirect()->back()->with('error', 'Pago cancelado.');
     }
 }

@@ -240,7 +240,10 @@ class AgendarCitaPublicController extends Controller
                 ]);
             }
 
-            return redirect()->route('agendarcita.create')->with('success', 'Cita registrada como pendiente. Continúa a pago para confirmarla.');
+            return redirect()->route('checkout', [
+    'cita' => $cita->id_cita
+]);
+
         });
     }
 

@@ -51,20 +51,7 @@
         >
     </div>
 
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-briefcase mr-2" style="color: rgba(201,162,74,.92)"></i>
-            Puesto
-        </label>
-        <input
-            type="text"
-            name="puesto"
-            value="{{ old('puesto', $empleado->puesto) }}"
-            class="w-full border border-gray-300 rounded-lg p-3 transition
-                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
-            placeholder="Puesto del empleado"
-        >
-    </div>
+    
 
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
@@ -86,20 +73,7 @@
     </div>
 
     <!-- Fila 3: Departamento y Fecha de Contratación -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-building mr-2" style="color: rgba(201,162,74,.92)"></i>
-            Departamento
-        </label>
-        <input
-            type="text"
-            name="departamento"
-            value="{{ old('departamento', $empleado->departamento) }}"
-            class="w-full border border-gray-300 rounded-lg p-3 transition
-                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
-            placeholder="Departamento"
-        >
-    </div>
+    
 
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
@@ -133,18 +107,93 @@
         </select>
     </div>
 
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-file-contract mr-2" style="color: rgba(201,162,74,.92)"></i>
-            Información Legal
-        </label>
-        <textarea
-            name="informacion_legal"
-            rows="4"
-            class="w-full border border-gray-300 rounded-lg p-3 transition
-                   focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]"
-            placeholder="Información legal o contractual del empleado"
-        >{{ old('informacion_legal', $empleado->informacion_legal) }}</textarea>
+    @php
+        $servicios = \App\Models\Servicio::all();
+        $selectedServicios = old('servicios', isset($empleado) && $empleado->relationLoaded('servicios') ? $empleado->servicios->pluck('id_servicio')->toArray() : (isset($empleado) ? $empleado->servicios->pluck('id_servicio')->toArray() : []));
+    @endphp
+
+<div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
+
+    {{-- 1️⃣ Título --}}
+    <label class="block text-sm font-medium mb-2 text-gray-700">
+        <i class="fas fa-concierge-bell mr-2" style="color: rgba(201,162,74,.92)"></i>
+        Servicios asignados al empleado
+    </label>
+
+    {{-- 2️⃣ Servicios seleccionados (TIEMPO REAL) --}}
+    <div
+        id="servicios-seleccionados"
+        class="flex flex-wrap gap-2 mb-4"
+    >
+        {{-- aquí se van agregando automáticamente --}}
     </div>
 
+    {{-- 3️⃣ Select --}}
+    <select
+        id="servicio-selector"
+        class="w-full border border-gray-300 rounded-lg p-3 transition
+               focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)]
+               focus:border-[rgba(201,162,74,.55)]"
+    >
+        <option value="">Selecciona un servicio</option>
+        @foreach($servicios as $servicio)
+            <option value="{{ $servicio->id_servicio }}">
+                {{ $servicio->nombre_servicio }}
+            </option>
+        @endforeach
+    </select>
+
+    <p class="mt-2 text-sm text-gray-500">
+        Selecciona un servicio y se agregará automáticamente.
+    </p>
 </div>
+
+
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const contenedor = document.getElementById('servicios-seleccionados');
+
+    const ts = new TomSelect('#servicio-selector', {
+        create: false,
+        placeholder: 'Selecciona un servicio',
+        onItemAdd(value, text) {
+
+            // ❌ Evitar duplicados
+            if (contenedor.querySelector(`[data-id="${value}"]`)) {
+                this.clear();
+                return;
+            }
+
+            const tag = document.createElement('span');
+            tag.className =
+                'flex items-center gap-2 bg-[rgba(201,162,74,.12)] text-gray-800 ' +
+                'px-3 py-1 rounded-full text-sm border border-[rgba(201,162,74,.35)]';
+            tag.dataset.id = value;
+
+            tag.innerHTML = `
+                ${text}
+                <button type="button"
+                        class="text-gray-500 hover:text-red-600 remove-servicio">
+                    ✕
+                </button>
+                <input type="hidden" name="servicios[]" value="${value}">
+            `;
+
+            contenedor.appendChild(tag);
+
+            // ✅ limpiar selector para permitir seguir agregando
+            this.clear();
+        }
+    });
+
+    // eliminar servicio
+    contenedor.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-servicio')) {
+            e.target.closest('span').remove();
+        }
+    });
+});
+</script>
