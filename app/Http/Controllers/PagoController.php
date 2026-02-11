@@ -7,44 +7,61 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Venta;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
+use App\Models\Cita;
+
 
 class PagoController extends Controller
 {
     public function checkout(Request $request)
-    {
-        $idCita = (int) $request->input('id_cita');
-        if (!$idCita) abort(400, 'Falta id_cita');
+{
+    $idCita = (int) $request->query('id_cita');
 
-        $anticipo = 200.00; // TODO: cámbialo por tu cálculo real
-
-        Stripe::setApiKey(config('services.stripe.secret'));
-
-        $session = StripeSession::create([
-            'mode' => 'payment',
-            'payment_method_types' => ['card'],
-
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => 'usd', // TODO: si cobras en MXN cambia a 'mxn'
-                    'product_data' => [
-                        'name' => 'Anticipo cita',
-                    ],
-                    'unit_amount' => (int) round($anticipo * 100),
-                ],
-                'quantity' => 1,
-            ]],
-
-            'metadata' => [
-                'id_cita' => (string) $idCita,
-                'tipo' => 'anticipo',
-            ],
-
-            'success_url' => route('success') . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url'  => route('cancel')  . '?id_cita=' . $idCita,
-        ]);
-
-        return redirect()->away($session->url);
+    if (!$idCita) {
+        abort(400, 'Falta id_cita');
     }
+
+    $cita = Cita::findOrFail($idCita);
+
+    if ($cita->estado_cita !== 'pendiente') {
+        abort(403, 'Esta cita no se puede pagar.');
+    }
+
+    // 🔹 calcular total real
+    $total = DB::table('cita_servicio')
+        ->where('id_cita', $idCita)
+        ->sum('precio_snapshot');
+
+    $anticipo = min(200, $total);
+
+    Stripe::setApiKey(config('services.stripe.secret'));
+
+    $session = StripeSession::create([
+        'mode' => 'payment',
+        'payment_method_types' => ['card'],
+
+        'line_items' => [[
+            'price_data' => [
+                'currency' => 'mxn',
+                'product_data' => [
+                    'name' => 'Anticipo cita #' . $idCita,
+                ],
+                'unit_amount' => (int) round($anticipo * 100),
+            ],
+            'quantity' => 1,
+        ]],
+
+        'metadata' => [
+            'id_cita' => (string) $idCita,
+            'tipo' => 'anticipo',
+        ],
+
+        'success_url' => route('success') . '?session_id={CHECKOUT_SESSION_ID}',
+        'cancel_url'  => route('cancel') . '?id_cita=' . $idCita,
+    ]);
+
+    return redirect()->away($session->url);
+}
+
 
     public function success(Request $request)
     {
@@ -86,6 +103,19 @@ class PagoController extends Controller
   ->with('success', 'Pago confirmado. Anticipo registrado.');
 
     }
+    public function pagar(Request $request)
+{
+    $citaId = $request->query('id_cita');
+
+    if (!$citaId) {
+        abort(404);
+    }
+
+    $cita = Cita::with('cliente')->findOrFail($citaId);
+
+    return view('metodo_pago', compact('cita'));
+}
+
 
     public function cancel(Request $request)
     {

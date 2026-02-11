@@ -217,14 +217,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 
-// Rutas de Payment Stripe
-Route::get('/pagar', function () {  
-    return view('metodo_pago');
-})->name('metodo.pago');
-
+Route::get('/pagar', [PagoController::class, 'pagar'])->name('pagar');
 Route::get('/checkout', [PagoController::class, 'checkout'])->name('checkout');
 Route::get('/success', [PagoController::class, 'success'])->name('success');
 Route::get('/cancel', [PagoController::class, 'cancel'])->name('cancel');
+
 
 // Ruta de diagnóstico
 Route::get('/debug-auth', function () {

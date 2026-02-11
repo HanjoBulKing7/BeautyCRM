@@ -240,9 +240,10 @@ class AgendarCitaPublicController extends Controller
                 ]);
             }
 
-            return redirect()->route('checkout', [
-    'cita' => $cita->id_cita
-]);
+            return redirect()->route('pagar', [
+                'id_cita' => $cita->id_cita
+            ]);
+
 
         });
     }
