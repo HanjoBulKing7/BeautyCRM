@@ -40,12 +40,10 @@ class Empleado extends Model
     public function servicios()
     {
         return $this->belongsToMany(
-            \App\Models\Servicio::class,
+            Servicio::class,
             'servicio_empleado',
             'empleado_id',
-            'servicio_id',
-            'id',
-            'id_servicio'
+            'servicio_id'
         )->withTimestamps();
     }
 }
