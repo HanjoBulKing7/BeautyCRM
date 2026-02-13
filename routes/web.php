@@ -17,8 +17,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProductosPublicController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardCitasController;
-
-
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 
 // ✅ ROOT: siempre manda a Home pública
 Route::get('/', function () {
@@ -55,7 +54,12 @@ Route::middleware('auth')->group(function () {
         ->name('agendarcita.availabilityMonth');
 });
 
-
+//===========================================================
+//Webhook para manejar el evento checkout de Stripe ( producción & más seguro )
+Route::post('/stripe/webhook', [PagoController::class, 'webhook'])
+    ->name('stripe.webhook')
+    ->withoutMiddleware([ValidateCsrfToken::class]);
+//==================================================================== 
 
 Route::get('/anticipo', function () {
     return view('cliente.anticipo');
@@ -217,7 +221,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 
-Route::get('/pagar', [PagoController::class, 'pagar'])->name('pagar');
+
 Route::get('/checkout', [PagoController::class, 'checkout'])->name('checkout');
 Route::get('/success', [PagoController::class, 'success'])->name('success');
 Route::get('/cancel', [PagoController::class, 'cancel'])->name('cancel');

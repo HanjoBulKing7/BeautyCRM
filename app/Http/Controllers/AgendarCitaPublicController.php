@@ -219,7 +219,7 @@ class AgendarCitaPublicController extends Controller
                 'fecha_cita' => $request->input('fecha_cita'),
                 'hora_cita'  => $inicioGlobal->format('H:i:s'),
                 'duracion_total_minutos' => $duracionTotal,
-                'estado_cita' => 'pendiente',
+                'estado_cita' => 'confirmada',
                 'observaciones' => $request->input('observaciones'),
             ];
 
@@ -240,11 +240,9 @@ class AgendarCitaPublicController extends Controller
                 ]);
             }
 
-            return redirect()->route('pagar', [
+            return redirect()->route('checkout', [
                 'id_cita' => $cita->id_cita
             ]);
-
-
         });
     }
 

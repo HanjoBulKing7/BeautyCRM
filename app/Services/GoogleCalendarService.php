@@ -350,8 +350,8 @@ class GoogleCalendarService
     {
         $attendees = [];
 
-        if ($cita->cliente && $cita->cliente->email) {
-            $attendees[] = ['email' => $cita->cliente->email];
+        if ($cita->empleado && $cita->empleado->email) {
+            $attendees[] = ['email' => $cita->empleado->email];
         }
 
         return $attendees;
