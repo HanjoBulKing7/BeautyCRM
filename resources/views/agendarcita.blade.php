@@ -24,7 +24,6 @@
         $imgSrc = $fallbackImg;
         if ($principal && $principal->imagen) {
             $img = $principal->imagen;
-
             if (\Illuminate\Support\Str::startsWith($img, ['images/', '/images/'])) {
                 $imgSrc = asset(ltrim($img, '/'));
             } else {
@@ -64,11 +63,10 @@
                 <section class="bb-panel bb-selected">
                     <p class="bb-badge">Servicios seleccionados</p>
 
-                    {{-- IMPORTANTE: este contenedor lo va a controlar el JS (cards + empleado por servicio) --}}
+                    {{-- IMPORTANTE: este contenedor lo controla el JS (cards + empleado por servicio) --}}
                     <div class="bb-selectedList" id="bbSelectedList">
-
-                        {{-- Si viene servicio principal, lo dejamos renderizado para mantener estética inicial --}}
                         @if($principal)
+                            {{-- Placeholder visual (el JS lo re-renderiza en cuanto carga) --}}
                             <article class="bb-selectedCard" data-service-id="{{ $principal->id_servicio }}" data-order="1">
                                 <div class="bb-selectedCard__media">
                                     <img
@@ -87,14 +85,13 @@
                                         <li><strong>Incluye:</strong> {{ $features[0] ?? 'Servicio profesional con acabado duradero' }}</li>
                                     </ul>
 
-                                    {{-- ✅ Placeholder para selector de empleado (JS lo reemplaza/inyecta) --}}
                                     <div class="bb-selectedCard__emp" style="margin-top:.75rem;">
                                         <label class="bb-label" style="margin-bottom:.35rem;">Empleado</label>
                                         <select class="bb-select" disabled>
-                                            <option>Selecciona empleado</option>
+                                            <option>Cargando asignación...</option>
                                         </select>
                                         <p class="bb-hint" style="margin-top:.35rem;">
-                                            Selecciona un empleado para habilitar disponibilidad.
+                                            Te asignaremos uno automáticamente y podrás cambiarlo.
                                         </p>
                                     </div>
                                 </div>
@@ -103,7 +100,6 @@
                                     ✓
                                 </button>
                             </article>
-
                         @else
                             <p style="opacity:.7; margin: 0;">
                                 Selecciona un servicio para iniciar tu cita.
@@ -115,7 +111,7 @@
                     <div id="bbItemsHidden"></div>
 
                     <p class="bb-hint" style="margin-top: .75rem;">
-                        Selecciona un empleado para cada servicio para habilitar calendario y horas.
+                        Te asignamos un empleado por servicio automáticamente, pero puedes cambiarlo si lo deseas.
                     </p>
                 </section>
 
@@ -123,11 +119,13 @@
                 <section class="bb-panel bb-add">
                     <h3 class="bb-panel__title">Agregar otro servicio</h3>
 
-                    {{-- Categorías como “pestañas/botones” (elegante) --}}
                     <div class="bb-formRow" style="align-items:flex-start;">
                         <div style="width:100%;">
-                            <p class="bb-label" style="margin-bottom:.5rem;">Pestañas</p>
+                            <p class="bb-label" style="margin-bottom:.5rem;">Categorías</p>
+
+                            {{-- Chips de categorías --}}
                             <div id="bbCategoryList" class="bb-cat__list"></div>
+
                             <p class="bb-hint" style="margin-top:.5rem;">
                                 Selecciona una categoría para ver servicios.
                             </p>
@@ -144,36 +142,51 @@
                 <section class="bb-panel bb-datetime">
                     <h3 class="bb-panel__title">Selecciona fecha y hora</h3>
 
-                    {{-- Lock: hasta elegir empleado por servicio --}}
+                    {{-- Lock: hasta que el JS tenga empleado asignado por cada servicio --}}
                     <div id="bbDatetimeLock" class="bb-note" style="margin-bottom: 1rem;">
-                        Primero selecciona un empleado para cada servicio para poder ver disponibilidad.
+                        Primero selecciona/permite la asignación de empleado para cada servicio para ver disponibilidad.
                     </div>
 
-                    {{-- Calendario mensual fijo --}}
+                    {{-- Calendario mensual --}}
                     <div id="bbCalendar" class="bb-calendar"></div>
 
                     {{-- Fecha (hidden) para POST --}}
                     <input type="hidden" name="fecha_cita" id="bbDateInput" value="{{ old('fecha_cita', '') }}">
 
-                    {{-- Hora (select) para POST --}}
-                    <div class="bb-formCol" style="margin-top: 1rem;">
-                        <label class="bb-label" for="bbHourSelect">Hora</label>
-                        <select class="bb-select" id="bbHourSelect" name="hora_cita" disabled>
-                            <option value="">Selecciona una fecha</option>
-                        </select>
-                        <p class="bb-hint" style="margin-top:.5rem;">
-                            Solo se muestran horarios válidos según servicios, duración y disponibilidad.
+                    {{-- Hora (hidden) para POST --}}
+                    <input type="hidden" name="hora_cita" id="bbHourInput" value="{{ old('hora_cita', '') }}">
+
+                    {{-- Panel/grid de horas (lo llena el JS) --}}
+                    <div id="bbTimesPanel" class="bb-timesPanel" aria-hidden="true" style="margin-top: 1rem;">
+                        <div class="bb-timesPanel__head">
+                            <div>
+                                <div class="bb-label" id="bbTimesTitle">Horas disponibles</div>
+                                <p class="bb-hint" id="bbTimesHint" style="margin-top:.25rem;">
+                                    Selecciona una fecha para ver horarios.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="bbTimesGrid" class="bb-timesGrid"></div>
+
+                        <p id="bbTimesEmpty" class="bb-hint" style="display:none; margin-top:.75rem;">
+                            No hay horas disponibles para ese día.
                         </p>
                     </div>
                 </section>
 
-                {{-- 3.1) Observaciones (opcional) --}}
+                {{-- Observaciones (opcional) --}}
                 <section class="bb-panel">
                     <h3 class="bb-panel__title">Observaciones (opcional)</h3>
-                    <textarea class="bb-input" name="observaciones" rows="3" placeholder="Ej. Maquillaje natural, alergias, referencias..."></textarea>
+                    <textarea
+                        class="bb-input"
+                        name="observaciones"
+                        rows="3"
+                        placeholder="Ej. Maquillaje natural, alergias, referencias..."
+                    >{{ old('observaciones', '') }}</textarea>
                 </section>
 
-                {{-- 4) Acción final --}}
+                {{-- Acción final --}}
                 <section class="bb-final">
                     <button type="submit" class="bb-btn bb-btn--primary" id="submitBooking" disabled>
                         Solicitar cita
@@ -184,13 +197,16 @@
         </div>
     </main>
 
-    {{-- ✅ Contexto para JS (incluye URLs reales de tus rutas) --}}
+    {{-- ✅ Contexto para JS --}}
     <script>
         window.__BOOKING_CTX__ = {
             servicioInicialId: {{ (int)($principal->id_servicio ?? 0) }},
             servicios: @json($serviciosJs ?? new \stdClass(), JSON_UNESCAPED_UNICODE),
             categorias: @json($categorias ?? [], JSON_UNESCAPED_UNICODE),
-            empleados: @json($empleados ?? [], JSON_UNESCAPED_UNICODE),
+
+            // ✅ NUEVO: para auto-asignación y selector por servicio
+            empleadosPorServicio: @json($empleadosPorServicio ?? new \stdClass(), JSON_UNESCAPED_UNICODE),
+            cargaEmpleados: @json($cargaEmpleados ?? new \stdClass(), JSON_UNESCAPED_UNICODE),
 
             fallbackImg: @json($fallbackImg),
             assetRoot: @json(rtrim(asset(''), '/')),
@@ -202,8 +218,7 @@
             }
         };
 
-
-        // Compatibilidad por si tu JS viejo aún usa __SERVICIOS__
+        // Compatibilidad si tu JS anterior aún usa esto
         window.__SERVICIOS__ = window.__BOOKING_CTX__.servicios;
     </script>
 

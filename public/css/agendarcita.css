@@ -454,3 +454,193 @@
   display:grid;
   place-items:center;
 }
+/* =========================================================
+   OVERRIDES + NUEVO UI (categorías, servicios, calendario, horas)
+   Pegar AL FINAL del agendarcita.css
+========================================================= */
+
+/* Empty helper */
+.bb-empty{
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(0,0,0,0.12);
+  background: rgba(244,235,221,0.35);
+  font-family: "Inter", sans-serif;
+  color: rgba(26,26,26,0.70);
+}
+
+/* ===== Categorías (chips) ===== */
+.bb-cat__list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.bb-cat-btn{
+  border:1px solid rgba(184,134,11,0.28);
+  background: rgba(244,235,221,0.55);
+  color: rgba(26,26,26,0.88);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-family:"Inter", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing:.08em;
+  text-transform: uppercase;
+  cursor:pointer;
+  transition: transform 150ms ease, filter 150ms ease;
+}
+.bb-cat-btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+.bb-cat-btn.is-active{
+  background: rgba(184,134,11,0.12);
+  border-color: rgba(184,134,11,0.55);
+  box-shadow: 0 10px 22px rgba(184,134,11,0.10);
+}
+
+/* ===== Cards de servicios ===== */
+.bb-svc__cards{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 14px;
+}
+@media (max-width: 1024px){
+  .bb-svc__cards{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 640px){
+  .bb-svc__cards{ grid-template-columns: 1fr; }
+}
+
+.bb-svc-card{
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background:#fff;
+  overflow:hidden;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.06);
+  cursor:pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+  display:flex;
+  flex-direction:column;
+}
+.bb-svc-card:hover{ transform: translateY(-2px); filter: brightness(1.02); }
+.bb-svc-card.is-disabled{ opacity:.55; cursor:not-allowed; }
+.bb-svc-card.is-disabled:hover{ transform:none; filter:none; }
+
+.bb-svc-card__media img{
+  width:100%;
+  height:140px;
+  object-fit:cover;
+  display:block;
+  background:#f4ebdd;
+}
+.bb-svc-card__body{
+  padding: 12px 14px 14px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+.bb-svc-card__name{
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  color: rgba(26,26,26,0.90);
+}
+.bb-svc-card__meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-family:"Inter", sans-serif;
+  font-size: 13px;
+  color: rgba(26,26,26,0.72);
+}
+
+/* botón suave para card */
+.bb-btn--soft{
+  width: 100%;
+  border-radius: 999px;
+  padding: 10px 14px;
+  border: 1px solid rgba(184,134,11,0.35);
+  background: rgba(244,235,221,0.70);
+  color: #b8860b;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+.bb-btn--soft:disabled{
+  opacity:.7;
+  cursor:not-allowed;
+}
+
+/* ===== Calendario: más compacto + dot + sin numerito ===== */
+
+/* compactar tamaño */
+.bb-cal__grid{ gap: 10px; }
+.bb-cal__cell{
+  aspect-ratio: auto;      /* override */
+  height: 64px;            /* 👈 más pequeño */
+  padding: 10px;
+}
+
+/* elimina el numerito dorado */
+.bb-cal__badge{ display:none !important; }
+
+/* dot (disponible/no/neutral) */
+.bb-cal__dot{
+  position:absolute;
+  right: 10px;
+  top: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+.bb-cal__dot.is-gold{
+  background: rgba(184,134,11,0.95);
+  box-shadow: 0 0 0 4px rgba(184,134,11,0.16);
+}
+.bb-cal__dot.is-red{
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239,68,68,0.16);
+}
+.bb-cal__dot.is-muted{
+  background: rgba(0,0,0,0.18);
+  box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
+}
+
+/* ===== Panel de horas (grid) ===== */
+.bb-timesPanel{
+  margin-top: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: linear-gradient(180deg, rgba(244,235,221,0.60), rgba(255,255,255,0.95));
+  padding: 14px 14px 16px;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.05);
+}
+.bb-timesGrid{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: repeat(6, minmax(0,1fr));
+  gap: 10px;
+}
+@media (max-width: 1024px){
+  .bb-timesGrid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+@media (max-width: 640px){
+  .bb-timesGrid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+
+.bb-timeBtn{
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background:#fff;
+  padding: 12px 10px;
+  font-family:"Inter", sans-serif;
+  font-weight: 900;
+  letter-spacing: .02em;
+  cursor:pointer;
+  transition: transform 140ms ease, filter 140ms ease;
+  box-shadow: 0 12px 22px rgba(0,0,0,0.04);
+}
+.bb-timeBtn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+.bb-timeBtn.is-selected{
+  border-color: rgba(184,134,11,0.60);
+  background: rgba(184,134,11,0.12);
+  box-shadow: 0 16px 30px rgba(184,134,11,0.12);
+}

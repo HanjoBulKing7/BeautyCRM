@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Empleado;
 use App\Models\Servicio;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class EmpleadoController extends Controller
@@ -23,8 +24,6 @@ class EmpleadoController extends Controller
         $empleado = new Empleado();
 
         $servicios = Servicio::query()
-            // si manejas estado en servicios, descomenta:
-            // ->where('estado', 'activo')
             ->orderBy('nombre_servicio')
             ->get();
 
@@ -33,40 +32,25 @@ class EmpleadoController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'user_id' => ['nullable', 'integer'],
-            'nombre'  => ['required', 'string', 'max:120'],
-            'apellido'=> ['required', 'string', 'max:120'],
-            'email'   => ['required', 'email', 'max:255', 'unique:empleados,email'],
-            'telefono'=> ['nullable', 'string', 'max:30'],
+        $this->normalizeServiciosInput($request);
 
-            // 👇 NO obligatorios (como pediste)
-            'informacion_legal' => ['nullable', 'string'],
-            'puesto'            => ['nullable', 'string', 'max:120'],
-            'departamento'      => ['nullable', 'string', 'max:120'],
-
-            'fecha_contratacion' => ['nullable', 'date'],
-            'estatus' => ['nullable', Rule::in(['activo', 'inactivo'])],
-
-            // servicios seleccionados para pivot
-            'servicios'   => ['nullable', 'array'],
-            'servicios.*' => ['integer', 'exists:servicios,id_servicio'],
-        ]);
+        $data = $this->validateEmpleado($request, null);
 
         $serviciosIds = $data['servicios'] ?? [];
         unset($data['servicios']);
 
-        // valores por defecto si no vienen
         $data['estatus'] = $data['estatus'] ?? 'activo';
 
-        $empleado = Empleado::create($data);
+        return DB::transaction(function () use ($data, $serviciosIds) {
+            $empleado = Empleado::create($data);
 
-        // ✅ crea registros en servicio_empleado (empleado_id, servicio_id)
-        $empleado->servicios()->sync($serviciosIds);
+            // ✅ crea N filas en servicio_empleado
+            $empleado->servicios()->sync($serviciosIds);
 
-        return redirect()
-            ->route('empleados.index')
-            ->with('success', 'Empleado creado y servicios asignados.');
+            return redirect()
+                ->route('admin.empleados.index')
+                ->with('success', 'Empleado creado y servicios asignados.');
+        });
     }
 
     public function edit(Empleado $empleado)
@@ -74,7 +58,6 @@ class EmpleadoController extends Controller
         $empleado->load('servicios');
 
         $servicios = Servicio::query()
-            // ->where('estado', 'activo')
             ->orderBy('nombre_servicio')
             ->get();
 
@@ -83,47 +66,98 @@ class EmpleadoController extends Controller
 
     public function update(Request $request, Empleado $empleado)
     {
-        $data = $request->validate([
-            'user_id' => ['nullable', 'integer'],
-            'nombre'  => ['required', 'string', 'max:120'],
-            'apellido'=> ['required', 'string', 'max:120'],
-            'email'   => ['required', 'email', 'max:255', Rule::unique('empleados', 'email')->ignore($empleado->id)],
-            'telefono'=> ['nullable', 'string', 'max:30'],
+        $this->normalizeServiciosInput($request);
 
-            // 👇 NO obligatorios (como pediste)
-            'informacion_legal' => ['nullable', 'string'],
-            'puesto'            => ['nullable', 'string', 'max:120'],
-            'departamento'      => ['nullable', 'string', 'max:120'],
-
-            'fecha_contratacion' => ['nullable', 'date'],
-            'estatus' => ['nullable', Rule::in(['activo', 'inactivo'])],
-
-            // servicios seleccionados para pivot
-            'servicios'   => ['nullable', 'array'],
-            'servicios.*' => ['integer', 'exists:servicios,id_servicio'],
-        ]);
+        $data = $this->validateEmpleado($request, $empleado);
 
         $serviciosIds = $data['servicios'] ?? [];
         unset($data['servicios']);
 
-        $empleado->update($data);
+        return DB::transaction(function () use ($empleado, $data, $serviciosIds) {
+            $empleado->update($data);
 
-        // ✅ SIEMPRE sync (si viene vacío, elimina pivots anteriores)
-        $empleado->servicios()->sync($serviciosIds);
+            // ✅ sincroniza pivots (si viene vacío, deja 0 servicios)
+            $empleado->servicios()->sync($serviciosIds);
 
-        return redirect()
-            ->route('empleados.index')
-            ->with('success', 'Empleado actualizado y servicios sincronizados.');
+            return redirect()
+                ->route('admin.empleados.index')
+                ->with('success', 'Empleado actualizado y servicios sincronizados.');
+        });
     }
 
     public function destroy(Empleado $empleado)
     {
-        // limpia pivot antes de borrar (opcional pero recomendable)
-        $empleado->servicios()->detach();
-        $empleado->delete();
+        return DB::transaction(function () use ($empleado) {
+            $empleado->servicios()->detach();
+            $empleado->delete();
 
-        return redirect()
-            ->route('empleados.index')
-            ->with('success', 'Empleado eliminado.');
+            return redirect()
+                ->route('admin.empleados.index')
+                ->with('success', 'Empleado eliminado.');
+        });
+    }
+
+    private function validateEmpleado(Request $request, ?Empleado $empleado): array
+    {
+        return $request->validate([
+            'user_id'  => ['nullable', 'integer'],
+            'nombre'   => ['required', 'string', 'max:120'],
+            'apellido' => ['required', 'string', 'max:120'],
+            'email'    => [
+                'required',
+                'email',
+                'max:255',
+                $empleado
+                    ? Rule::unique('empleados', 'email')->ignore($empleado->id)
+                    : Rule::unique('empleados', 'email'),
+            ],
+            'telefono' => ['nullable', 'string', 'max:30'],
+
+            'fecha_contratacion' => ['nullable', 'date'],
+            'estatus'            => ['nullable', Rule::in(['activo', 'inactivo'])],
+
+            // ✅ Servicios (lista)
+            'servicios'          => ['nullable', 'array'],
+            'servicios.*'        => ['integer', 'distinct', 'exists:servicios,id_servicio'],
+        ]);
+    }
+
+    /**
+     * Normaliza "servicios" por si llega como:
+     * - array: [1,2,3]
+     * - JSON string: "[1,2,3]"
+     * - CSV string: "1,2,3"
+     */
+    private function normalizeServiciosInput(Request $request): void
+    {
+        if (!$request->has('servicios')) return;
+
+        $raw = $request->input('servicios');
+
+        if (is_array($raw)) {
+            $request->merge(['servicios' => $this->sanitizeServiciosArray($raw)]);
+            return;
+        }
+
+        if (is_string($raw)) {
+            $raw = trim($raw);
+
+            if (str_starts_with($raw, '[')) {
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded)) {
+                    $request->merge(['servicios' => $this->sanitizeServiciosArray($decoded)]);
+                    return;
+                }
+            }
+
+            $parts = array_map('trim', explode(',', $raw));
+            $request->merge(['servicios' => $this->sanitizeServiciosArray($parts)]);
+        }
+    }
+
+    private function sanitizeServiciosArray(array $arr): array
+    {
+        $arr = array_map(fn ($v) => (int) $v, $arr);
+        return array_values(array_unique(array_filter($arr, fn ($v) => $v > 0)));
     }
 }
