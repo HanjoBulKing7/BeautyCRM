@@ -42,7 +42,7 @@
     <div class="bb-glass-card">
         <div class="overflow-x-auto">
             <table class="min-w-full">
-                <thead class="bb-thead">
+                <thead class="bb-thead bg-gray-50 dark:bg-gray-800">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Producto</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Categoría</th>

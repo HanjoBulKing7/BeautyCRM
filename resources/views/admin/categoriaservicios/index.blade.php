@@ -24,13 +24,10 @@
 
         <div class="flex items-center gap-2">
             <a href="{{ route('admin.categoriaservicios.create') }}"
-                data-bb-open="modal"
-                data-bb-title="Nueva Categoría"
-                data-bb-url="{{ route('admin.categoriaservicios.create') }}?modal=1"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
-                border border-[rgba(201,162,74,.35)]
-                bg-[rgba(201,162,74,.12)] hover:bg-[rgba(201,162,74,.18)]
-                text-gray-900 font-semibold shadow-sm hover:shadow transition">
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                      border border-[rgba(201,162,74,.35)]
+                      bg-[rgba(201,162,74,.12)] hover:bg-[rgba(201,162,74,.18)]
+                      text-gray-900 font-semibold shadow-sm hover:shadow transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -55,11 +52,11 @@
     <div class="bb-glass-card">
         <div class="overflow-x-auto">
             <table class="min-w-full">
-                <thead class="bb-thead">
+                <thead class="bb-thead bg-gray-50 dark:bg-gray-800">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Categoría</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Estado</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold dark:text-gray-300 uppercase tracking-wider">Categoría</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold dark:text-gray-300 uppercase tracking-wider">Estado</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold dark:text-gray-300 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
 
@@ -78,15 +75,15 @@
                                             >
                                         </div>
                                     @else
-                                        <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
+                                        <span class="bb-icon-pill inline-flex items-center justify-center shrink-0"
+                                            style="width:34px;height:34px;border-radius:12px; line-height:0;">
                                             <!-- icon: tag -->
-                                            <svg class="w-4 h-4 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4 bb-gold block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M7 7h.01M3 11l8.586 8.586a2 2 0 002.828 0L21 13.414a2 2 0 000-2.828L12.414 2H6a2 2 0 00-2 2v6z" />
+                                                    d="M7 7h.01M3 11l8.586 8.586a2 2 0 002.828 0L21 13.414a2 2 0 000-2.828L12.414 2H6a2 2 0 00-2 2v6z" />
                                             </svg>
                                         </span>
                                     @endif
-
                                     <div>
                                         <div class="text-sm font-semibold text-gray-900 dark:text-white">
                                             {{ $categoria->nombre ?? 'Categoría' }}
@@ -108,7 +105,7 @@
 
                                     <!-- Ver -->
                                     <a href="{{ route('admin.categoriaservicios.show', $categoria->id_categoria) }}"
-                                       class="bb-action text-gray-700 dark:text-gray-200"
+                                       class="bb-action text-gray-700 dark:text-gray-200 inline-flex leading-none"
                                        title="Ver">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -120,7 +117,7 @@
 
                                     <!-- Editar -->
                                     <a href="{{ route('admin.categoriaservicios.edit', $categoria->id_categoria) }}"
-                                       class="bb-action bb-action-edit"
+                                       class="bb-action bb-action-edit inline-flex leading-none"
                                        title="Editar">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -130,11 +127,12 @@
 
                                     <!-- Eliminar -->
                                     <form action="{{ route('admin.categoriaservicios.destroy', $categoria->id_categoria) }}" method="POST"
+                                          class="m-0 p-0 inline-flex"
                                           onsubmit="return confirm('¿Eliminar esta categoría?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                                class="bb-action bb-action-del"
+                                                class="bb-action bb-action-del inline-flex leading-none"
                                                 title="Eliminar">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

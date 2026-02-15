@@ -2,7 +2,6 @@
 @section('title','Crear Empleado - Salón de Belleza')
 
 @section('content')
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
     <!-- Header (antes rosa) => Glass dorado estilo dashboard -->
     <div
@@ -74,5 +73,4 @@
             </div>
         </form>
     </div>
-</div>
 @endsection

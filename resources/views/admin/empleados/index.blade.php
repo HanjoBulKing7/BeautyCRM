@@ -34,9 +34,8 @@
     </div>
 
     <div class="flex items-center gap-2">
+      <!-- ✅ SIN MODAL -->
       <a href="{{ route('admin.empleados.create') }}"
-        data-bb-open="modal"
-        data-bb-title="Nuevo Empleado"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
                 border border-[rgba(201,162,74,.35)]
                 bg-[rgba(201,162,74,.12)] hover:bg-[rgba(201,162,74,.18)]
@@ -56,7 +55,7 @@
     <div class="bb-glass-card">
       <div class="overflow-x-auto">
         <table class="min-w-full">
-          <thead class="bb-thead">
+          <thead class="bb-thead bg-gray-50 dark:bg-gray-800">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                 Empleado
@@ -108,41 +107,37 @@
                   </div>
                 </td>
 
+                <td class="px-4 py-3 whitespace-nowrap align-middle" style="width:96px;">
+                  <div class="flex items-center justify-end gap-2">
 
+                    <!-- ✅ Editar (SIN MODAL) -->
+                    <a href="{{ route('admin.empleados.edit', $empleado->id) }}"
+                      class="bb-action bb-action-icon bb-action-ink"
+                      title="Editar">
+                        <svg class="w-4 h-4 block -translate-y-[0.5px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l9.586-9.586z"/>
+                        </svg>
+                    </a>
 
-            <td class="px-4 py-3 whitespace-nowrap align-middle" style="width:96px;">
-              <div class="flex items-center justify-end gap-2">
+                    <!-- Eliminar -->
+                    <form class="inline-flex m-0" action="{{ route('admin.empleados.destroy', $empleado->id) }}" method="POST"
+                          onsubmit="return confirm('¿Eliminar empleado?');">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit"
+                              class="inline-flex items-center justify-center w-9 h-9 rounded-xl
+                                    bg-white/70 hover:bg-white"
+                              title="Eliminar">
+                        <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m2 0V5a2 2 0 012-2h2a2 2 0 012 2v2"/>
+                        </svg>
+                      </button>
+                    </form>
 
-                <!-- Editar -->
-              <a href="{{ route('admin.empleados.edit', $empleado->id) }}"
-                data-bb-open="modal"
-                data-bb-title="Editar Empleado"
-                class="bb-action bb-action-icon bb-action-ink"
-                title="Editar">
-                  <svg class="w-4 h-4 block -translate-y-[0.5px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l9.586-9.586z"/>
-                  </svg>
-                </a>
-
-                <!-- Eliminar -->
-                <form class="inline-flex m-0" action="{{ route('admin.empleados.destroy', $empleado->id) }}" method="POST"
-                      onsubmit="return confirm('¿Eliminar empleado?');">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit"
-                          class="inline-flex items-center justify-center w-9 h-9 rounded-xl
-                                bg-white/70 hover:bg-white"
-                          title="Eliminar">
-                    <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m2 0V5a2 2 0 012-2h2a2 2 0 012 2v2"/>
-                    </svg>
-                  </button>
-                </form>
-
-              </div>
-            </td>
+                  </div>
+                </td>
 
               </tr>
             @empty
@@ -175,7 +170,7 @@
   </div>
 
   <!-- ===================== -->
-  <!-- ✅ MÓVIL: CARDS (misma lógica que Ventas, pero con tus botones bb-action) -->
+  <!-- ✅ MÓVIL: CARDS -->
   <!-- ===================== -->
   <div class="empleados-cards space-y-3 md:hidden">
     @forelse($empleados as $empleado)
@@ -206,12 +201,9 @@
 
           <div class="flex flex-col items-end gap-2">
             <div class="flex items-center gap-2">
-             
 
-              <!-- Editar -->
+              <!-- ✅ Editar (SIN MODAL) -->
               <a href="{{ route('admin.empleados.edit', $empleado->id) }}"
-                data-bb-open="modal"
-                data-bb-title="Editar Empleado"
                 class="bb-action bb-action-icon bb-action-ink"
                 title="Editar">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,6 +228,7 @@
                   </svg>
                 </button>
               </form>
+
             </div>
           </div>
         </div>

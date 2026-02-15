@@ -2,8 +2,6 @@
 @section('title','Editar Categoría - Salón de Belleza')
 
 @section('content')
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-
     <!-- Header => Glass dorado estilo dashboard -->
     <div
         class="p-6"
@@ -69,5 +67,4 @@
             </div>
         </form>
     </div>
-</div>
 @endsection

@@ -49,73 +49,74 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <!-- Información -->
-            <div class="space-y-4">
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                        <i class="fas fa-circle-info" style="color: rgba(201,162,74,.92)"></i>
-                        Información Básica
-                    </h3>
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-circle-info" style="color: rgba(201,162,74,.92)"></i>
+                    Información Básica
+                </h3>
 
-                    <div class="space-y-2 text-gray-700">
+                <div class="space-y-2 text-gray-700">
 
-                        <p class="flex items-center gap-2">
-                            <span class="font-medium text-gray-800">Estado:</span>
-                            <span class="px-2.5 py-1 text-xs font-semibold rounded-full
-                                {{ ($categoria->estado ?? 'activo') == 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ ucfirst($categoria->estado ?? 'activo') }}
-                            </span>
-                        </p>
+                    <p class="flex items-center gap-2">
+                        <span class="font-medium text-gray-800">Estado:</span>
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                            {{ ($categoria->estado ?? 'activo') == 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ ucfirst($categoria->estado ?? 'activo') }}
+                        </span>
+                    </p>
 
-                        <p>
-                            <span class="font-medium text-gray-800">Servicios asociados:</span>
-                            {{ $categoria->servicios()->count() }}
-                        </p>
-                    </div>
+                    <p>
+                        <span class="font-medium text-gray-800">Servicios asociados:</span>
+                        {{ $categoria->servicios()->count() }}
+                    </p>
                 </div>
             </div>
 
+            <!-- (Opcional) Espacio para futuras métricas/info -->
+            <div class="hidden md:block"></div>
 
         </div>
 
-        <!-- Botones de acción (igual que servicios) -->
+        <!-- Botones de acción (alineados y consistentes) -->
         <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
 
-            <!-- Editar (dorado tipo dashboard) -->
+            <!-- Editar -->
             <a href="{{ route('admin.categoriaservicios.edit', $categoria->id_categoria) }}"
-               class="px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+               class="w-full sm:w-auto px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 transition leading-none"
                style="
                     background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
                     border: 1px solid rgba(201,162,74,.35);
                     box-shadow: 0 10px 22px rgba(201,162,74,.18);
                     color: #111827;
-               "
-               onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
-               onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
-            >
-                <i class="fas fa-edit" style="color: rgba(17,24,39,.90)"></i>
+               ">
+                <i class="fas fa-edit leading-none" style="color: rgba(17,24,39,.90)"></i>
                 Editar Categoría
             </a>
 
-            <!-- Eliminar -->
-            <form action="{{ route('admin.categoriaservicios.destroy', $categoria->id_categoria) }}" method="POST" class="inline">
+            <!-- Eliminar (MISMO alto/centrado que los otros) -->
+            <form action="{{ route('admin.categoriaservicios.destroy', $categoria->id_categoria) }}"
+                  method="POST"
+                  class="m-0 p-0 w-full sm:w-auto"
+                  onsubmit="return confirm('¿Estás seguro de eliminar esta categoría?')">
                 @csrf
                 @method('DELETE')
+
                 <button type="submit"
-                        class="px-6 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold
-                               flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
-                        onclick="return confirm('¿Estás seguro de eliminar esta categoría?')">
-                    <i class="fas fa-trash"></i>
+                        class="w-full sm:w-auto px-6 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold
+                               inline-flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md leading-none">
+                    <i class="fas fa-trash leading-none"></i>
                     Eliminar
                 </button>
             </form>
 
             <!-- Volver -->
             <a href="{{ route('admin.categoriaservicios.index') }}"
-               class="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
-                      flex items-center justify-center gap-2 transition">
-                <i class="fas fa-arrow-left" style="color: rgba(17,24,39,.70)"></i>
+               class="w-full sm:w-auto px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
+                      inline-flex items-center justify-center gap-2 transition leading-none">
+                <i class="fas fa-arrow-left leading-none" style="color: rgba(17,24,39,.70)"></i>
                 Volver
             </a>
+
         </div>
 
     </div>
