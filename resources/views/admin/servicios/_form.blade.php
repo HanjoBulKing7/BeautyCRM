@@ -81,7 +81,7 @@
         >
     </div>
 
-    <!-- Fila 3: Descuento y Estado -->
+    <!-- Fila 3: Descuento y Estado 
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
             <i class="fas fa-percent mr-2" style="color: rgba(201,162,74,.92)"></i>
@@ -98,6 +98,7 @@
             placeholder="0.00"
         >
     </div>
+    -->
 
     @if(!empty($showEstado))
         <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
@@ -171,11 +172,15 @@
         </div>
     </div>
 
-    {{-- =========================
-    HORARIOS DEL SERVICIO
+ {{-- =========================
+    HORARIOS DEL SERVICIO (GRID 30 min)
     ========================= --}}
     @php
-    $dias = [
+    $gridStart = '07:00';
+    $gridEnd   = '21:00';
+    $slotMin   = 30;
+
+    $daysMap = [
         0 => 'Domingo',
         1 => 'Lunes',
         2 => 'Martes',
@@ -185,13 +190,22 @@
         6 => 'Sábado',
     ];
 
-    // Prefill para edit
-    $horariosPrefill = [];
+    // Columnas de tiempo cada 30 min
+    $times = [];
+    $t = \Carbon\Carbon::createFromFormat('H:i', $gridStart);
+    $end = \Carbon\Carbon::createFromFormat('H:i', $gridEnd);
+    while ($t->lt($end)) {
+        $times[] = $t->format('H:i');
+        $t->addMinutes($slotMin);
+    }
+
+    // Prefill para edit desde servicio_horarios
+    $existingRanges = [];
     if(isset($servicio) && $servicio && $servicio->exists) {
         foreach(($servicio->horarios ?? []) as $h) {
-        $horariosPrefill[$h->dia_semana][] = [
-            'hora_inicio' => substr((string)$h->hora_inicio, 0, 5),
-            'hora_fin'    => substr((string)$h->hora_fin, 0, 5),
+        $existingRanges[$h->dia_semana][] = [
+            'inicio' => substr((string)$h->hora_inicio, 0, 5),
+            'fin'    => substr((string)$h->hora_fin, 0, 5),
         ];
         }
     }
@@ -205,183 +219,299 @@
             Horarios del Servicio
         </label>
         <p class="text-xs text-gray-500 mt-1">
-            Agrega uno o más rangos por día (ej. 10:00–14:00 y 16:00–19:00).
+            Selecciona bloques de <b>30 min</b>. Tip: clic y arrastra para pintar.
         </p>
         </div>
-    </div>
 
-    <div class="mt-4 space-y-4" id="bb-horarios-wrapper">
-        @foreach($dias as $dia => $diaLabel)
-        @php
-            $rows = old("horarios.$dia") ?? ($horariosPrefill[$dia] ?? []);
-            $rows = is_array($rows) ? $rows : [];
-        @endphp
-
-        <div class="rounded-lg border border-gray-200 p-3">
-            <div class="flex items-center justify-between gap-3">
-            <div class="font-medium text-gray-800">{{ $diaLabel }}</div>
-
-            <button
-                type="button"
-                class="text-sm px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50"
-                data-add-horario
-                data-dia="{{ $dia }}"
-            >
-                + Agregar rango
-            </button>
-            </div>
-
-            <div class="mt-3 space-y-2" data-dia-wrap="{{ $dia }}">
-            @foreach($rows as $i => $r)
-                @php
-                $hi = data_get($r, 'hora_inicio', '');
-                $hf = data_get($r, 'hora_fin', '');
-                @endphp
-
-                <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-gray-50 rounded-lg p-2" data-horario-row>
-                <div class="flex gap-2 items-center w-full sm:w-auto">
-                    <label class="text-xs text-gray-600 w-16">Inicio</label>
-                    <input type="time"
-                        name="horarios[{{ $dia }}][{{ $i }}][hora_inicio]"
-                        value="{{ $hi }}"
-                        class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
-                </div>
-
-                <div class="flex gap-2 items-center w-full sm:w-auto">
-                    <label class="text-xs text-gray-600 w-16">Fin</label>
-                    <input type="time"
-                        name="horarios[{{ $dia }}][{{ $i }}][hora_fin]"
-                        value="{{ $hf }}"
-                        class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
-                </div>
-
-                <button type="button"
-                        class="ml-auto text-xs px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
-                        data-remove-horario>
-                    Quitar
-                </button>
-                </div>
-            @endforeach
-            </div>
+        <div class="flex gap-2">
+        <button type="button" id="bbGridClearAll" class="text-sm px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50">
+            Limpiar
+        </button>
+        <button type="button" id="bbGridCopyMonday" class="text-sm px toggle px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50">
+            Copiar Lunes
+        </button>
         </div>
-        @endforeach
     </div>
 
-    @error('horarios')
-    <div class="mt-3 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm space-y-1">
-        @if(is_array($message))
-        @foreach($message as $m)
-            <div>• {{ $m }}</div>
-        @endforeach
-        @else
-        <div>• {{ $message }}</div>
-        @endif
+    {{-- ✅ JSON (para rehidratar/depurar) --}}
+    <input type="hidden" name="horarios_grid" id="horarios_grid" value="{{ old('horarios_grid') }}">
+
+    {{-- ✅ inputs reales para el backend (horarios[d][i][hora_inicio|hora_fin]) --}}
+    <div id="horariosFields" class="hidden"></div>
+
+
+    <div id="bbScheduleGrid"
+        class="mt-4 overflow-auto border border-gray-200 rounded-xl bg-white"
+        data-slot-minutes="{{ $slotMin }}"
+        data-start="{{ $gridStart }}"
+        data-end="{{ $gridEnd }}"
+        data-existing='@json($existingRanges)'>
+        <table class="min-w-max w-full border-separate" style="border-spacing:0;">
+        <thead>
+            <tr>
+            <th class="sticky top-0 left-0 z-20 bg-gray-50 text-xs text-gray-700 border-b border-r border-gray-200 p-2 text-left min-w-[130px]">
+                Día
+            </th>
+            @foreach($times as $time)
+                <th class="sticky top-0 z-10 bg-gray-50 text-xs text-gray-700 border-b border-r border-gray-200 p-2">
+                {{ $time }}
+                </th>
+            @endforeach
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($daysMap as $d => $label)
+            <tr>
+                <th class="sticky left-0 z-10 bg-white text-xs text-gray-700 border-b border-r border-gray-200 p-2 text-left min-w-[130px]">
+                {{ $label }}
+                </th>
+                @foreach($times as $time)
+                <td class="border-b border-r border-gray-200 p-2 text-center">
+                    <button type="button"
+                            class="bb-slot"
+                            data-day="{{ $d }}"
+                            data-time="{{ $time }}"
+                            aria-pressed="false"></button>
+                </td>
+                @endforeach
+            </tr>
+            @endforeach
+        </tbody>
+        </table>
     </div>
+
+    {{-- errores por si backend valida horarios_grid o horarios --}}
+    @error('horarios_grid')
+        <p class="text-red-500 text-sm mt-3">{{ $message }}</p>
     @enderror
-
+    @error('horarios')
+        <p class="text-red-500 text-sm mt-3">{{ is_array($message) ? implode(', ', $message) : $message }}</p>
+    @enderror
     </div>
 
+    <style>
+    :root { --bb-gold:#C9A24A; --bb-border:#E5E7EB; }
+    .bb-slot{
+        width:18px; height:18px; border-radius:6px;
+        border:1px solid var(--bb-border);
+        background:#fff; cursor:pointer; display:inline-block;
+    }
+    .bb-slot.is-on{
+        background:var(--bb-gold);
+        border-color:var(--bb-gold);
+        box-shadow:0 0 0 2px rgba(201,162,74,.20) inset;
+    }
+    </style>
 
 </div>
-<!--
+
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("SCRIPT FORM SERVICIOS CARGADO ✅");
+document.addEventListener('DOMContentLoaded', () => {
+  const root = document.getElementById('bbScheduleGrid');
+  if (!root) return;
 
-    const input = document.getElementById("imagenInput");
-    const preview = document.getElementById("imagenPreview");
+  const hiddenGrid = document.getElementById('horarios_grid');
+  const hiddenFieldsWrap = document.getElementById('horariosFields');
 
-    // Si vienes de EDIT y ya hay imagen, muéstrala
-    if (preview && preview.getAttribute("src")) {
-        preview.classList.remove("hidden");
-    }
+  const slotMin = parseInt(root.dataset.slotMinutes || '30', 10);
+  const start = root.dataset.start || '07:00';
+  const end   = root.dataset.end   || '21:00';
 
-    const input = document.getElementById("imagenInput");
-    const preview = document.getElementById("imagenPreview");
+  let existing = {};
+  try { existing = JSON.parse(root.dataset.existing || '{}') || {}; } catch(e){ existing = {}; }
 
-    if (preview && preview.getAttribute("src")) {
-    preview.classList.remove("hidden");
-    }
+  const slots = Array.from(root.querySelectorAll('.bb-slot'));
 
-    if (input) {
-    input.addEventListener("change", (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
+  const setOn = (btn, on) => {
+    btn.classList.toggle('is-on', !!on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  };
+  const isOn = (btn) => btn.classList.contains('is-on');
 
-        if (!file.type.startsWith("image/")) {
-        alert("Selecciona un archivo de imagen válido.");
-        input.value = "";
-        return;
-        }
+  const toMinutes = (hhmm) => {
+    const [h,m] = String(hhmm).slice(0,5).split(':').map(Number);
+    return h*60 + m;
+  };
+  const fromMinutes = (mins) => {
+    const h = String(Math.floor(mins/60)).padStart(2,'0');
+    const m = String(mins%60).padStart(2,'0');
+    return `${h}:${m}`;
+  };
 
-        const url = URL.createObjectURL(file);
-        preview.src = url;
-        preview.classList.remove("hidden");
+  const clearAll = () => {
+    slots.forEach(b => setOn(b,false));
+    syncHiddenAndFields();
+  };
+
+  // ===== 1) Prefill desde DB (existing ranges) =====
+  Object.keys(existing || {}).forEach(day => {
+    (existing[day] || []).forEach(r => {
+      const ini = (r.inicio || '').slice(0,5);
+      const fin = (r.fin || '').slice(0,5);
+      if (!ini || !fin) return;
+
+      let cur = toMinutes(ini);
+      const stop = toMinutes(fin);
+      while (cur < stop) {
+        const t = fromMinutes(cur);
+        const btn = root.querySelector(`.bb-slot[data-day="${day}"][data-time="${t}"]`);
+        if (btn) setOn(btn, true);
+        cur += slotMin;
+      }
     });
-    }
-// 👇 aquí YA NO hay return y el código de horarios sí corre
+  });
 
+  // ===== 2) Si viene old('horarios_grid'), rehidrata selección (override) =====
+  const tryHydrateFromHiddenGrid = () => {
+    const raw = (hiddenGrid?.value || '').trim();
+    if (!raw) return;
+    try {
+      const obj = JSON.parse(raw);
+      if (!obj || !obj.days) return;
 
-        // ==========================
-    // Horarios del servicio (UI)
-    // ==========================
-    const horariosWrapper = document.getElementById('bb-horarios-wrapper');
-    if (horariosWrapper) {
+      // limpiamos y repintamos
+      slots.forEach(b => setOn(b,false));
 
-        const nextIndexForDay = (day) => {
-            const dayWrap = horariosWrapper.querySelector(`[data-dia-wrap="${day}"]`);
-            const rows = dayWrap ? dayWrap.querySelectorAll('[data-horario-row]') : [];
-            return rows.length;
-        };
-
-        horariosWrapper.addEventListener('click', (e) => {
-
-            const addBtn = e.target.closest('[data-add-horario]');
-            if (addBtn) {
-                const day = addBtn.getAttribute('data-dia');
-                const dayWrap = horariosWrapper.querySelector(`[data-dia-wrap="${day}"]`);
-                if (!dayWrap) return;
-
-                const i = nextIndexForDay(day);
-
-                const row = document.createElement('div');
-                row.className = 'flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-gray-50 rounded-lg p-2';
-                row.setAttribute('data-horario-row', '');
-
-                row.innerHTML = `
-                    <div class="flex gap-2 items-center w-full sm:w-auto">
-                        <label class="text-xs text-gray-600 w-16">Inicio</label>
-                        <input type="time"
-                               name="horarios[${day}][${i}][hora_inicio]"
-                               class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
-                    </div>
-
-                    <div class="flex gap-2 items-center w-full sm:w-auto">
-                        <label class="text-xs text-gray-600 w-16">Fin</label>
-                        <input type="time"
-                               name="horarios[${day}][${i}][hora_fin]"
-                               class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2">
-                    </div>
-
-                    <button type="button"
-                            class="ml-auto text-xs px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
-                            data-remove-horario>
-                        Quitar
-                    </button>
-                `;
-
-                dayWrap.appendChild(row);
-                return;
-            }
-
-            const removeBtn = e.target.closest('[data-remove-horario]');
-            if (removeBtn) {
-                const row = removeBtn.closest('[data-horario-row]');
-                if (row) row.remove();
-            }
+      Object.keys(obj.days).forEach(day => {
+        (obj.days[day] || []).forEach(t => {
+          const btn = root.querySelector(`.bb-slot[data-day="${day}"][data-time="${String(t).slice(0,5)}"]`);
+          if (btn) setOn(btn, true);
         });
+      });
+    } catch(e) {}
+  };
+
+  tryHydrateFromHiddenGrid();
+
+  // ===== Helpers: convertir slots -> rangos =====
+  const timesToRanges = (timesSorted) => {
+    if (!timesSorted.length) return [];
+    const mins = timesSorted.map(toMinutes).sort((a,b)=>a-b);
+
+    const ranges = [];
+    let startM = mins[0];
+    let prevM  = mins[0];
+
+    for (let i=1;i<mins.length;i++){
+      const m = mins[i];
+      if (m === prevM + slotMin) {
+        prevM = m;
+      } else {
+        ranges.push({ inicio: fromMinutes(startM), fin: fromMinutes(prevM + slotMin) });
+        startM = m;
+        prevM  = m;
+      }
+    }
+    ranges.push({ inicio: fromMinutes(startM), fin: fromMinutes(prevM + slotMin) });
+
+    return ranges;
+  };
+
+  // ===== Sync: JSON + hidden inputs horarios[...] =====
+  const syncHiddenAndFields = () => {
+    const days = {};
+    for (let d=0; d<=6; d++) days[d] = [];
+
+    slots.forEach(btn => {
+      if (!isOn(btn)) return;
+      const d = btn.dataset.day;
+      const t = btn.dataset.time;
+      days[d].push(String(t).slice(0,5));
+    });
+
+    Object.keys(days).forEach(d => {
+      const arr = Array.from(new Set(days[d]));
+      arr.sort((a,b)=>toMinutes(a)-toMinutes(b));
+      days[d] = arr;
+    });
+
+    // 1) JSON (debug / rehidratar)
+    if (hiddenGrid) {
+      hiddenGrid.value = JSON.stringify({ slot_minutes: slotMin, start, end, days });
     }
 
+    // 2) Inputs reales para backend: horarios[d][i][hora_inicio|hora_fin]
+    // IMPORTANT: siempre mandamos horarios para que en EDIT reemplace (y pueda limpiar)
+    const html = [];
+    html.push(`<input type="hidden" name="horarios[_present]" value="1">`);
+
+    Object.keys(days).forEach((d) => {
+      const ranges = timesToRanges(days[d]);
+      ranges.forEach((r, idx) => {
+        html.push(`<input type="hidden" name="horarios[${d}][${idx}][hora_inicio]" value="${r.inicio}">`);
+        html.push(`<input type="hidden" name="horarios[${d}][${idx}][hora_fin]" value="${r.fin}">`);
+      });
+    });
+
+    if (hiddenFieldsWrap) hiddenFieldsWrap.innerHTML = html.join('');
+  };
+
+  // inicial
+  syncHiddenAndFields();
+
+  // ===== Interacción (clic + arrastrar) =====
+  let down = false;
+  let paintMode = null;
+  let lastPointerToggleAt = 0;
+
+  const beginPaint = (btn) => {
+    down = true;
+    paintMode = !isOn(btn);
+    setOn(btn, paintMode);
+    lastPointerToggleAt = Date.now();
+    syncHiddenAndFields();
+  };
+
+  const paintOver = (btn) => {
+    if (!down || paintMode === null) return;
+    setOn(btn, paintMode);
+    syncHiddenAndFields();
+  };
+
+  slots.forEach(btn => {
+    btn.style.touchAction = 'none';
+
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      beginPaint(btn);
+    });
+
+    btn.addEventListener('pointerenter', () => paintOver(btn));
+
+    // Click fallback (evita doble toggle después de pointerdown)
+    btn.addEventListener('click', (e) => {
+      if (Date.now() - lastPointerToggleAt < 250) { e.preventDefault(); return; }
+      e.preventDefault();
+      setOn(btn, !isOn(btn));
+      syncHiddenAndFields();
+    });
+  });
+
+  window.addEventListener('pointerup', () => {
+    down = false;
+    paintMode = null;
+  });
+
+  // ===== Acciones =====
+  const copyMonday = () => {
+    const mondayOn = new Set(
+      slots.filter(b=>b.dataset.day==="1" && isOn(b)).map(b=>b.dataset.time)
+    );
+    if (mondayOn.size === 0) return;
+
+    for (let d=0; d<=6; d++){
+      if (d===1) continue;
+      const daySlots = slots.filter(b=>b.dataset.day===String(d));
+      const anyOn = daySlots.some(isOn);
+      if (anyOn) continue; // no pisar si ya tiene algo
+      daySlots.forEach(b => setOn(b, mondayOn.has(b.dataset.time)));
+    }
+    syncHiddenAndFields();
+  };
+
+  document.getElementById('bbGridClearAll')?.addEventListener('click', clearAll);
+  document.getElementById('bbGridCopyMonday')?.addEventListener('click', copyMonday);
+
+  root.closest('form')?.addEventListener('submit', syncHiddenAndFields);
 });
 </script>
--->

@@ -1,6 +1,6 @@
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
-    <!-- Header (antes rosa) => Glass dorado estilo dashboard -->
+    <!-- Header -->
     <div
         class="p-6"
         style="
@@ -76,12 +76,7 @@
                             </span>
                         </p>
 
-                        @if($servicio->descuento > 0)
-                            <p>
-                                <span class="font-medium text-gray-800">Descuento:</span>
-                                ${{ number_format($servicio->descuento, 2) }}
-                            </p>
-                        @endif
+                        {{-- ✅ Descuento removido de UI --}}
                     </div>
                 </div>
             </div>
@@ -130,7 +125,6 @@
                 ->groupBy('dia_semana');
 
             $diasConHorario = $horariosPorDia->keys()->sort()->values();
-
             $fmt = fn($t) => $t ? \Carbon\Carbon::parse($t)->format('H:i') : '';
         @endphp
 
@@ -191,42 +185,39 @@
         <!-- Botones de acción -->
         <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
 
-        <!-- Editar -->
-        <a
-            href="{{ route('admin.servicios.edit', $servicio->id_servicio) }}"
-            data-bb-modal="1"
-            data-bb-title="Editar Servicio"
-            class="h-12 px-6 rounded-lg font-semibold inline-flex items-center justify-center gap-2 transition"
-            style="
-            background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
-            border: 1px solid rgba(201,162,74,.35);
-            box-shadow: 0 10px 22px rgba(201,162,74,.18);
-            color: #111827;
-            "
-            onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
-            onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
-        >
-            <i class="fas fa-edit" style="color: rgba(17,24,39,.90)"></i>
-            Editar Servicio
-        </a>
+            <!-- Editar (NORMAL, sin modal) -->
+            <a
+                href="{{ route('admin.servicios.edit', $servicio->id_servicio) }}"
+                class="h-12 px-6 rounded-lg font-semibold inline-flex items-center justify-center gap-2 transition"
+                style="
+                background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
+                border: 1px solid rgba(201,162,74,.35);
+                box-shadow: 0 10px 22px rgba(201,162,74,.18);
+                color: #111827;
+                "
+                onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
+                onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
+            >
+                <i class="fas fa-edit" style="color: rgba(17,24,39,.90)"></i>
+                Editar Servicio
+            </a>
 
-        <!-- Eliminar -->
-        <form action="{{ route('admin.servicios.destroy', $servicio->id_servicio) }}"
-                method="POST"
-                class="m-0 inline-flex">
-            @csrf
-            @method('DELETE')
+            <!-- Eliminar -->
+            <form action="{{ route('admin.servicios.destroy', $servicio->id_servicio) }}"
+                  method="POST"
+                  class="m-0 inline-flex">
+                @csrf
+                @method('DELETE')
 
-            <button type="submit"
-            class="h-12 px-6 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold
-                    inline-flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
-            onclick="return confirm('¿Estás seguro de eliminar este servicio?')">
-            <i class="fas fa-trash"></i>
-            Eliminar
-            </button>
-        </form>
+                <button type="submit"
+                    class="h-12 px-6 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold
+                           inline-flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
+                    onclick="return confirm('¿Estás seguro de eliminar este servicio?')">
+                    <i class="fas fa-trash"></i>
+                    Eliminar
+                </button>
+            </form>
         </div>
-
 
     </div>
 </div>

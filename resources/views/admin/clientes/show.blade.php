@@ -7,17 +7,7 @@
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <span
-                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border"
-                    style="
-                        background: linear-gradient(135deg, rgba(201,162,74,.18), rgba(255,255,255,.75));
-                        border-color: rgba(201,162,74,.22);
-                        box-shadow: 0 10px 22px rgba(201,162,74,.12);
-                        color: rgba(17,24,39,.90);
-                    "
-                >
-                    <i class="fas fa-user"></i>
-                </span>
+                <i class="fas fa-user text-base" style="color: rgba(201,162,74,.92)"></i>
                 {{ $cliente->nombre ?? 'Cliente' }}
             </h1>
             <p class="text-gray-600 mt-1">
@@ -49,7 +39,7 @@
                 Volver
             </a>
             @endif
-
+            <!--
             <a href="{{ route('admin.clientes.edit', $cliente->id) }}"
             data-bb-open="modal"
             data-bb-title="Editar Cliente"
@@ -67,6 +57,7 @@
             <i class="fas fa-pen" style="color: rgba(17,24,39,.90)"></i>
             Editar
             </a>
+            -->
         </div>
     </div>
 
@@ -178,20 +169,6 @@
                             bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
                             shadow-sm hover:shadow transition";
                 @endphp
-
-                @if(request('modal'))
-                <button type="button"
-                        onclick="document.getElementById('bb-modal-close')?.click()"
-                        class="{{ $bbListBtn }}">
-                    <i class="fas fa-list" style="color: rgba(17,24,39,.70)"></i>
-                    Volver al listado
-                </button>
-                @else
-                <a href="{{ route('admin.clientes.index') }}" class="{{ $bbListBtn }}">
-                    <i class="fas fa-list" style="color: rgba(17,24,39,.70)"></i>
-                    Volver al listado
-                </a>
-                @endif
             </div>
 
         </div>

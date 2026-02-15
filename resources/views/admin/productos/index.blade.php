@@ -16,10 +16,13 @@
             </h1>
         </div>
 
-        <a href="{{ route('admin.productos.create') }}" class="bb-btn-gold">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
+        {{-- ✅ Botón consistente (1 línea) --}}
+        <a href="{{ route('admin.productos.create') }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                  border border-[rgba(201,162,74,.35)]
+                  bg-[rgba(201,162,74,.12)] hover:bg-[rgba(201,162,74,.18)]
+                  text-gray-900 font-semibold shadow-sm hover:shadow transition">
+            <i class="fas fa-plus text-sm leading-none"></i>
             Nuevo Producto
         </a>
     </div>
@@ -66,8 +69,8 @@
                                             >
                                         </div>
                                     @else
-                                        <span class="bb-icon-pill" style="width:34px;height:34px;border-radius:12px;">
-                                            <i class="fas fa-box" style="color: rgba(201,162,74,.92)"></i>
+                                        <span class="bb-icon-pill flex items-center justify-center" style="width:34px;height:34px;border-radius:12px;">
+                                            <i class="fas fa-box text-sm leading-none" style="color: rgba(201,162,74,.92)"></i>
                                         </span>
                                     @endif
 
@@ -106,14 +109,15 @@
                                 </span>
                             </td>
 
+                            {{-- ✅ Acciones alineadas (fix trash) --}}
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-2">
 
                                     <!-- Ver -->
                                     <a href="{{ route('admin.productos.show', $p->id) }}"
-                                       class="bb-action text-gray-700 dark:text-gray-200"
+                                       class="bb-action inline-flex items-center justify-center leading-none text-gray-700 dark:text-gray-200"
                                        title="Ver">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -123,9 +127,9 @@
 
                                     <!-- Editar -->
                                     <a href="{{ route('admin.productos.edit', $p->id) }}"
-                                       class="bb-action bb-action-edit"
+                                       class="bb-action bb-action-edit inline-flex items-center justify-center leading-none"
                                        title="Editar">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l9.586-9.586z"/>
                                         </svg>
@@ -133,11 +137,15 @@
 
                                     <!-- Eliminar -->
                                     <form action="{{ route('admin.productos.destroy', $p->id) }}" method="POST"
+                                          class="m-0 p-0 inline-flex items-center"
                                           onsubmit="return confirm('¿Eliminar este producto?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="bb-action bb-action-del" title="Eliminar">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                                        <button type="submit"
+                                                class="bb-action bb-action-del inline-flex items-center justify-center leading-none"
+                                                title="Eliminar">
+                                            <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m2 0V5a2 2 0 012-2h2a2 2 0 012 2v2"/>
                                             </svg>

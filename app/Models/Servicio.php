@@ -12,7 +12,10 @@ class Servicio extends Model
     protected $table = 'servicios';
     protected $primaryKey = 'id_servicio';
     protected $keyType = 'int';
-
+    protected $attributes = [
+        'descuento' => 0.00,
+    ];
+    
     protected $fillable = [
         'nombre_servicio',
         'descripcion',
@@ -21,14 +24,12 @@ class Servicio extends Model
         'estado',
         'imagen',
         'id_categoria',
-        'descuento',
         'caracteristicas',
     ];
 
     protected $casts = [
         'precio' => 'decimal:2',
         'duracion_minutos' => 'integer',
-        'descuento' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

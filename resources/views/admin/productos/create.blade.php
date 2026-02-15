@@ -2,8 +2,6 @@
 @section('title','Crear Producto - Salón de Belleza')
 
 @section('content')
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-
     <div class="p-6" style="background: linear-gradient(135deg, rgba(201,162,74,.14), rgba(255,255,255,.78)); border-bottom: 1px solid rgba(201,162,74,.18);">
         <div class="flex items-center gap-3">
             <div class="p-3 rounded-full border"
@@ -37,5 +35,4 @@
             </div>
         </form>
     </div>
-</div>
 @endsection

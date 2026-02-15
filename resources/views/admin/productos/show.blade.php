@@ -78,38 +78,42 @@
 
         </div>
 
-        <!-- Botones de acción (igual que servicios/categorías) -->
-        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+        <!-- Botones de acción -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-6 border-t border-gray-200">
 
             <a href="{{ route('admin.productos.edit', $producto->id) }}"
-               class="px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
-               style="background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
-                      border: 1px solid rgba(201,162,74,.35);
-                      box-shadow: 0 10px 22px rgba(201,162,74,.18);
-                      color: #111827;">
-                <i class="fas fa-edit" style="color: rgba(17,24,39,.90)"></i>
+            class="w-full sm:w-auto h-12 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+            style="background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
+                    border: 1px solid rgba(201,162,74,.35);
+                    box-shadow: 0 10px 22px rgba(201,162,74,.18);
+                    color: #111827;">
+                <i class="fas fa-edit leading-none" style="color: rgba(17,24,39,.90)"></i>
                 Editar
             </a>
 
             <form action="{{ route('admin.productos.destroy', $producto->id) }}" method="POST"
-                  onsubmit="return confirm('¿Eliminar este producto?');">
+                class="m-0 p-0 w-full sm:w-auto flex"
+                onsubmit="return confirm('¿Eliminar este producto?');">
                 @csrf
                 @method('DELETE')
+
                 <button type="submit"
-                        class="px-6 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold
-                               flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md">
-                    <i class="fas fa-trash"></i>
+                        class="w-full sm:w-auto h-12 px-6 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold
+                            inline-flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md leading-none">
+                    <i class="fas fa-trash leading-none"></i>
                     Eliminar
                 </button>
             </form>
 
             <a href="{{ route('admin.productos.index') }}"
-               class="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
-                      flex items-center justify-center gap-2 transition">
-                <i class="fas fa-arrow-left" style="color: rgba(17,24,39,.70)"></i>
+            class="w-full sm:w-auto h-12 px-6 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
+                    flex items-center justify-center gap-2 transition">
+                <i class="fas fa-arrow-left leading-none" style="color: rgba(17,24,39,.70)"></i>
                 Volver
             </a>
+
         </div>
+
 
     </div>
 </div>
