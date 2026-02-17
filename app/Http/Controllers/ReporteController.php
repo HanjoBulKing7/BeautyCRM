@@ -162,9 +162,11 @@ class ReporteController extends Controller
         }
 
         // ==========================
-        // 3) Totales "ventas" desde citas+pivot
+        // 3) Totales "ventas" para KPIs (preferir tabla ventas si existe)
         // ==========================
-        $agg = (clone $ventasBase)
+
+        // Fallback: cálculo por citas+pivot (por si no hay tabla ventas o no hay registros)
+        $aggCitas = (clone $ventasBase)
             ->selectRaw("
                 COUNT(*) as total_ventas,
                 COALESCE(SUM(GREATEST(x.subtotal - x.descuento, 0)),0) as monto_total,
@@ -172,10 +174,36 @@ class ReporteController extends Controller
             ")
             ->first();
 
-        $montoTotal     = (float) ($agg->monto_total ?? 0);
-        $totalVentas    = (int) ($agg->total_ventas ?? 0);
-        $ticketPromedio = (float) ($agg->ticket_promedio ?? 0);
+        $montoTotal     = (float) ($aggCitas->monto_total ?? 0);
+        $totalVentas    = (int)   ($aggCitas->total_ventas ?? 0);
+        $ticketPromedio = (float) ($aggCitas->ticket_promedio ?? 0);
 
+        // Fuente preferida: tabla ventas (cuadra con métodos de pago + gráfica)
+        if (Schema::hasTable('ventas')) {
+            $qVentas = DB::table('ventas as v')
+                ->whereBetween('v.fecha_venta', [$inicio, $fin]);
+
+            // Si existe estado_venta, filtramos a las pagadas (ajusta si manejas otros estados)
+            if (Schema::hasColumn('ventas', 'estado_venta')) {
+                $qVentas->whereIn('v.estado_venta', ['pagada', 'PAGADA']);
+            }
+
+            $aggVentas = $qVentas
+                ->selectRaw("
+                    COUNT(*) as total_ventas,
+                    COALESCE(SUM(v.total),0) as monto_total
+                ")
+                ->first();
+
+            $ventasCount = (int) ($aggVentas->total_ventas ?? 0);
+
+            // Si hay ventas en el rango, sobreescribimos KPIs con esta fuente
+            if ($ventasCount > 0) {
+                $totalVentas = $ventasCount;
+                $montoTotal  = (float) ($aggVentas->monto_total ?? 0);
+                $ticketPromedio = $totalVentas > 0 ? ($montoTotal / $totalVentas) : 0;
+            }
+        }
         // ==========================
         // 4) Métodos de pago (desde ventas)
         // ==========================
@@ -316,19 +344,36 @@ class ReporteController extends Controller
         }
 
         // ==========================
-        // 7) Últimas "ventas" (últimas citas completadas)
+        // 7) Últimas ventas (preferir tabla ventas)
         // ==========================
-        $ultimasVentas = (clone $ventasBase)
-            ->orderByDesc('x.fecha_cita')
-            ->orderByDesc('x.hora_cita')
-            ->limit(10)
-            ->get([
-                'x.id_cita',
-                'x.fecha_cita',
-                'x.hora_cita',
-                DB::raw("GREATEST(x.subtotal - x.descuento,0) as total"),
-                DB::raw("COALESCE(NULLIF(x.metodo_pago,''),'sin_definir') as forma_pago"),
-            ]);
+        $ultimasVentas = collect();
+
+        if (Schema::hasTable('ventas')) {
+            $ultimasVentas = DB::table('ventas as v')
+                ->whereBetween('v.fecha_venta', [$inicio, $fin])
+                ->orderByDesc('v.fecha_venta')
+                ->limit(10)
+                ->get([
+                    'v.id_cita',
+                    DB::raw('DATE(v.fecha_venta) as fecha_cita'),
+                    DB::raw('TIME(v.fecha_venta) as hora_cita'),
+                    DB::raw('COALESCE(v.total,0) as total'),
+                    DB::raw("COALESCE(NULLIF(v.forma_pago,''),'sin_definir') as forma_pago"),
+                ]);
+        } else {
+            // Fallback si no existe ventas
+            $ultimasVentas = (clone $ventasBase)
+                ->orderByDesc('x.fecha_cita')
+                ->orderByDesc('x.hora_cita')
+                ->limit(10)
+                ->get([
+                    'x.id_cita',
+                    'x.fecha_cita',
+                    'x.hora_cita',
+                    DB::raw("GREATEST(x.subtotal - x.descuento,0) as total"),
+                    DB::raw("COALESCE(NULLIF(x.metodo_pago,''),'sin_definir') as forma_pago"),
+                ]);
+        }
 
         // Clientes nuevos (users role_id=1)
         $clientesNuevos = 0;
@@ -338,6 +383,43 @@ class ReporteController extends Controller
                 ->whereBetween('created_at', [$inicio, $fin])
                 ->count();
         }
+        // ==========================
+        // Últimos clientes (en el rango)
+        // ==========================
+        $ultimosClientes = collect();
+
+        if (Schema::hasTable('users')) {
+            $q = DB::table('users');
+
+            // Identificar clientes (tu sistema usa role_id=1)
+            if (Schema::hasColumn('users', 'role_id')) {
+                $q->where('role_id', 1);
+            } elseif (Schema::hasColumn('users', 'rol')) {
+                $q->where('rol', 'cliente');
+            }
+
+            if (Schema::hasColumn('users', 'created_at')) {
+                $q->whereBetween('created_at', [$inicio, $fin]);
+            }
+
+            // Select seguro según columnas existentes
+            $select = [];
+            $select[] = 'id';
+            if (Schema::hasColumn('users', 'email')) $select[] = 'email';
+            if (Schema::hasColumn('users', 'telefono')) $select[] = 'telefono';
+            if (Schema::hasColumn('users', 'created_at')) $select[] = 'created_at';
+
+            if (Schema::hasColumn('users', 'nombre') && Schema::hasColumn('users', 'apellido')) {
+                $select[] = DB::raw("TRIM(CONCAT(COALESCE(nombre,''),' ',COALESCE(apellido,''))) as nombre_completo");
+            } elseif (Schema::hasColumn('users', 'name')) {
+                $select[] = DB::raw("name as nombre_completo");
+            } elseif (Schema::hasColumn('users', 'nombre')) {
+                $select[] = DB::raw("nombre as nombre_completo");
+            }
+
+            $ultimosClientes = $q->orderByDesc('created_at')->limit(10)->get($select);
+        }
+
 
         return [
             'ok' => true,
@@ -353,7 +435,10 @@ class ReporteController extends Controller
             'citas' => $citas,
             'empleados' => ['top' => $topEmpleados],
             'servicios' => ['top' => $topServicios],
-            'clientes' => ['nuevos' => $clientesNuevos],
+            'clientes' => [
+                'nuevos'  => $clientesNuevos,
+                'ultimos' => $ultimosClientes,
+            ],
         ];
     }
 

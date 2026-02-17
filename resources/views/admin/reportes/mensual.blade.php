@@ -18,28 +18,8 @@
   ({{ $inicio->format('d/m') }} → {{ $fin->format('d/m') }})
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-  <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-    <p class="text-sm text-gray-500 dark:text-gray-400">Ingresos</p>
-    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $mxn(data_get($ventas,'monto_total',0)) }}</p>
-  </div>
-  <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-    <p class="text-sm text-gray-500 dark:text-gray-400">Ventas</p>
-    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ (int)data_get($ventas,'total_ventas',0) }}</p>
-  </div>
-  <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-    <p class="text-sm text-gray-500 dark:text-gray-400">Ticket Promedio</p>
-    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $mxn(data_get($ventas,'ticket_promedio',0)) }}</p>
-  </div>
-  <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-    <p class="text-sm text-gray-500 dark:text-gray-400">Citas</p>
-    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ (int)data_get($citas,'total',0) }}</p>
-  </div>
-  <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-    <p class="text-sm text-gray-500 dark:text-gray-400">Clientes nuevos</p>
-    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $clientesNuevos }}</p>
-  </div>
-</div>
+  {{-- Cards --}}
+  @include('admin.reportes.partials.cards')
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
   <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
