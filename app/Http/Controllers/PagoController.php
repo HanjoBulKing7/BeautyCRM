@@ -11,6 +11,8 @@ use App\Models\Cita;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CitaConfirmadaMail;
 
 class PagoController extends Controller
 {
@@ -67,7 +69,6 @@ class PagoController extends Controller
     //Webhook importante para producción no usar "succes"
     public function webhook(Request $request)
     {
-
         Log::info('Webhook hit', [
             'mode' => str_starts_with((string) config('services.stripe.secret'), 'sk_live_') ? 'LIVE' : 'TEST',
             'has_signature' => (bool) $request->header('Stripe-Signature'),
@@ -79,65 +80,36 @@ class PagoController extends Controller
 
         try {
             $event = Webhook::constructEvent($payload, $sigHeader, $secret);
-        } catch (SignatureVerificationException $e) {
-            Log::error('Stripe webhook firma inválida', [
-                'error' => $e->getMessage(),
-            ]);
-            return response('Firma inválida', 400);
-        } catch (\UnexpectedValueException $e) {
-            Log::error('Stripe webhook payload inválido', [
-                'error' => $e->getMessage(),
-            ]);
-            return response('Payload inválido', 400);
+        } catch (\Throwable $e) {
+            Log::error('Stripe webhook inválido', ['error' => $e->getMessage()]);
+            return response('Invalid', 400);
         }
 
-        // Solo nos interesa este evento por ahora
         if ($event->type !== 'checkout.session.completed') {
             return response('OK', 200);
         }
 
         $session = $event->data->object ?? null;
 
-        if (!$session) {
-        Log::warning('Stripe webhook sin session object', [
-            'event_id' => $event->id ?? null,
-        ]);
-        return response('OK', 200);
-        }
-
-        Log::info('Webhook session snapshot', [
-        'event_id' => $event->id ?? null,
-        'session_id' => $session->id ?? null,
-        'payment_status' => $session->payment_status ?? null,
-        'amount_total' => $session->amount_total ?? null,
-        'metadata' => (array) ($session->metadata ?? []),
-        ]);
-
-
-        if (($session->payment_status ?? null) !== 'paid') {
-            // No es error; simplemente no está pagado
-            Log::info('Stripe checkout.session.completed no pagado', [
-                'session_id'     => $session->id ?? null,
-                'payment_status' => $session->payment_status ?? null,
-            ]);
+        if (!$session || ($session->payment_status ?? null) !== 'paid') {
             return response('OK', 200);
         }
 
-        // ✅ CLAVE: si viene sin metadata (ej. stripe trigger), NO intentes guardar nada
-        $idCita = (int) (($session->metadata->id_cita ?? 0));
-
+        $idCita = (int) ($session->metadata->id_cita ?? 0);
         if (!$idCita) {
-            Log::warning('checkout.session.completed sin metadata id_cita (se ignora)', [
-                'session_id' => $session->id ?? null,
-                'event_id'   => $event->id ?? null,
-            ]);
             return response('OK', 200);
         }
 
         $total      = ((int) ($session->amount_total ?? 0)) / 100;
         $referencia = $session->payment_intent ?? $session->id;
 
+        /**
+         * ==============================
+         * 1️⃣ PERSISTENCIA (SOLO DB)
+         * ==============================
+         */
         try {
+
             DB::transaction(function () use ($idCita, $total, $referencia, $session) {
 
                 Venta::updateOrCreate(
@@ -147,40 +119,92 @@ class PagoController extends Controller
                         'fecha_venta' => now(),
                         'total' => $total,
                         'forma_pago' => 'tarjeta_credito',
-                        'estado_venta' => 'confirmada',
+                        'estado_venta' => 'pagada',
                         'metodo_pago_especifico' => 'stripe_webhook',
                         'notas' => 'Confirmado vía webhook. session_id=' . ($session->id ?? ''),
                         'comision_empleado' => 0,
                     ]
                 );
 
-                $rows = Cita::where('id_cita', $idCita)
+                Cita::where('id_cita', $idCita)
                     ->update([
-                        'estado_cita' => 'confirmada',
+                        'estado_cita' => Cita::ESTADO_CONFIRMADA,
                         'updated_at'  => now(),
                     ]);
-
-                Log::info('UPDATE cita estado_cita', [
-                    'id_cita' => $idCita,
-                    'rows' => $rows,
-                ]);
             });
 
         } catch (\Throwable $e) {
-            // Importante: loguear y NO romper el webhook con 500 en dev/trigger
-            Log::error('Error procesando webhook checkout.session.completed', [
-                'id_cita'    => $idCita,
-                'referencia' => $referencia,
-                'error'      => $e->getMessage(),
+
+            Log::error('Error DB en webhook', [
+                'id_cita' => $idCita,
+                'error'   => $e->getMessage(),
             ]);
 
-            // En producción puedes preferir 200 para evitar reintentos infinitos si es un error lógico.
-            // Para debug, puedes dejar 500 si quieres que Stripe reintente.
-            return response('Error interno', 200);
+            return response('Error DB', 200);
+        }
+
+        /**
+         * ==============================
+         * 2️⃣ ACCIONES POST-COMMIT
+         * ==============================
+         */
+
+        try {
+
+            $cita = Cita::with(['servicios','cliente','empleado'])
+                ->find($idCita);
+
+            if (!$cita) {
+                return response('OK', 200);
+            }
+
+            /**
+             * 🔹 Google Calendar (no bloqueante)
+             */
+            try {
+                if ($cita->empleado_id) {
+                    app(\App\Services\GoogleCalendarService::class)
+                        ->createEventFromCita($cita);
+                }
+            } catch (\Throwable $e) {
+                Log::error('Google Calendar error', [
+                    'id_cita' => $idCita,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
+
+            /**
+             * 🔹 Correos (no bloqueante)
+             */
+            try {
+
+                if ($cita->empleado?->email) {
+                    Mail::to($cita->empleado->email)
+                        ->send(new CitaConfirmadaMail($cita));
+                }
+
+                if ($cita->cliente?->email) {
+                    Mail::to($cita->cliente->email)
+                        ->send(new CitaConfirmadaMail($cita));
+                }
+
+            } catch (\Throwable $e) {
+                Log::error('Mail error', [
+                    'id_cita' => $idCita,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
+
+        } catch (\Throwable $e) {
+            Log::error('Post processing error', [
+                'id_cita' => $idCita,
+                'error'   => $e->getMessage(),
+            ]);
         }
 
         return response('OK', 200);
     }
+
 
 
     public function success(Request $request)

@@ -249,7 +249,7 @@ class AgendarCitaPublicController extends Controller
                 'fecha_cita'             => $request->input('fecha_cita'),
                 'hora_cita'              => $inicioGlobal->format('H:i:s'),
                 'duracion_total_minutos' => $duracionTotal,
-                'estado_cita' => 'confirmada',
+                'estado_cita' => 'pendiente',
                 'observaciones' => $request->input('observaciones'),
             ];
 

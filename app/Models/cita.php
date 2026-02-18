@@ -14,6 +14,11 @@ class Cita extends Model
 
     private const TZ = 'America/Mexico_City';
 
+    public const ESTADO_PENDIENTE = 'pendiente';
+    public const ESTADO_CONFIRMADA = 'confirmada';
+    public const ESTADO_CANCELADA = 'cancelada';
+    public const ESTADO_COMPLETADA = 'completada';
+
     protected $fillable = [
         'cliente_id',
         'empleado_id',

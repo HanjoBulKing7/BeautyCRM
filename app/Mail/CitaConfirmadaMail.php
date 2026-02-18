@@ -14,34 +14,39 @@ class CitaConfirmadaMail extends Mailable
 
     public $cita;
     public $googleEventLink;
+    public $fecha_legible;
+    public $hora;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(Cita $cita, ?string $googleEventLink = null)
     {
+        // Aseguramos relaciones necesarias
+        $cita->loadMissing(['servicios', 'cliente', 'empleado']);
+
         $this->cita = $cita;
         $this->googleEventLink = $googleEventLink;
-    }
 
-    /**
-     * Build the message.
-     */
-    public function build()
-    {
-        // Aseguramos que aunque venga como string, lo parseamos
-        $fecha = $this->cita->fecha_cita
-            ? Carbon::parse($this->cita->fecha_cita)->translatedFormat('l d \\de F Y')
+        $this->fecha_legible = $cita->fecha_cita
+            ? Carbon::parse($cita->fecha_cita)->translatedFormat('l d \d\e F Y')
             : 'Fecha no disponible';
 
-        $hora = $this->cita->hora_cita
-            ? Carbon::parse($this->cita->hora_cita)->format('H:i')
+        $this->hora = $cita->hora_cita
+            ? Carbon::parse($cita->hora_cita)->format('H:i')
             : 'Hora no disponible';
-
-        return $this->subject('[Confirmación de cita] ' . $this->cita->servicio->nombre_servicio . ' - ' . $fecha)
-            ->markdown('emails.citas.confirmada', [
-                'fecha_legible' => $fecha,
-                'hora'          => $hora,
-            ]);
     }
+
+    public function build()
+    {
+        $serviciosNombres = $this->cita->servicios
+            ->pluck('nombre_servicio')
+            ->implode(', ');
+
+        return $this->subject(
+                'Confirmación de cita - ' .
+                ($serviciosNombres ?: 'Servicio') .
+                ' - ' .
+                $this->fecha_legible
+            )
+            ->markdown('emails.confirmada');
+    }
+
 }
