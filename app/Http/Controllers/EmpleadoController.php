@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empleado;
 use App\Models\Servicio;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -35,21 +36,29 @@ class EmpleadoController extends Controller
         $this->normalizeServiciosInput($request);
 
         $data = $this->validateEmpleado($request, null);
-
         $serviciosIds = $data['servicios'] ?? [];
         unset($data['servicios']);
 
         $data['estatus'] = $data['estatus'] ?? 'activo';
 
         return DB::transaction(function () use ($data, $serviciosIds) {
-            $empleado = Empleado::create($data);
+            // 1. Crear usuario
+            $user = User::create([
+                'name' => $data['nombre'] . ' ' . $data['apellido'],
+                'email' => $data['email'],
+                'password' => bcrypt('empleado123'), // Puedes cambiar la contraseña por defecto
+                'role_id' => 2, // Asume 2 = empleado, ajusta según tu sistema
+            ]);
 
-            // ✅ crea N filas en servicio_empleado
+            // 2. Asociar el user_id al empleado
+            $data['user_id'] = $user->id;
+
+            $empleado = Empleado::create($data);
             $empleado->servicios()->sync($serviciosIds);
 
             return redirect()
                 ->route('admin.empleados.index')
-                ->with('success', 'Empleado creado y servicios asignados.');
+                ->with('success', 'Empleado y usuario creados correctamente. Contraseña inicial: empleado123');
         });
     }
 

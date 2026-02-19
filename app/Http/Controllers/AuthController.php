@@ -116,6 +116,7 @@ class AuthController extends Controller
             ->orWhere('email', $email)
             ->first();
 
+        $isNewUser = false;
         if (!$user) {
             $user = new User();
             $user->name = $googleUser->getName() ?? 'Usuario';
@@ -125,16 +126,26 @@ class AuthController extends Controller
             $user->google_id = $googleUser->getId();
             $user->email_verified_at = now();
             $user->save();
+            $isNewUser = true;
         } else {
             if (empty($user->google_id)) {
                 $user->google_id = $googleUser->getId();
             }
-
             if (empty($user->name) && $googleUser->getName()) {
                 $user->name = $googleUser->getName();
             }
-
             $user->save();
+        }
+
+        // Si es nuevo usuario y es cliente, crea también el registro en clientes
+        if ($isNewUser && $user->role_id == 2) {
+            \App\Models\Cliente::create([
+                'user_id' => $user->id,
+                'nombre' => $user->name,
+                'email' => $user->email,
+                'telefono' => null,
+                'direccion' => null,
+            ]);
         }
 
         Auth::login($user, true);
