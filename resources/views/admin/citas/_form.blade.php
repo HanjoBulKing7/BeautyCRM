@@ -21,6 +21,8 @@
                 focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]";
 
     $bbIconColor = "color: rgba(201,162,74,.92)";
+        $horaGuardada = substr((string) old('hora_cita', $cita->hora_cita ?? ''), 0, 5); // "HH:MM"
+
 @endphp
 
 <form action="{{ $action }}" method="POST" class="space-y-6">
@@ -103,7 +105,8 @@
             'categorias' => $categorias,
             'bbField' => $bbField,
             'bbIconColor' => $bbIconColor,
-        ])
+                'empleados' => $empleados,
+            ])
 
         {{-- TOTAL DURACIÓN --}}
         <div class="mt-3">
@@ -153,7 +156,26 @@
                 required
             >
                 @php
-                    $horaSelected = old('hora_cita', $cita->hora_cita ?? '');
+                    $horaRaw = old('hora_cita', $cita->hora_cita ?? '');
+                    $horaSelected = '';
+                    if ($horaRaw) {
+                        try {
+                            $horaSelected = \Carbon\Carbon::createFromFormat('H:i', $horaRaw)->format('H:i');
+                        } catch (Exception $e) {
+                            $horaSelected = $horaRaw;
+                        }
+                    }
+                    @endphp
+                    @php
+                        $horaRaw = old('hora_cita', $cita->hora_cita ?? '');
+                        $horaSelected = '';
+                        if ($horaRaw) {
+                            try {
+                                $horaSelected = \Carbon\Carbon::createFromFormat('H:i', $horaRaw)->format('H:i');
+                            } catch (Exception $e) {
+                                $horaSelected = $horaRaw;
+                            }
+                        }
                 @endphp
 
                 <option value="">Seleccionar Hora</option>
@@ -322,7 +344,7 @@
         })->values();
     @endphp
 
- <script>
+<script>
 document.addEventListener('DOMContentLoaded', function () {
 
     // Flatpickr: create = minDate today, edit = permitir fechas pasadas y set defaultDate
@@ -340,6 +362,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const serviciosWrapper = document.getElementById('servicios-wrapper');
     const btnAddServicio   = document.getElementById('btn-add-servicio');
 
+    // ✅ Hora guardada desde backend (funciona aunque DB traiga HH:MM:SS)
+    const HORA_GUARDADA = @json($horaGuardada);
     if (serviciosWrapper) {
 
         const serviciosAll = @json($serviciosForJs);
@@ -473,8 +497,6 @@ document.addEventListener('DOMContentLoaded', function () {
             row.remove();
             reindexRows();
             recalcAll();
-
-            // nota: hooks de horas viven dentro del INIT (más abajo) y este click también los dispara ahí
         });
 
         // Agregar fila (clonando la primera)
@@ -529,8 +551,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!catSel || !svcSel) continue;
 
                 const selectedId = svcSel.dataset.selected || svcSel.value || "";
+
+                // ✅ Si no viene categoría preseleccionada pero sí servicio (EDIT),
+                // inferimos la categoría a partir del servicio.
+                if (!catSel.value && selectedId) {
+                    const srv = serviciosAll.find(s => String(s.id) === String(selectedId));
+                    if (srv?.categoria) catSel.value = srv.categoria;
+                }
+
                 buildOptionsForServiceSelect(svcSel, catSel.value, selectedId);
                 svcSel.dataset.selected = selectedId;
+
+                // ✅ Si los snapshots vienen vacíos, rellenarlos desde el option
+                if (selectedId && svcSel.selectedIndex > -1) {
+                    const opt = svcSel.options[svcSel.selectedIndex];
+                    const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
+                    const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
+
+                    if (precioInp && (!precioInp.value || Number(precioInp.value) === 0)) {
+                        if (opt?.dataset?.precio != null) precioInp.value = opt.dataset.precio;
+                    }
+                    if (durInp && (!durInp.value || Number(durInp.value) === 0)) {
+                        if (opt?.dataset?.duracion != null) durInp.value = opt.dataset.duracion;
+                    }
+                }
 
                 // ✅ precargar empleados en edit (si existe data-preselect)
                 const empSel = row.querySelector('select[data-role="empleado"]');
@@ -564,28 +608,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
-            // ✅ IMPORTANTE: este endpoint EN TU BACKEND espera `servicios[]` (no `servicio_id`)
+            function ensureHoraOption(value, label) {
+                if (!horaSelect || !value) return;
+
+                const exists = Array.from(horaSelect.options).some(o => o.value === value);
+                if (!exists) {
+                    const opt = document.createElement('option');
+                    opt.value = value;
+                    opt.textContent = label || value;
+                    horaSelect.appendChild(opt);
+                }
+            }
+
+            // ✅ Backend espera: date, servicios[], empleados[]
             async function refreshHorasDisponibles() {
                 if (!horaSelect) return;
 
-                // (por ahora tomamos SOLO la PRIMER fila)
-                const row = serviciosWrapper.querySelector('.servicio-row');
-                if (!row) return;
-
-                const svcSel = row.querySelector('select[data-role="servicio"]');
-                const empSel = row.querySelector('select[data-role="empleado"]');
-                const durInp = row.querySelector('input[data-role="duracion_snapshot"]');
-
                 const date = (fechaInput?.value || '').trim();
-                const servicioId = (svcSel?.value || '').trim();
-                const empleadoId = (empSel?.value || '').trim();
-                const duracion = (durInp?.value || '').trim();
 
-                if (!date || !servicioId) {
+                // ✅ toma TODOS los servicios seleccionados (NO solo la primer fila)
+                const svcIds = Array.from(serviciosWrapper.querySelectorAll('select[data-role="servicio"]'))
+                    .map(s => (s.value || '').trim())
+                    .filter(Boolean);
+
+                // ✅ empleados seleccionados (opcional)
+                const empIds = Array.from(serviciosWrapper.querySelectorAll('select[data-role="empleado"]'))
+                    .map(e => (e.value || '').trim())
+                    .filter(Boolean);
+
+                if (!date || svcIds.length === 0) {
                     setHoraOptions([], 'Selecciona fecha y servicio');
                     horaSelect.disabled = true;
                     return;
                 }
+
+                // ✅ conserva hora previa / guardada (normalizada HH:MM)
+                const prevRaw = (horaSelect.value || HORA_GUARDADA || '').trim();
+                const prev = prevRaw ? prevRaw.slice(0, 5) : '';
 
                 horaSelect.disabled = true;
                 setHoraOptions([], 'Cargando horarios...');
@@ -593,11 +652,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 try {
                     const qs = new URLSearchParams();
                     qs.set('date', date);
-                    qs.append('servicios[]', servicioId);
-                    if (empleadoId) qs.append('empleados[]', empleadoId);
 
-                    // nota: tu backend NO usa duracion por query, la calcula desde servicios en DB,
-                    // así que no hace falta mandarla (pero no estorba si la quieres usar luego).
+                    svcIds.forEach(id => qs.append('servicios[]', id));
+                    empIds.forEach(id => qs.append('empleados[]', id));
 
                     const url = `{{ route('admin.citas.horasDisponibles') }}?` + qs.toString();
                     const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
@@ -605,24 +662,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (!Array.isArray(data) || data.length === 0) {
                         setHoraOptions([], 'Sin horas disponibles');
-                        horaSelect.disabled = true;
-                        horaSelect.value = '';
+                        horaSelect.disabled = false;
+
+                        // ✅ deja visible la hora actual aunque no haya disponibilidad
+                        if (prev) {
+                            ensureHoraOption(prev, `${prev} (hora actual)`);
+                            horaSelect.value = prev;
+                        } else {
+                            horaSelect.value = '';
+                        }
                         return;
                     }
 
-                    const prev = horaSelect.value;
-                    await Promise.resolve(); // microtick
                     setHoraOptions(data, 'Seleccionar Hora');
                     horaSelect.disabled = false;
 
-                    if (prev && data.some(x => x.value === prev)) horaSelect.value = prev;
-                    else horaSelect.value = '';
+                    // ✅ re-selecciona hora guardada si existe
+                    if (prev && data.some(x => x.value === prev)) {
+                        horaSelect.value = prev;
+                    } else if (prev) {
+                        // ✅ si no está en disponibles, igual la mostramos
+                        ensureHoraOption(prev, `${prev} (hora actual)`);
+                        horaSelect.value = prev;
+                    } else {
+                        horaSelect.value = '';
+                    }
 
                 } catch (e) {
                     console.error(e);
                     setHoraOptions([], 'Error cargando horarios');
-                    horaSelect.disabled = true;
-                    horaSelect.value = '';
+                    horaSelect.disabled = false;
+
+                    // ✅ no pierdas la hora
+                    const prevRaw = (horaSelect.value || HORA_GUARDADA || '').trim();
+                    const prev = prevRaw ? prevRaw.slice(0, 5) : '';
+                    if (prev) {
+                        ensureHoraOption(prev, `${prev} (hora actual)`);
+                        horaSelect.value = prev;
+                    }
                 }
             }
 
@@ -633,7 +710,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 fechaInput.addEventListener('change', () => setTimeout(refreshHorasDisponibles, 0));
             }
 
-            // cuando cambian categoría/servicio/empleado o duración snapshot
             serviciosWrapper.addEventListener('change', async (e) => {
 
                 // cambio de categoría
@@ -678,15 +754,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     const precio   = opt.dataset.precio ?? '';
                     const duracion = opt.dataset.duracion ?? '';
 
-                    if (precioInp && (precioInp.value === '' || precioInp.value == 0)) precioInp.value = precio;
-                    if (durInp && (durInp.value === '' || durInp.value == 0)) durInp.value = duracion;
+                    if (precioInp && (precioInp.value === '' || Number(precioInp.value) === 0)) precioInp.value = precio;
+                    if (durInp && (durInp.value === '' || Number(durInp.value) === 0)) durInp.value = duracion;
 
                     // ✅ cargar empleados para este servicio
                     await loadEmpleadosForRow(row, svcSel.value || null);
 
                     recalcAll();
 
-                    // ✅ refrescar horas al cambiar servicio (y ya con empleados cargados)
+                    // ✅ refrescar horas al cambiar servicio
                     await refreshHorasDisponibles();
                     return;
                 }
@@ -705,8 +781,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     e.target.matches('input[data-role="precio_snapshot"]')
                 ) {
                     recalcAll();
-                    // si cambian duración manualmente y quieres que afecte horas:
-                    // setTimeout(refreshHorasDisponibles, 0);
                 }
             });
 
@@ -722,7 +796,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // primer load
             await refreshHorasDisponibles();
-
             recalcAll();
         })();
     }
@@ -758,7 +831,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const input    = document.getElementById('cliente_search');
     const dropdown = document.getElementById('cliente_dropdown');
     const results  = document.getElementById('cliente_results');
-    const hidden = document.getElementById('cliente_id');
+    const hidden   = document.getElementById('cliente_id');
 
     function hideResults() {
         dropdown.classList.add('hidden');

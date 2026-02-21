@@ -375,11 +375,10 @@ class ReporteController extends Controller
                 ]);
         }
 
-        // Clientes nuevos (users role_id=1)
+        // Clientes nuevos (tabla clientes)
         $clientesNuevos = 0;
-        if (Schema::hasTable('users') && Schema::hasColumn('users', 'role_id')) {
-            $clientesNuevos = DB::table('users')
-                ->where('role_id', 1)
+        if (Schema::hasTable('clientes')) {
+            $clientesNuevos = DB::table('clientes')
                 ->whereBetween('created_at', [$inicio, $fin])
                 ->count();
         }
@@ -388,35 +387,12 @@ class ReporteController extends Controller
         // ==========================
         $ultimosClientes = collect();
 
-        if (Schema::hasTable('users')) {
-            $q = DB::table('users');
-
-            // Identificar clientes (tu sistema usa role_id=1)
-            if (Schema::hasColumn('users', 'role_id')) {
-                $q->where('role_id', 1);
-            } elseif (Schema::hasColumn('users', 'rol')) {
-                $q->where('rol', 'cliente');
-            }
-
-            if (Schema::hasColumn('users', 'created_at')) {
-                $q->whereBetween('created_at', [$inicio, $fin]);
-            }
+        if (Schema::hasTable('clientes')) {
+            $q = DB::table('clientes');
+            $q->whereBetween('created_at', [$inicio, $fin]);
 
             // Select seguro según columnas existentes
-            $select = [];
-            $select[] = 'id';
-            if (Schema::hasColumn('users', 'email')) $select[] = 'email';
-            if (Schema::hasColumn('users', 'telefono')) $select[] = 'telefono';
-            if (Schema::hasColumn('users', 'created_at')) $select[] = 'created_at';
-
-            if (Schema::hasColumn('users', 'nombre') && Schema::hasColumn('users', 'apellido')) {
-                $select[] = DB::raw("TRIM(CONCAT(COALESCE(nombre,''),' ',COALESCE(apellido,''))) as nombre_completo");
-            } elseif (Schema::hasColumn('users', 'name')) {
-                $select[] = DB::raw("name as nombre_completo");
-            } elseif (Schema::hasColumn('users', 'nombre')) {
-                $select[] = DB::raw("nombre as nombre_completo");
-            }
-
+            $select = ['id', 'user_id', 'nombre', 'email', 'telefono', 'direccion', 'created_at'];
             $ultimosClientes = $q->orderByDesc('created_at')->limit(10)->get($select);
         }
 

@@ -20,7 +20,7 @@
         class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
         {{ request()->is('admin/citas*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
         <i class="fas fa-calendar-alt mr-3 text-lg"></i>
-        <span>Citas</span>
+        <span>Agendar Citas</span>
     </a>
 </li>
 
@@ -30,7 +30,7 @@
     class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
     {{ request()->is('admin/ventas*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
     <i class="fas fa-cash-register mr-3 text-lg"></i>
-    <span>Citas Completadas</span>
+    <span>Ver Citas</span>
 </a>
 </li>
 

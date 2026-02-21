@@ -465,89 +465,93 @@ class CitaController extends Controller
         ));
     }
 
-    public function store(Request $request)
-    {
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'cliente_id'   => ['required', 'exists:clientes,id'],
+        'fecha_cita'   => ['required', 'date'],
+        'hora_cita'    => ['required'],
 
+        'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
+        'observaciones'=> ['nullable', 'string'],
+        'descuento'    => ['nullable', 'numeric', 'min:0'],
 
-        $validated = $request->validate([
-            'cliente_id'   => ['required', 'exists:clientes,id'],
-            'fecha_cita'   => ['required', 'date'],
-            'hora_cita'    => ['required'],
+        // ✅ FIX: método de pago (solo si completada)
+        'metodo_pago'  => [
+            'nullable',
+            Rule::requiredIf(fn () => $request->input('estado_cita') === 'completada'),
+            Rule::in(['efectivo','tarjeta_credito','tarjeta_debito','transferencia']),
+        ],
 
-            'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
-            'observaciones'=> ['nullable', 'string'],
-            'descuento'    => ['nullable', 'numeric', 'min:0'],
+        'servicios'                     => ['required', 'array', 'min:1'],
+        'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
+        'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],
+        'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
+        'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
+    ]);
 
-            'servicios'                     => ['required', 'array', 'min:1'],
-            'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
-            'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],
-            'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
-            'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
-        ]);
+    $ids = collect($validated['servicios'])
+        ->pluck('id_servicio')
+        ->map(fn($v) => (int) $v)
+        ->unique()
+        ->values();
 
-        $ids = collect($validated['servicios'])
-            ->pluck('id_servicio')
-            ->map(fn($v) => (int) $v)
-            ->unique()
-            ->values();
+    $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
 
-        $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
+    $pivotData = [];
+    $totalDuracion = 0;
+    $totalMonto = 0;
 
-        $pivotData = [];
-        $totalDuracion = 0;
-        $totalMonto = 0;
+    foreach ($validated['servicios'] as $item) {
+        $id = (int) $item['id_servicio'];
+        $srv = $serviciosDb->get($id);
 
-        foreach ($validated['servicios'] as $item) {
-            $id = (int) $item['id_servicio'];
-            $srv = $serviciosDb->get($id);
+        $precio = (isset($item['precio_snapshot']) && $item['precio_snapshot'] !== '')
+            ? (float) $item['precio_snapshot']
+            : (float) ($srv->precio ?? 0);
 
-            $precio = (isset($item['precio_snapshot']) && $item['precio_snapshot'] !== '')
-                ? (float) $item['precio_snapshot']
-                : (float) ($srv->precio ?? 0);
+        $duracion = (isset($item['duracion_snapshot']) && $item['duracion_snapshot'] !== '')
+            ? (int) $item['duracion_snapshot']
+            : (int) ($srv->duracion_minutos ?? 0);
 
-            $duracion = (isset($item['duracion_snapshot']) && $item['duracion_snapshot'] !== '')
-                ? (int) $item['duracion_snapshot']
-                : (int) ($srv->duracion_minutos ?? 0);
+        $idEmpleadoServicio = !empty($item['id_empleado']) ? (int) $item['id_empleado'] : null;
 
-            $idEmpleadoServicio = !empty($item['id_empleado']) ? (int) $item['id_empleado'] : null;
+        $pivotData[$id] = [
+            'precio_snapshot'   => $precio,
+            'duracion_snapshot' => $duracion,
+            'id_empleado'       => $idEmpleadoServicio,
+        ];
 
-            $pivotData[$id] = [
-                'precio_snapshot'   => $precio,
-                'duracion_snapshot' => $duracion,
-                'id_empleado'       => $idEmpleadoServicio,
-            ];
+        $totalMonto += $precio;
+        $totalDuracion += $duracion;
+    }
 
-            $totalMonto += $precio;
-            $totalDuracion += $duracion;
+    $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
+
+    // ✅ FIX: ahora sí sale del validated (ya existe y está validado)
+    $metodoPago = $validated['metodo_pago'] ?? null;
+
+    $cita = Cita::create([
+        'cliente_id'            => $validated['cliente_id'],
+        'empleado_id'           => $responsableId,
+        'fecha_cita'            => $validated['fecha_cita'],
+        'hora_cita'             => $validated['hora_cita'],
+        'duracion_total_minutos'=> $totalDuracion,
+        'descuento'             => $validated['descuento'] ?? 0,
+        'estado_cita'           => $validated['estado_cita'],
+        'observaciones'         => $validated['observaciones'] ?? null,
+        'synced_with_google'    => false,
+    ]);
+
+    $cita->servicios()->sync($pivotData);
+
+    if ($cita->estado_cita === 'confirmada') {
+        try {
+            Mail::to($cita->cliente->email)->send(new CitaConfirmadaMail($cita));
+        } catch (\Exception $e) {
+            Log::error('Error enviando correo de confirmación: '.$e->getMessage());
         }
-
-        // ✅ Responsable según tu regla
-        $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
-
-        $metodoPago = $validated['metodo_pago'] ?? null;
-
-        $cita = Cita::create([
-            'cliente_id'            => $validated['cliente_id'],
-            'empleado_id'           => $responsableId,
-            'fecha_cita'            => $validated['fecha_cita'],
-            'hora_cita'             => $validated['hora_cita'],
-            'duracion_total_minutos'=> $totalDuracion,
-            'descuento'             => $validated['descuento'] ?? 0,
-            'estado_cita'           => $validated['estado_cita'],
-            'observaciones'         => $validated['observaciones'] ?? null,
-            'synced_with_google'    => false,
-        ]);
-
-        $cita->servicios()->sync($pivotData);
-
-        if ($cita->estado_cita === 'confirmada') {
-            try {
-                Mail::to($cita->cliente->email)->send(new CitaConfirmadaMail($cita));
-            } catch (\Exception $e) {
-                Log::error('Error enviando correo de confirmación: '.$e->getMessage());
-            }
-        }
-
+    }
         // ✅ MANTENEMOS tu bloque Google tal cual
         $token = GoogleToken::first();
         if ($token) {
@@ -666,80 +670,87 @@ class CitaController extends Controller
         ));
     }
 
-    public function update(Request $request, $id)
-    {
-        $cita = Cita::findOrFail($id);
-        $oldEstado = $cita->estado_cita;
+   public function update(Request $request, $id)
+{
+    $cita = Cita::findOrFail($id);
+    $oldEstado = $cita->estado_cita;
 
-        $metodoPago = $validated['metodo_pago'] ?? null;
+    // ✅ FIX: primero valida, luego lees $validated
+    $validated = $request->validate([
+        'cliente_id'   => ['required', 'exists:clientes,id'],
+        'fecha_cita'   => ['required', 'date'],
+        'hora_cita'    => ['required'],
 
-        $validated = $request->validate([
-            'cliente_id'   => ['required', 'exists:clientes,id'],
-            'fecha_cita'   => ['required', 'date'],
-            'hora_cita'    => ['required'],
+        'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
+        'observaciones'=> ['nullable', 'string'],
+        'descuento'    => ['nullable', 'numeric', 'min:0'],
 
-            'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
-            'observaciones'=> ['nullable', 'string'],
-            'descuento'    => ['nullable', 'numeric', 'min:0'],
+        // ✅ FIX: método de pago (solo si completada)
+        'metodo_pago'  => [
+            'nullable',
+            Rule::requiredIf(fn () => $request->input('estado_cita') === 'completada'),
+            Rule::in(['efectivo','tarjeta_credito','tarjeta_debito','transferencia']),
+        ],
 
-            'servicios'                     => ['required', 'array', 'min:1'],
-            'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
-            'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],
-            'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
-            'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
-        ]);
+        'servicios'                     => ['required', 'array', 'min:1'],
+        'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
+        'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],
+        'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
+        'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
+    ]);
 
-        $ids = collect($validated['servicios'])
-            ->pluck('id_servicio')
-            ->map(fn($v) => (int) $v)
-            ->unique()
-            ->values();
+    $metodoPago = $validated['metodo_pago'] ?? null;
 
-        $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
+    $ids = collect($validated['servicios'])
+        ->pluck('id_servicio')
+        ->map(fn($v) => (int) $v)
+        ->unique()
+        ->values();
 
-        $pivotData = [];
-        $totalDuracion = 0;
-        $totalMonto = 0;
+    $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
 
-        foreach ($validated['servicios'] as $item) {
-            $idSrv = (int) $item['id_servicio'];
-            $srv = $serviciosDb->get($idSrv);
+    $pivotData = [];
+    $totalDuracion = 0;
+    $totalMonto = 0;
 
-            $precio = (isset($item['precio_snapshot']) && $item['precio_snapshot'] !== '')
-                ? (float) $item['precio_snapshot']
-                : (float) ($srv->precio ?? 0);
+    foreach ($validated['servicios'] as $item) {
+        $idSrv = (int) $item['id_servicio'];
+        $srv = $serviciosDb->get($idSrv);
 
-            $duracion = (isset($item['duracion_snapshot']) && $item['duracion_snapshot'] !== '')
-                ? (int) $item['duracion_snapshot']
-                : (int) ($srv->duracion_minutos ?? 0);
+        $precio = (isset($item['precio_snapshot']) && $item['precio_snapshot'] !== '')
+            ? (float) $item['precio_snapshot']
+            : (float) ($srv->precio ?? 0);
 
-            $idEmpleadoServicio = !empty($item['id_empleado']) ? (int) $item['id_empleado'] : null;
+        $duracion = (isset($item['duracion_snapshot']) && $item['duracion_snapshot'] !== '')
+            ? (int) $item['duracion_snapshot']
+            : (int) ($srv->duracion_minutos ?? 0);
 
-            $pivotData[$idSrv] = [
-                'precio_snapshot'   => $precio,
-                'duracion_snapshot' => $duracion,
-                'id_empleado'       => $idEmpleadoServicio,
-            ];
+        $idEmpleadoServicio = !empty($item['id_empleado']) ? (int) $item['id_empleado'] : null;
 
-            $totalMonto += $precio;
-            $totalDuracion += $duracion;
-        }
+        $pivotData[$idSrv] = [
+            'precio_snapshot'   => $precio,
+            'duracion_snapshot' => $duracion,
+            'id_empleado'       => $idEmpleadoServicio,
+        ];
 
-        // ✅ Responsable según tu regla
-        $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
+        $totalMonto += $precio;
+        $totalDuracion += $duracion;
+    }
 
-        $cita->update([
-            'cliente_id'            => $validated['cliente_id'],
-            'empleado_id'           => $responsableId,
-            'fecha_cita'            => $validated['fecha_cita'],
-            'hora_cita'             => $validated['hora_cita'],
-            'duracion_total_minutos'=> $totalDuracion,
-            'descuento'             => $validated['descuento'] ?? 0,
-            'estado_cita'           => $validated['estado_cita'],
-            'observaciones'         => $validated['observaciones'] ?? null,
-        ]);
+    $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
 
-        $cita->servicios()->sync($pivotData);
+    $cita->update([
+        'cliente_id'            => $validated['cliente_id'],
+        'empleado_id'           => $responsableId,
+        'fecha_cita'            => $validated['fecha_cita'],
+        'hora_cita'             => $validated['hora_cita'],
+        'duracion_total_minutos'=> $totalDuracion,
+        'descuento'             => $validated['descuento'] ?? 0,
+        'estado_cita'           => $validated['estado_cita'],
+        'observaciones'         => $validated['observaciones'] ?? null,
+    ]);
+
+    $cita->servicios()->sync($pivotData);
 
         $token = GoogleToken::first();
         if ($token && $cita->google_event_id) {
