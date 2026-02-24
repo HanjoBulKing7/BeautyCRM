@@ -1,3 +1,9 @@
+function refreshAOS() {
+  if (!window.AOS) return;
+  if (typeof window.AOS.refreshHard === "function") window.AOS.refreshHard();
+  else if (typeof window.AOS.refresh === "function") window.AOS.refresh();
+}
+
 (() => {
   // Si no existe la sección, no hacemos nada
   const section = document.querySelector(".bb-people");
@@ -23,6 +29,10 @@
       start: "top 75%",
       toggleActions: "play none none reverse",
     },
+    onStart: () => {
+      // Por si AOS ya está inicializado, refrescamos cálculos
+      refreshAOS();
+    },
   });
 
   // Cards: entrada + mini-parallax suave
@@ -36,6 +46,9 @@
         trigger: card,
         start: "top 85%",
         toggleActions: "play none none reverse",
+      },
+      onStart: () => {
+        refreshAOS();
       },
     });
 
@@ -58,4 +71,7 @@
       );
     }
   });
+
+  // Refresh inicial por si el layout cambió
+  requestAnimationFrame(() => refreshAOS());
 })();

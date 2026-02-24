@@ -2,23 +2,23 @@
 @extends('layouts.website')
 
 @section('title', 'Beauty Bonita - Salon de Belleza')
+
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/beauty/people.css') }}">
   <link rel="stylesheet" href="{{ asset('css/beauty/homehero.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
 @endpush
 
 @section('content')
-    @include('beauty.partials.whatsApp-icon')
-    @include('beauty.partials.header')
-    @include('beauty.homehero')
-    @include('beauty.people')
-    @include('beauty.about-salon')
-    @include('beauty.donde-encontrarnos')
+  @include('beauty.partials.whatsApp-icon')
+  @include('beauty.partials.header')
 
+  @include('beauty.homehero')
+  @include('beauty.people')
+  @include('beauty.about-salon')
+  @include('beauty.donde-encontrarnos')
 
-    @include('beauty.partials.footer')
-    
-
+  @include('beauty.partials.footer')
 @endsection
 
 @push('scripts')
@@ -28,4 +28,18 @@
 
   <script src="{{ asset('js/beauty/people.js') }}"></script>
   <script src="{{ asset('js/beauty/homehero.js') }}"></script>
+
+  {{-- AOS --}}
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.AOS) return;
+      AOS.init({
+        duration: 650,
+        easing: 'ease-out-cubic',
+        once: true,
+        offset: 80
+      });
+    });
+  </script>
 @endpush

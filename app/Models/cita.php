@@ -35,10 +35,12 @@ class Cita extends Model
     ];
 
     protected $casts = [
-        'fecha_cita' => 'date',
-        'synced_with_google' => 'boolean',
+        'fecha_cita' => 'date:Y-m-d',
+        'hora_cita'  => 'string',
         'last_sync_at' => 'datetime',
     ];
+    
+
 
     public function cliente()
     {

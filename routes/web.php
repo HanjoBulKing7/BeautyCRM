@@ -18,6 +18,7 @@ use App\Http\Controllers\ProductosPublicController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardCitasController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use App\Http\Controllers\MisReservasController;
 
 // ✅ ROOT: siempre manda a Home pública
 Route::get('/', function () {
@@ -226,6 +227,13 @@ Route::get('/checkout', [PagoController::class, 'checkout'])->name('checkout');
 Route::get('/success', [PagoController::class, 'success'])->name('success');
 Route::get('/cancel', [PagoController::class, 'cancel'])->name('cancel');
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/mis-reservas', [MisReservasController::class, 'index'])->name('misreservas');
+
+    // ✅ NUEVA: cancelar reserva
+    Route::post('/mis-reservas/{cita}/cancelar', [MisReservasController::class, 'cancel'])
+        ->name('misreservas.cancel');
+});
 
 // Ruta de diagnóstico
 Route::get('/debug-auth', function () {

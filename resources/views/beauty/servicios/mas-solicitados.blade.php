@@ -4,26 +4,59 @@
       <h2 class="bb-most__title">Servicios más solicitados</h2>
     </header>
 
-    <div class="bb-most__grid">
-      @forelse($topServicios as $item)
-        <article class="bb-card">
-          <div class="bb-card__img">
-            {{-- Si aún no tienes imagen por servicio, deja la default --}}
-            <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}"
-                 alt="{{ $item->nombre_servicio }}">
+    {{-- ✅ MISMO grid/clases que categorías --}}
+    <div class="bb-cat__grid">
+      @forelse(($topServicios ?? collect()) as $item)
+        @php
+          $precioFinal = max(0, (float)($item->precio ?? 0) - (float)($item->descuento ?? 0));
+
+          // Imagen robusta (igual criterio que en categorías)
+          $img = $item->imagen ?? null;
+          if ($img) {
+              if (\Illuminate\Support\Str::startsWith($img, ['images/', '/images/'])) {
+                  $imgSrc = asset(ltrim($img, '/'));
+              } else {
+                  $imgSrc = asset('storage/' . ltrim($img, '/'));
+              }
+          } else {
+              $imgSrc = asset('images/Beige Blogger Moderna Personal Sitio web.png');
+          }
+        @endphp
+
+        <article class="bb-svcCard">
+          <div class="bb-svcCard__img">
+            <img src="{{ $imgSrc }}" alt="{{ $item->nombre_servicio }}" loading="lazy">
           </div>
 
-          <h3 class="bb-card__name">{{ $item->nombre_servicio }}</h3>
+          {{-- ✅ Body centrado con toda la info --}}
+          <div class="bb-svcCard__body" style="text-align:center; padding: 14px 16px;">
+            <h4 class="bb-svcCard__name" style="margin: 10px 0 6px;">
+              {{ $item->nombre_servicio }}
+            </h4>
 
-          <a class="bb-card__link"
-             href="https://wa.me/5215512345678?text={{ urlencode('Hola, quiero agendar ' . $item->nombre_servicio . ' 😊') }}"
-             target="_blank" rel="noopener">
-            Agendar
-          </a>
+            <p class="bb-svcCard__desc" style="margin: 0 0 12px; opacity: .85; line-height: 1.5;">
+              {{ \Illuminate\Support\Str::limit($item->descripcion ?? 'Sin descripción.', 120) }}
+            </p>
+
+            <div class="bb-svcCard__meta" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom: 12px;">
+              <span class="bb-svcCard__pill" style="padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,.08);">
+                <strong>Duración:</strong> {{ (int)($item->duracion_minutos ?? 0) }} min
+              </span>
+
+              <span class="bb-svcCard__pill" style="padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,.08);">
+                <strong>Precio:</strong> ${{ number_format($precioFinal, 2) }}
+              </span>
+            </div>
+
+            <a class="bb-svcCard__link"
+               href="{{ route('agendarcita.create', ['servicio' => $item->id_servicio]) }}"
+               style="display:inline-flex; justify-content:center; align-items:center; text-decoration:none;">
+              Agendar
+            </a>
+          </div>
         </article>
       @empty
-        {{-- Si no hay datos en el mes actual, puedes mostrar tus 4 cards default o un mensaje --}}
-        <p style="opacity:.75;">Aún no hay reservas este mes.</p>
+        <p style="opacity:.75; text-align:center; width:100%;">Aún no hay servicios para mostrar.</p>
       @endforelse
     </div>
   </div>

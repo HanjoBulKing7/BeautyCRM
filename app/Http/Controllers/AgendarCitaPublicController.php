@@ -165,7 +165,7 @@ class AgendarCitaPublicController extends Controller
         });
 
         // dia_semana 1-7
-        $diaSemana = Carbon::parse($request->input('fecha_cita'))->isoWeekday();
+        $diaSemana = Carbon::parse($request->input('fecha_cita'))->dayOfWeek; // 0..6 (dom..sab)
 
         $horarios = DB::table('servicio_horarios')
             ->whereIn('servicio_id', $serviceIds)
@@ -351,7 +351,7 @@ class AgendarCitaPublicController extends Controller
             return $it;
         })->values();
 
-        $diaSemana = $fecha->isoWeekday();
+        $diaSemana = $fecha->dayOfWeek; // 0..6
 
         $horariosRows = DB::table('servicio_horarios')
             ->whereIn('servicio_id', $serviceIds)
@@ -474,7 +474,7 @@ class AgendarCitaPublicController extends Controller
 
         for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
             $ymd = $d->toDateString();
-            $dow = $d->isoWeekday();
+            $dow = $d->dayOfWeek; // 0..6
 
             $horariosByService = [];
             $hasAll = true;

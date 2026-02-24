@@ -547,3 +547,91 @@ video {
     padding: 12px 18px;
   }
 }
+/* ===========================
+   USER DROPDOWN
+   =========================== */
+.Normal-user-dropdown{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.Normal-user-trigger{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.Normal-user-chevron{
+  font-size: 18px;
+  transition: transform .2s ease;
+}
+
+.Normal-user-dropdown.is-open .Normal-user-chevron{
+  transform: rotate(180deg);
+}
+
+.Normal-user-menu{
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 220px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(184, 134, 11, 0.22);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.10);
+  display: none;
+  z-index: 12000;
+}
+
+.Normal-user-dropdown.is-open .Normal-user-menu{
+  display: block;
+}
+
+.Normal-user-item{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--normal-ink);
+  font-size: 15px;
+  font-weight: 500;
+  transition: background .2s ease, color .2s ease;
+}
+
+.Normal-user-item .bx{
+  font-size: 18px;
+  color: var(--normal-gold);
+}
+
+.Normal-user-item:hover{
+  background: rgba(184, 134, 11, 0.10);
+  color: var(--normal-gold);
+}
+
+.Normal-user-form{
+  margin: 0;
+}
+
+/* En móvil: el dropdown se despliega "en flujo" dentro del menú */
+@media (max-width: 991.98px){
+  .Normal-menu-footer .Normal-user-dropdown{
+    width: 100%;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .Normal-menu-footer .Normal-user-menu{
+    position: static;
+    margin-top: 10px;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .Normal-menu-footer .Normal-user-item{
+    justify-content: center;
+  }
+}

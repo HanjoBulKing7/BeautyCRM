@@ -1,3 +1,155 @@
+@push('styles')
+<style>
+  /* Scope para NO afectar otras vistas */
+  .bb-admin-datetime .bb-calendar{ margin-top: 10px; }
+
+  .bb-admin-datetime .bb-cal__header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 14px;
+    border:1px solid rgba(0,0,0,0.08);
+    border-radius:16px;
+    background: linear-gradient(180deg, rgba(244,235,221,0.85), rgba(255,255,255,0.95));
+    box-shadow: 0 12px 26px rgba(0,0,0,0.05);
+  }
+  .bb-admin-datetime .bb-cal__title{
+    font-weight: 800;
+    text-transform: capitalize;
+    letter-spacing: .02em;
+    color: rgba(26,26,26,0.86);
+  }
+  .bb-admin-datetime .bb-cal__nav{
+    border: 1px solid rgba(201,162,74,0.35);
+    background:#fff;
+    color: rgba(201,162,74,0.95);
+    width:38px; height:38px;
+    border-radius:999px;
+    cursor:pointer;
+    font-size:20px;
+    line-height:1;
+    display:grid;
+    place-items:center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  }
+  .bb-admin-datetime .bb-cal__nav:active{ transform: translateY(1px); }
+
+  .bb-admin-datetime .bb-cal__dow{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+    padding: 0 4px;
+    font-weight: 800;
+    font-size: 12px;
+    color: rgba(26,26,26,0.55);
+    text-align:center;
+  }
+
+  .bb-admin-datetime .bb-cal__grid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .bb-admin-datetime .bb-cal__cell{
+    position:relative;
+    width: 100%;
+    height: 64px;            /* compacto */
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: #fff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+    cursor:pointer;
+    display:flex;
+    align-items:flex-start;
+    justify-content:flex-start;
+    padding: 10px;
+  }
+
+  .bb-admin-datetime .bb-cal__cell.is-empty{
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    cursor: default;
+  }
+
+  .bb-admin-datetime .bb-cal__cell.is-disabled{
+    opacity: .45;
+    cursor: not-allowed;
+    filter: grayscale(0.2);
+  }
+
+  .bb-admin-datetime .bb-cal__cell.is-selected{
+    border-color: rgba(201,162,74,0.60);
+    box-shadow: 0 12px 26px rgba(201,162,74,0.18);
+    background: linear-gradient(180deg, rgba(244,235,221,0.95), rgba(255,255,255,0.95));
+  }
+
+  .bb-admin-datetime .bb-cal__day{
+    font-weight: 900;
+    color: rgba(26,26,26,0.86);
+    font-size: 13px;
+  }
+
+  .bb-admin-datetime .bb-cal__dot{
+    position:absolute;
+    right: 10px;
+    top: 10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+  }
+  .bb-admin-datetime .bb-cal__dot.is-gold{
+    background: rgba(201,162,74,0.95);
+    box-shadow: 0 0 0 4px rgba(201,162,74,0.16);
+  }
+  .bb-admin-datetime .bb-cal__dot.is-muted{
+    background: rgba(0,0,0,0.18);
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
+  }
+
+  .bb-admin-datetime .bb-timesPanel{
+    border-radius: 18px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: linear-gradient(180deg, rgba(244,235,221,0.60), rgba(255,255,255,0.95));
+    padding: 14px 14px 16px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.05);
+  }
+
+  .bb-admin-datetime .bb-timesGrid{
+    margin-top: 12px;
+    display:grid;
+    grid-template-columns: repeat(6, minmax(0,1fr));
+    gap: 10px;
+  }
+  @media (max-width: 1024px){
+    .bb-admin-datetime .bb-timesGrid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+  }
+  @media (max-width: 640px){
+    .bb-admin-datetime .bb-timesGrid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+  }
+
+  .bb-admin-datetime .bb-timeBtn{
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background:#fff;
+    padding: 12px 10px;
+    font-weight: 900;
+    letter-spacing: .02em;
+    cursor:pointer;
+    transition: transform 140ms ease, filter 140ms ease;
+    box-shadow: 0 12px 22px rgba(0,0,0,0.04);
+  }
+  .bb-admin-datetime .bb-timeBtn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+
+  .bb-admin-datetime .bb-timeBtn.is-selected{
+    border-color: rgba(201,162,74,0.60);
+    background: rgba(201,162,74,0.12);
+    box-shadow: 0 16px 30px rgba(201,162,74,0.12);
+  }
+</style>
+@endpush
+
 @php
     // Modo: 'create' | 'edit'
     $mode = $mode ?? 'create';
@@ -31,9 +183,6 @@
         @method('PUT')
     @endif
 
-    {{-- =========================
-        GRID FORM
-    ========================== --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {{-- CLIENTE (buscador) --}}
@@ -43,10 +192,8 @@
                 Cliente <span class="text-red-500">*</span>
             </label>
 
-            {{-- Valor real --}}
             <input type="hidden" name="cliente_id" id="cliente_id" value="{{ $selectedClienteId }}" required>
 
-            {{-- Input visible --}}
             <div class="relative">
                 <input
                     type="text"
@@ -61,7 +208,6 @@
                 </div>
             </div>
 
-            {{-- Dropdown --}}
             <div
                 id="cliente_dropdown"
                 class="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden hidden"
@@ -74,31 +220,9 @@
                     <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
                 </p>
             @enderror
-
         </div>
 
-        {{-- FECHA --}}
-        <div>
-            <label for="fecha_cita" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-calendar mr-1" style="{{ $bbIconColor }}"></i>
-                Fecha de la Cita <span class="text-red-500">*</span>
-            </label>
-
-            <input
-                type="text"
-                id="fecha_cita"
-                name="fecha_cita"
-                value="{{ old('fecha_cita', $cita->fecha_cita ?? ($fechaPrefill ?? '')) }}"
-                class="{{ $bbField }}"
-                required
-            />
-
-            @error('fecha_cita')
-                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-            @enderror
-        </div>
-
-        {{-- SERVICIOS ROWS (partial) --}}
+        {{-- SERVICIOS (partial con UI chips/cards + rows ocultos) --}}
         @include('admin.citas.partials._servicios_rows', [
             'mode' => $mode,
             'cita' => $cita,
@@ -142,62 +266,73 @@
             </div>
         </div>
 
-        {{-- HORA --}}
-        <div>
-            <label for="hora_cita" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-clock mr-1" style="{{ $bbIconColor }}"></i>
-                Hora de la Cita <span class="text-red-500">*</span>
-            </label>
+        {{-- FECHA + HORA (Calendario izq / Horas der) --}}
+        @php
+          $fechaInit = old('fecha_cita', $cita->fecha_cita ?? ($fechaPrefill ?? ''));
+          $horaInit  = old('hora_cita',  $cita->hora_cita ?? '');
+        @endphp
 
-            <select
-                id="hora_cita"
-                name="hora_cita"
-                class="{{ $bbField }}"
-                required
-            >
-                @php
-                    $horaRaw = old('hora_cita', $cita->hora_cita ?? '');
-                    $horaSelected = '';
-                    if ($horaRaw) {
-                        try {
-                            $horaSelected = \Carbon\Carbon::createFromFormat('H:i', $horaRaw)->format('H:i');
-                        } catch (Exception $e) {
-                            $horaSelected = $horaRaw;
-                        }
-                    }
-                    @endphp
-                    @php
-                        $horaRaw = old('hora_cita', $cita->hora_cita ?? '');
-                        $horaSelected = '';
-                        if ($horaRaw) {
-                            try {
-                                $horaSelected = \Carbon\Carbon::createFromFormat('H:i', $horaRaw)->format('H:i');
-                            } catch (Exception $e) {
-                                $horaSelected = $horaRaw;
-                            }
-                        }
-                @endphp
+        <div class="md:col-span-2">
+          <div class="bb-admin-datetime rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_18px_40px_rgba(0,0,0,0.06)]">
+            <div class="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-sm font-bold tracking-wider uppercase text-gray-800">
+                  <i class="fas fa-calendar-alt mr-2" style="{{ $bbIconColor }}"></i>
+                  Fecha y hora
+                </h3>
+                <p class="text-xs text-gray-500 mt-1">
+                  Selecciona la fecha en el calendario y luego el horario disponible.
+                </p>
+              </div>
 
-                <option value="">Seleccionar Hora</option>
-                @for($h = 9; $h <= 20; $h++)
-                    @foreach([0, 30] as $m)
-                        @php $time = sprintf('%02d:%02d', $h, $m); @endphp
-                        <option value="{{ $time }}" @selected($horaSelected == $time)>
-                            {{ \Carbon\Carbon::createFromFormat('H:i', $time)->format('g:i A') }}
-                        </option>
-                    @endforeach
-                @endfor
-            </select>
+              <div id="bbDatetimeLock"
+                   class="text-xs px-3 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800"
+                   style="display:none;">
+                Primero selecciona servicio(s) y empleado(s) para ver disponibilidad.
+              </div>
+            </div>
 
-            @error('hora_cita')
-                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-            @enderror
+            <input type="hidden" name="fecha_cita" id="bbDateInput" value="{{ $fechaInit }}">
+            <input type="hidden" name="hora_cita"  id="bbHourInput" value="{{ $horaInit }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div id="bbAdminCalendar" class="bb-calendar"></div>
+
+                @error('fecha_cita')
+                  <p class="text-red-500 text-sm mt-2">
+                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                  </p>
+                @enderror
+              </div>
+
+              <div>
+                <div class="bb-timesPanel">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <div class="bb-label" id="bbTimesTitle">Horas disponibles</div>
+                      <p class="bb-hint" id="bbTimesHint" style="margin-top:.25rem;">
+                        Selecciona una fecha para ver horarios.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div id="bbTimesGrid" class="bb-timesGrid"></div>
+
+                  <p id="bbTimesEmpty" class="bb-hint" style="display:none; margin-top:.75rem;">
+                    No hay horas disponibles para ese día.
+                  </p>
+
+                  @error('hora_cita')
+                    <p class="text-red-500 text-sm mt-2">
+                      <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                    </p>
+                  @enderror
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {{-- EMPLEADO GLOBAL (DESACTIVADO) --}}
-        <!--
-        <div> ... </div>
-        -->
 
         {{-- ESTADO --}}
         <div>
@@ -234,12 +369,13 @@
             @php $metodoPagoSelected = old('metodo_pago', $cita->metodo_pago ?? ''); @endphp
 
             <select id="metodo_pago" name="metodo_pago" class="{{ $bbField }}">
-            <option value="">Seleccionar método</option>
-            <option value="efectivo" @selected($metodoPagoSelected === 'efectivo')>Efectivo</option>
-            <option value="tarjeta_credito" @selected($metodoPagoSelected === 'tarjeta_credito')>Tarjeta (crédito)</option>
-            <option value="tarjeta_debito" @selected($metodoPagoSelected === 'tarjeta_debito')>Tarjeta (débito)</option>
-            <option value="transferencia" @selected($metodoPagoSelected === 'transferencia')>Transferencia</option>
+                <option value="">Seleccionar método</option>
+                <option value="efectivo" @selected($metodoPagoSelected === 'efectivo')>Efectivo</option>
+                <option value="tarjeta_credito" @selected($metodoPagoSelected === 'tarjeta_credito')>Tarjeta (crédito)</option>
+                <option value="tarjeta_debito" @selected($metodoPagoSelected === 'tarjeta_debito')>Tarjeta (débito)</option>
+                <option value="transferencia" @selected($metodoPagoSelected === 'transferencia')>Transferencia</option>
             </select>
+
             @error('metodo_pago')
                 <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
             @enderror
@@ -318,588 +454,689 @@
 </form>
 
 @push('scripts')
-    {{-- Flatpickr --}}
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+@php
+    $clientesForJs = $clientes->map(function ($c) {
+        return [
+            'id'     => $c->id,
+            'label'  => trim((($c->nombre ?? $c->name ?? '') . ' - ' . ($c->email ?? ''))),
+            'nombre' => ($c->nombre ?? $c->name ?? ''),
+            'email'  => ($c->email ?? ''),
+        ];
+    })->values();
 
-    @php
-        $clientesForJs = $clientes->map(function ($c) {
-            return [
-                'id'     => $c->id,
-                'label'  => trim((($c->nombre ?? $c->name ?? '') . ' - ' . ($c->email ?? ''))),
-                'nombre' => ($c->nombre ?? $c->name ?? ''),
-                'email'  => ($c->email ?? ''),
-            ];
-        })->values();
-
-        $serviciosForJs = $servicios->map(function ($s) {
-            return [
-                'id'       => $s->id_servicio,
-                'nombre'   => $s->nombre_servicio,
-                'categoria'=> $s->categoria->nombre ?? 'Sin categoría',
-                'duracion' => $s->duracion_minutos,
-                'precio'   => $s->precio,
-            ];
-        })->values();
-    @endphp
+    $serviciosForJs = $servicios->map(function ($s) {
+        return [
+            'id'       => $s->id_servicio,
+            'nombre'   => $s->nombre_servicio,
+            'categoria'=> $s->categoria->nombre ?? 'Sin categoría',
+            'duracion' => $s->duracion_minutos,
+            'precio'   => $s->precio,
+        ];
+    })->values();
+@endphp
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
-    // Flatpickr: create = minDate today, edit = permitir fechas pasadas y set defaultDate
-    flatpickr("#fecha_cita", {
-        locale: "es",
-        minDate: @json($mode === 'create' ? 'today' : null),
-        defaultDate: document.getElementById('fecha_cita').value || null,
-        dateFormat: "Y-m-d",
-        disableMobile: true,
-    });
-
-    // ===========================
-    // Multi-servicio (UI) + snapshots + empleado por servicio
-    // ===========================
-    const serviciosWrapper = document.getElementById('servicios-wrapper');
-    const btnAddServicio   = document.getElementById('btn-add-servicio');
-
-    // ✅ Hora guardada desde backend (funciona aunque DB traiga HH:MM:SS)
-    const HORA_GUARDADA = @json($horaGuardada);
-    if (serviciosWrapper) {
-
-        const serviciosAll = @json($serviciosForJs);
-        const norm = (v) => (v ?? '').toString().trim().toLowerCase();
-
-        function buildOptionsForServiceSelect(selectEl, categoria, selectedId = "") {
-            selectEl.innerHTML = "";
-
-            if (!categoria) {
-                const opt = document.createElement("option");
-                opt.value = "";
-                opt.textContent = "Selecciona primero una categoría";
-                selectEl.appendChild(opt);
-                return;
-            }
-
-            const opt0 = document.createElement("option");
-            opt0.value = "";
-            opt0.textContent = "Seleccionar servicio";
-            selectEl.appendChild(opt0);
-
-            const catN = norm(categoria);
-
-            serviciosAll
-                .filter(s => norm(s.categoria) === catN)
-                .forEach(s => {
-                    const opt = document.createElement("option");
-                    opt.value = s.id;
-
-                    const precio = Number(s.precio ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
-                    opt.textContent = `${s.nombre} - $${precio} (${s.duracion} min)`;
-
-                    opt.dataset.duracion = s.duracion ?? 0;
-                    opt.dataset.precio   = s.precio ?? 0;
-
-                    if (String(selectedId) === String(s.id)) opt.selected = true;
-                    selectEl.appendChild(opt);
-                });
-        }
-
-        async function loadEmpleadosForRow(rowEl, servicioId, preselectId = null) {
-            const empleadoSelect = rowEl.querySelector('select[data-role="empleado"]');
-            if (!empleadoSelect) return;
-
-            empleadoSelect.innerHTML = `<option value="">Cargando...</option>`;
-            empleadoSelect.disabled = true;
-
-            if (!servicioId) {
-                empleadoSelect.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
-                return;
-            }
-
-            const url = `{{ route('admin.citas.empleadosPorServicio') }}?servicio_id=${encodeURIComponent(servicioId)}`;
-            const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
-            const data = await res.json();
-
-            empleadoSelect.innerHTML =
-                `<option value="">Selecciona un empleado</option>` +
-                data.map(e => `<option value="${e.id}">${e.label}</option>`).join('');
-
-            empleadoSelect.disabled = false;
-
-            if (preselectId) {
-                empleadoSelect.value = String(preselectId);
-            } else if (data.length === 1) {
-                empleadoSelect.value = String(data[0].id);
-            }
-        }
-
-        function recalcTotalDuracion() {
-            let total = 0;
-            serviciosWrapper.querySelectorAll('input[data-role="duracion_snapshot"]').forEach(inp => {
-                const v = parseInt(inp.value || '0', 10);
-                total += isNaN(v) ? 0 : v;
-            });
-
-            const totalInput = document.getElementById('duracion_total');
-            if (totalInput) totalInput.value = total;
-        }
-
-        function recalcTotalMonto() {
-            let total = 0;
-
-            serviciosWrapper.querySelectorAll('input[data-role="precio_snapshot"]').forEach(inp => {
-                const v = parseFloat(inp.value || '0');
-                total += isNaN(v) ? 0 : v;
-            });
-
-            const totalInput = document.getElementById('total_servicios');
-            if (totalInput) totalInput.value = total.toFixed(2);
-        }
-
-        function recalcAll() {
-            recalcTotalDuracion();
-            recalcTotalMonto();
-        }
-
-        function reindexRows() {
-            const rows = serviciosWrapper.querySelectorAll('.servicio-row');
-
-            rows.forEach((row, i) => {
-                const svc    = row.querySelector('select[data-role="servicio"]');
-                const emp    = row.querySelector('select[data-role="empleado"]');
-                const precio = row.querySelector('input[data-role="precio_snapshot"]');
-                const dur    = row.querySelector('input[data-role="duracion_snapshot"]');
-
-                if (svc)    svc.name    = `servicios[${i}][id_servicio]`;
-                if (emp)    emp.name    = `servicios[${i}][id_empleado]`;
-                if (precio) precio.name = `servicios[${i}][precio_snapshot]`;
-                if (dur)    dur.name    = `servicios[${i}][duracion_snapshot]`;
-            });
-
-            const canRemove = rows.length > 1;
-            rows.forEach(row => {
-                const btn = row.querySelector('.btn-remove-servicio');
-                if (btn) btn.disabled = !canRemove;
-            });
-        }
-
-        // CLICK (quitar fila)
-        serviciosWrapper.addEventListener('click', (e) => {
-            const btn = e.target.closest('.btn-remove-servicio');
-            if (!btn) return;
-
-            const row = btn.closest('.servicio-row');
-            if (!row) return;
-
-            const rows = serviciosWrapper.querySelectorAll('.servicio-row');
-            if (rows.length <= 1) return;
-
-            row.remove();
-            reindexRows();
-            recalcAll();
-        });
-
-        // Agregar fila (clonando la primera)
-        function addRow() {
-            const base = serviciosWrapper.querySelector('.servicio-row');
-            if (!base) return;
-
-            const clone = base.cloneNode(true);
-
-            // limpiar inputs
-            clone.querySelectorAll('input').forEach(inp => inp.value = '');
-
-            // reset selects
-            const catSel = clone.querySelector('select[data-role="categoria"]');
-            const svcSel = clone.querySelector('select[data-role="servicio"]');
-            const empSel = clone.querySelector('select[data-role="empleado"]');
-
-            if (catSel) catSel.selectedIndex = 0;
-
-            if (svcSel) {
-                svcSel.innerHTML = `<option value="">Selecciona primero una categoría</option>`;
-                svcSel.removeAttribute('data-selected');
-            }
-
-            if (empSel) {
-                empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
-                empSel.disabled = true;
-                empSel.value = '';
-                empSel.removeAttribute('data-preselect');
-            }
-
-            // quitar ids duplicados
-            clone.querySelector('#servicio_main')?.removeAttribute('id');
-            clone.querySelector('#categoria_main')?.removeAttribute('id');
-
-            serviciosWrapper.appendChild(clone);
-
-            reindexRows();
-            recalcAll();
-        }
-
-        if (btnAddServicio) btnAddServicio.addEventListener('click', addRow);
-
-        // INIT: procesa TODAS las filas (edit + create)
-        (async () => {
-            const rows = serviciosWrapper.querySelectorAll('.servicio-row');
-            if (!rows.length) return;
-
-            for (const row of rows) {
-                const catSel = row.querySelector('select[data-role="categoria"]');
-                const svcSel = row.querySelector('select[data-role="servicio"]');
-                if (!catSel || !svcSel) continue;
-
-                const selectedId = svcSel.dataset.selected || svcSel.value || "";
-
-                // ✅ Si no viene categoría preseleccionada pero sí servicio (EDIT),
-                // inferimos la categoría a partir del servicio.
-                if (!catSel.value && selectedId) {
-                    const srv = serviciosAll.find(s => String(s.id) === String(selectedId));
-                    if (srv?.categoria) catSel.value = srv.categoria;
-                }
-
-                buildOptionsForServiceSelect(svcSel, catSel.value, selectedId);
-                svcSel.dataset.selected = selectedId;
-
-                // ✅ Si los snapshots vienen vacíos, rellenarlos desde el option
-                if (selectedId && svcSel.selectedIndex > -1) {
-                    const opt = svcSel.options[svcSel.selectedIndex];
-                    const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
-                    const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
-
-                    if (precioInp && (!precioInp.value || Number(precioInp.value) === 0)) {
-                        if (opt?.dataset?.precio != null) precioInp.value = opt.dataset.precio;
-                    }
-                    if (durInp && (!durInp.value || Number(durInp.value) === 0)) {
-                        if (opt?.dataset?.duracion != null) durInp.value = opt.dataset.duracion;
-                    }
-                }
-
-                // ✅ precargar empleados en edit (si existe data-preselect)
-                const empSel = row.querySelector('select[data-role="empleado"]');
-                const preEmp = empSel?.dataset.preselect || null;
-
-                const currentServiceId = selectedId || svcSel.value || null;
-                if (currentServiceId) {
-                    await loadEmpleadosForRow(row, currentServiceId, preEmp);
-                }
-            }
-
-            reindexRows();
-
-            const fechaInput = document.getElementById('fecha_cita');
-            const horaSelect = document.getElementById('hora_cita');
-
-            function setHoraOptions(items, placeholder = 'Seleccionar Hora') {
-                if (!horaSelect) return;
-
-                horaSelect.innerHTML = '';
-                const opt0 = document.createElement('option');
-                opt0.value = '';
-                opt0.textContent = placeholder;
-                horaSelect.appendChild(opt0);
-
-                (items || []).forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t.value;       // "HH:MM"
-                    opt.textContent = t.label; // "5:30 PM"
-                    horaSelect.appendChild(opt);
-                });
-            }
-
-            function ensureHoraOption(value, label) {
-                if (!horaSelect || !value) return;
-
-                const exists = Array.from(horaSelect.options).some(o => o.value === value);
-                if (!exists) {
-                    const opt = document.createElement('option');
-                    opt.value = value;
-                    opt.textContent = label || value;
-                    horaSelect.appendChild(opt);
-                }
-            }
-
-            // ✅ Backend espera: date, servicios[], empleados[]
-            async function refreshHorasDisponibles() {
-                if (!horaSelect) return;
-
-                const date = (fechaInput?.value || '').trim();
-
-                // ✅ toma TODOS los servicios seleccionados (NO solo la primer fila)
-                const svcIds = Array.from(serviciosWrapper.querySelectorAll('select[data-role="servicio"]'))
-                    .map(s => (s.value || '').trim())
-                    .filter(Boolean);
-
-                // ✅ empleados seleccionados (opcional)
-                const empIds = Array.from(serviciosWrapper.querySelectorAll('select[data-role="empleado"]'))
-                    .map(e => (e.value || '').trim())
-                    .filter(Boolean);
-
-                if (!date || svcIds.length === 0) {
-                    setHoraOptions([], 'Selecciona fecha y servicio');
-                    horaSelect.disabled = true;
-                    return;
-                }
-
-                // ✅ conserva hora previa / guardada (normalizada HH:MM)
-                const prevRaw = (horaSelect.value || HORA_GUARDADA || '').trim();
-                const prev = prevRaw ? prevRaw.slice(0, 5) : '';
-
-                horaSelect.disabled = true;
-                setHoraOptions([], 'Cargando horarios...');
-
-                try {
-                    const qs = new URLSearchParams();
-                    qs.set('date', date);
-
-                    svcIds.forEach(id => qs.append('servicios[]', id));
-                    empIds.forEach(id => qs.append('empleados[]', id));
-
-                    const url = `{{ route('admin.citas.horasDisponibles') }}?` + qs.toString();
-                    const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
-                    const data = await res.json();
-
-                    if (!Array.isArray(data) || data.length === 0) {
-                        setHoraOptions([], 'Sin horas disponibles');
-                        horaSelect.disabled = false;
-
-                        // ✅ deja visible la hora actual aunque no haya disponibilidad
-                        if (prev) {
-                            ensureHoraOption(prev, `${prev} (hora actual)`);
-                            horaSelect.value = prev;
-                        } else {
-                            horaSelect.value = '';
-                        }
-                        return;
-                    }
-
-                    setHoraOptions(data, 'Seleccionar Hora');
-                    horaSelect.disabled = false;
-
-                    // ✅ re-selecciona hora guardada si existe
-                    if (prev && data.some(x => x.value === prev)) {
-                        horaSelect.value = prev;
-                    } else if (prev) {
-                        // ✅ si no está en disponibles, igual la mostramos
-                        ensureHoraOption(prev, `${prev} (hora actual)`);
-                        horaSelect.value = prev;
-                    } else {
-                        horaSelect.value = '';
-                    }
-
-                } catch (e) {
-                    console.error(e);
-                    setHoraOptions([], 'Error cargando horarios');
-                    horaSelect.disabled = false;
-
-                    // ✅ no pierdas la hora
-                    const prevRaw = (horaSelect.value || HORA_GUARDADA || '').trim();
-                    const prev = prevRaw ? prevRaw.slice(0, 5) : '';
-                    if (prev) {
-                        ensureHoraOption(prev, `${prev} (hora actual)`);
-                        horaSelect.value = prev;
-                    }
-                }
-            }
-
-            // ===========================
-            // HOOKS para refrescar horas
-            // ===========================
-            if (fechaInput) {
-                fechaInput.addEventListener('change', () => setTimeout(refreshHorasDisponibles, 0));
-            }
-
-            serviciosWrapper.addEventListener('change', async (e) => {
-
-                // cambio de categoría
-                const catSel = e.target.closest('select[data-role="categoria"]');
-                if (catSel) {
-                    const row = catSel.closest('.servicio-row');
-                    const svcSel = row?.querySelector('select[data-role="servicio"]');
-                    if (!row || !svcSel) return;
-
-                    buildOptionsForServiceSelect(svcSel, catSel.value, "");
-
-                    // limpiar snapshots al cambiar categoría
-                    const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
-                    const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
-                    if (precioInp) precioInp.value = '';
-                    if (durInp) durInp.value = '';
-
-                    // reset empleado
-                    const empSel = row.querySelector('select[data-role="empleado"]');
-                    if (empSel) {
-                        empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
-                        empSel.disabled = true;
-                        empSel.value = '';
-                        empSel.removeAttribute('data-preselect');
-                    }
-
-                    recalcAll();
-                    setTimeout(refreshHorasDisponibles, 0);
-                    return;
-                }
-
-                // cambio de servicio
-                const svcSel = e.target.closest('select[data-role="servicio"]');
-                if (svcSel) {
-                    const row = svcSel.closest('.servicio-row');
-                    const opt = svcSel.options[svcSel.selectedIndex];
-                    if (!row || !opt) return;
-
-                    const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
-                    const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
-
-                    const precio   = opt.dataset.precio ?? '';
-                    const duracion = opt.dataset.duracion ?? '';
-
-                    if (precioInp && (precioInp.value === '' || Number(precioInp.value) === 0)) precioInp.value = precio;
-                    if (durInp && (durInp.value === '' || Number(durInp.value) === 0)) durInp.value = duracion;
-
-                    // ✅ cargar empleados para este servicio
-                    await loadEmpleadosForRow(row, svcSel.value || null);
-
-                    recalcAll();
-
-                    // ✅ refrescar horas al cambiar servicio
-                    await refreshHorasDisponibles();
-                    return;
-                }
-
-                // cambio de empleado
-                const empSel = e.target.closest('select[data-role="empleado"]');
-                if (empSel) {
-                    setTimeout(refreshHorasDisponibles, 0);
-                    return;
-                }
-            });
-
-            serviciosWrapper.addEventListener('input', (e) => {
-                if (
-                    e.target.matches('input[data-role="duracion_snapshot"]') ||
-                    e.target.matches('input[data-role="precio_snapshot"]')
-                ) {
-                    recalcAll();
-                }
-            });
-
-            if (btnAddServicio) {
-                btnAddServicio.addEventListener('click', () => setTimeout(refreshHorasDisponibles, 0));
-            }
-
-            serviciosWrapper.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-remove-servicio')) {
-                    setTimeout(refreshHorasDisponibles, 0);
-                }
-            });
-
-            // primer load
-            await refreshHorasDisponibles();
-            recalcAll();
-        })();
+  const MODE = @json($mode);
+  const CITA_ID = @json($cita->id ?? null);
+
+  const serviciosWrapper = document.getElementById('servicios-wrapper');
+  const btnAddServicio   = document.getElementById('btn-add-servicio');
+
+  const elCalendar   = document.getElementById('bbAdminCalendar');
+  const elTimesGrid  = document.getElementById('bbTimesGrid');
+  const elTimesTitle = document.getElementById('bbTimesTitle');
+  const elTimesHint  = document.getElementById('bbTimesHint');
+  const elTimesEmpty = document.getElementById('bbTimesEmpty');
+  const elLock       = document.getElementById('bbDatetimeLock');
+
+  const elDateInput  = document.getElementById('bbDateInput');
+  const elHourInput  = document.getElementById('bbHourInput');
+
+  const URL_EMPLEADOS = @json(route('admin.citas.empleadosPorServicio'));
+  const URL_HORAS     = @json(route('admin.citas.horasDisponibles'));
+
+  const dtState = {
+    calendarMonth: new Date(),
+    selectedDate: (elDateInput?.value || '').trim() || null,
+    selectedHour: (elHourInput?.value || '').trim() || null,
+    locked: true,
+  };
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function toYMD(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+  function ymdToDate(ymd){
+    const [y,m,d] = String(ymd).split('-').map(x => parseInt(x,10));
+    if (!y || !m || !d) return null;
+    return new Date(y, m-1, d);
+  }
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  // ✅ IMPORTANTE: ignora filas vacías (sin servicio)
+  function getItemsFromRows() {
+    if (!serviciosWrapper) return [];
+
+    const rows = [...serviciosWrapper.querySelectorAll('.servicio-row')];
+
+    const raw = rows.map((row) => {
+      const svcSel = row.querySelector('select[data-role="servicio"]');
+      const empSel = row.querySelector('select[data-role="empleado"]');
+
+      return {
+        id_servicio: (svcSel?.value || '').trim(),
+        id_empleado: (empSel?.value || '').trim(),
+      };
+    }).filter(it => it.id_servicio);
+
+    return raw.map((it, idx) => ({ ...it, orden: idx + 1 }));
+  }
+
+  function isReadyForAvailability() {
+    const items = getItemsFromRows();
+    if (!items.length) return false;
+    return items.every(it => String(it.id_servicio).length > 0 && String(it.id_empleado).length > 0);
+  }
+
+  function setLockUI() {
+    const locked = !isReadyForAvailability();
+    dtState.locked = locked;
+    if (elLock) elLock.style.display = locked ? '' : 'none';
+
+    if (locked) {
+      dtState.selectedDate = null;
+      dtState.selectedHour = null;
+      if (elDateInput) elDateInput.value = '';
+      if (elHourInput) elHourInput.value = '';
+      if (elTimesGrid) elTimesGrid.innerHTML = '';
+      if (elTimesEmpty) elTimesEmpty.style.display = 'none';
+      if (elTimesTitle) elTimesTitle.textContent = 'Horas disponibles';
+      if (elTimesHint) elTimesHint.textContent = 'Selecciona una fecha para ver horarios.';
+    }
+  }
+
+  function renderCalendar() {
+    if (!elCalendar) return;
+
+    if (dtState.selectedDate) {
+      const d = ymdToDate(dtState.selectedDate);
+      if (d) dtState.calendarMonth = new Date(d.getFullYear(), d.getMonth(), 1);
     }
 
-    // ===========================
-    // Método de pago (solo completada)
-    // ===========================
-    const estadoSelect = document.getElementById('estado_cita');
-    const metodoWrap   = document.getElementById('metodo_pago_wrap');
-    const metodoSelect = document.getElementById('metodo_pago');
+    const d = dtState.calendarMonth;
+    const y = d.getFullYear();
+    const m = d.getMonth();
 
-    function toggleMetodoPago() {
-        const show = (estadoSelect?.value === 'completada');
+    const first = new Date(y, m, 1);
+    const startDow = (first.getDay() + 6) % 7; // lunes=0
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-        if (metodoWrap) metodoWrap.style.display = show ? '' : 'none';
+    const monthName = first.toLocaleString('es-MX', { month: 'long', year: 'numeric' });
 
-        if (metodoSelect) {
-            metodoSelect.required = show;
-            if (!show) metodoSelect.value = '';
-        }
-    }
+    const grid = [];
+    for (let i = 0; i < startDow; i++) grid.push(null);
+    for (let day = 1; day <= daysInMonth; day++) grid.push(new Date(y, m, day));
+    while (grid.length % 7 !== 0) grid.push(null);
 
-    if (estadoSelect) {
-        estadoSelect.addEventListener('change', toggleMetodoPago);
-    }
+    const todayYMD = toYMD(new Date());
+    const disablePast = (MODE === 'create');
 
-    toggleMetodoPago();
+    elCalendar.innerHTML = `
+      <div class="bb-cal__header">
+        <button type="button" class="bb-cal__nav" data-nav="-1">‹</button>
+        <div class="bb-cal__title">${escapeHtml(monthName)}</div>
+        <button type="button" class="bb-cal__nav" data-nav="1">›</button>
+      </div>
 
-    // ===========================
-    // Buscador de clientes
-    // ===========================
-    const CLIENTES = @json($clientesForJs);
-    const input    = document.getElementById('cliente_search');
-    const dropdown = document.getElementById('cliente_dropdown');
-    const results  = document.getElementById('cliente_results');
-    const hidden   = document.getElementById('cliente_id');
+      <div class="bb-cal__dow">
+        <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+      </div>
 
-    function hideResults() {
-        dropdown.classList.add('hidden');
-        results.innerHTML = '';
-    }
+      <div class="bb-cal__grid">
+        ${grid.map(cell => {
+          if (!cell) return `<div class="bb-cal__cell is-empty"></div>`;
 
-    function escapeHtml(str) {
-        return String(str)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
-    }
+          const ymd = toYMD(cell);
+          const isPast = disablePast ? (ymd < todayYMD) : false;
+          const isSelected = dtState.selectedDate === ymd;
 
-    function showResults(items) {
-        if (!items.length) {
-            results.innerHTML = `<div class="px-4 py-3 text-sm text-gray-500">Sin resultados</div>`;
-            dropdown.classList.remove('hidden');
-            return;
-        }
+          const disabled = dtState.locked || isPast;
+          const dotClass = dtState.locked ? 'is-muted' : 'is-gold';
 
-        results.innerHTML = items.map(c => `
+          return `
             <button type="button"
-                class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm"
-                data-id="${c.id}"
-                data-label="${escapeHtml(c.label || '')}"
-            >
-                <div class="font-medium text-gray-800">${escapeHtml(c.nombre || 'Sin nombre')}</div>
-                ${c.email ? `<div class="text-gray-500">${escapeHtml(c.email)}</div>` : ''}
+              class="bb-cal__cell ${isSelected ? 'is-selected' : ''} ${disabled ? 'is-disabled' : ''}"
+              data-date="${ymd}"
+              ${disabled ? 'disabled' : ''}>
+              <span class="bb-cal__day">${cell.getDate()}</span>
+              <span class="bb-cal__dot ${dotClass}" aria-hidden="true"></span>
             </button>
-        `).join('');
+          `;
+        }).join('')}
+      </div>
+    `;
 
-        dropdown.classList.remove('hidden');
+    elCalendar.querySelectorAll('.bb-cal__nav').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const delta = Number(btn.getAttribute('data-nav'));
+        dtState.calendarMonth = new Date(y, m + delta, 1);
+        renderCalendar();
+      });
+    });
+
+    elCalendar.querySelectorAll('.bb-cal__cell[data-date]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const ymd = btn.getAttribute('data-date');
+        dtState.selectedDate = ymd;
+        if (elDateInput) elDateInput.value = ymd;
+
+        dtState.selectedHour = null;
+        if (elHourInput) elHourInput.value = '';
+
+        renderCalendar();
+        await refreshHorasDisponibles();
+      });
+    });
+  }
+
+  function buildAvailabilityParams(qs, items) {
+    if (dtState.selectedDate) {
+      qs.set('date', dtState.selectedDate);
+      qs.set('fecha', dtState.selectedDate);
     }
 
+    if (CITA_ID) qs.set('cita_id', String(CITA_ID));
+
+    [...qs.keys()].forEach(k => {
+      if (k === 'servicios[]' || k === 'empleados[]' || k.startsWith('items[')) qs.delete(k);
+    });
+
+    items.forEach((it, i) => {
+      qs.append('servicios[]', String(it.id_servicio));
+      qs.append('empleados[]', String(it.id_empleado));
+
+      qs.set(`items[${i}][id_servicio]`, String(it.id_servicio));
+      qs.set(`items[${i}][id_empleado]`, String(it.id_empleado));
+      qs.set(`items[${i}][orden]`, String(it.orden));
+    });
+  }
+
+  function renderTimesButtons(list) {
+    if (!elTimesGrid) return;
+
+    elTimesGrid.innerHTML = '';
+
+    if (!list.length) {
+      if (elTimesEmpty) elTimesEmpty.style.display = '';
+      return;
+    }
+
+    if (elTimesEmpty) elTimesEmpty.style.display = 'none';
+
+    elTimesGrid.innerHTML = list.map(it => {
+      const value = String(it.value ?? it);
+      const label = String(it.label ?? it);
+      const selected = (dtState.selectedHour && String(dtState.selectedHour) === value);
+
+      return `
+        <button type="button" class="bb-timeBtn ${selected ? 'is-selected' : ''}"
+                data-hour="${escapeHtml(value)}">
+          ${escapeHtml(label)}
+        </button>
+      `;
+    }).join('');
+
+    elTimesGrid.querySelectorAll('.bb-timeBtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const h = btn.getAttribute('data-hour');
+        dtState.selectedHour = h;
+        if (elHourInput) elHourInput.value = h;
+
+        elTimesGrid.querySelectorAll('.bb-timeBtn').forEach(x => x.classList.remove('is-selected'));
+        btn.classList.add('is-selected');
+      });
+    });
+  }
+
+  async function refreshHorasDisponibles() {
+    if (!elTimesGrid) return;
+
+    if (dtState.locked || !dtState.selectedDate) {
+      if (elTimesTitle) elTimesTitle.textContent = 'Horas disponibles';
+      if (elTimesHint) elTimesHint.textContent = dtState.locked
+        ? 'Selecciona servicio(s) y empleado(s) para ver disponibilidad.'
+        : 'Selecciona una fecha para ver horarios.';
+      if (elTimesEmpty) elTimesEmpty.style.display = 'none';
+      elTimesGrid.innerHTML = '';
+      return;
+    }
+
+    if (elTimesHint) elTimesHint.textContent = 'Cargando horarios...';
+    if (elTimesEmpty) elTimesEmpty.style.display = 'none';
+    elTimesGrid.innerHTML = '';
+
+    try {
+      const items = getItemsFromRows();
+      const qs = new URLSearchParams();
+      buildAvailabilityParams(qs, items);
+
+      const url = URL_HORAS + '?' + qs.toString();
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+      const data = await res.json();
+
+      let list = [];
+      if (Array.isArray(data)) list = data;
+      else if (Array.isArray(data?.horas)) list = data.horas.map(h => ({ value: h, label: h }));
+      else if (Array.isArray(data?.items)) list = data.items;
+      else list = [];
+
+      if (elTimesTitle) elTimesTitle.textContent = `Horas disponibles (${dtState.selectedDate})`;
+      if (!list.length) {
+        if (elTimesHint) elTimesHint.textContent = 'No hay horas disponibles, prueba otro día o cambia empleado.';
+        renderTimesButtons([]);
+        return;
+      }
+
+      if (elTimesHint) elTimesHint.textContent = 'Selecciona una hora para confirmar.';
+
+      const current = dtState.selectedHour;
+      renderTimesButtons(list);
+
+      if (current) {
+        const exists = list.some(x => String(x.value ?? x) === String(current));
+        if (!exists) {
+          dtState.selectedHour = current;
+          if (elHourInput) elHourInput.value = current;
+        }
+      }
+
+    } catch (e) {
+      console.error(e);
+      if (elTimesHint) elTimesHint.textContent = 'Error cargando horarios.';
+      renderTimesButtons([]);
+    }
+  }
+
+  // ===========================
+  // Multi-servicio (rows ocultos) + empleados + snapshots
+  // ===========================
+  if (serviciosWrapper) {
+    const serviciosAll = @json($serviciosForJs);
+    const norm = (v) => (v ?? '').toString().trim().toLowerCase();
+
+    function buildOptionsForServiceSelect(selectEl, categoria, selectedId = "") {
+      selectEl.innerHTML = "";
+
+      if (!categoria) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Selecciona primero una categoría";
+        selectEl.appendChild(opt);
+        return;
+      }
+
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "Seleccionar servicio";
+      selectEl.appendChild(opt0);
+
+      const catN = norm(categoria);
+
+      serviciosAll
+        .filter(s => norm(s.categoria) === catN)
+        .forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+
+          const precio = Number(s.precio ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+          opt.textContent = `${s.nombre} - $${precio} (${s.duracion} min)`;
+
+          opt.dataset.duracion = s.duracion ?? 0;
+          opt.dataset.precio   = s.precio ?? 0;
+
+          if (String(selectedId) === String(s.id)) opt.selected = true;
+          selectEl.appendChild(opt);
+        });
+    }
+
+    async function loadEmpleadosForRow(rowEl, servicioId, preselectId = null) {
+      const empleadoSelect = rowEl.querySelector('select[data-role="empleado"]');
+      if (!empleadoSelect) return;
+
+      empleadoSelect.innerHTML = `<option value="">Cargando...</option>`;
+      empleadoSelect.disabled = true;
+
+      if (!servicioId) {
+        empleadoSelect.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
+        return;
+      }
+
+      const url = URL_EMPLEADOS + `?servicio_id=${encodeURIComponent(servicioId)}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+      const data = await res.json();
+
+      empleadoSelect.innerHTML =
+        `<option value="">Selecciona un empleado</option>` +
+        (data || []).map(e => `<option value="${e.id}">${e.label}</option>`).join('');
+
+      empleadoSelect.disabled = false;
+
+      if (preselectId) {
+        empleadoSelect.value = String(preselectId);
+      } else if (Array.isArray(data) && data.length === 1) {
+        empleadoSelect.value = String(data[0].id);
+      }
+    }
+
+    function recalcTotalDuracion() {
+      let total = 0;
+      serviciosWrapper.querySelectorAll('input[data-role="duracion_snapshot"]').forEach(inp => {
+        const v = parseInt(inp.value || '0', 10);
+        total += isNaN(v) ? 0 : v;
+      });
+
+      const totalInput = document.getElementById('duracion_total');
+      if (totalInput) totalInput.value = total;
+    }
+
+    function recalcTotalMonto() {
+      let total = 0;
+      serviciosWrapper.querySelectorAll('input[data-role="precio_snapshot"]').forEach(inp => {
+        const v = parseFloat(inp.value || '0');
+        total += isNaN(v) ? 0 : v;
+      });
+
+      const totalInput = document.getElementById('total_servicios');
+      if (totalInput) totalInput.value = total.toFixed(2);
+    }
+
+    function recalcAll() { recalcTotalDuracion(); recalcTotalMonto(); }
+
+    function reindexRows() {
+      const rows = serviciosWrapper.querySelectorAll('.servicio-row');
+
+      rows.forEach((row, i) => {
+        const svc    = row.querySelector('select[data-role="servicio"]');
+        const emp    = row.querySelector('select[data-role="empleado"]');
+        const precio = row.querySelector('input[data-role="precio_snapshot"]');
+        const dur    = row.querySelector('input[data-role="duracion_snapshot"]');
+
+        if (svc)    svc.name    = `servicios[${i}][id_servicio]`;
+        if (emp)    emp.name    = `servicios[${i}][id_empleado]`;
+        if (precio) precio.name = `servicios[${i}][precio_snapshot]`;
+        if (dur)    dur.name    = `servicios[${i}][duracion_snapshot]`;
+      });
+
+      const canRemove = rows.length > 1;
+      rows.forEach(row => {
+        const btn = row.querySelector('.btn-remove-servicio');
+        if (btn) btn.disabled = !canRemove;
+      });
+    }
+
+    serviciosWrapper.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-remove-servicio');
+      if (!btn) return;
+
+      const row = btn.closest('.servicio-row');
+      if (!row) return;
+
+      const rows = serviciosWrapper.querySelectorAll('.servicio-row');
+      if (rows.length <= 1) return;
+
+      row.remove();
+      reindexRows();
+      recalcAll();
+
+      setLockUI();
+      renderCalendar();
+      refreshHorasDisponibles();
+    });
+
+    function addRow() {
+      const base = serviciosWrapper.querySelector('.servicio-row');
+      if (!base) return;
+
+      const clone = base.cloneNode(true);
+      // ✅ importante: evitar que el uid se copie al clonar
+      clone.removeAttribute('data-bb-uid');
+      if (clone.dataset) delete clone.dataset.bbUid;
+
+
+      clone.querySelectorAll('input').forEach(inp => inp.value = '');
+
+      const catSel = clone.querySelector('select[data-role="categoria"]');
+      const svcSel = clone.querySelector('select[data-role="servicio"]');
+      const empSel = clone.querySelector('select[data-role="empleado"]');
+
+      if (catSel) catSel.selectedIndex = 0;
+
+      if (svcSel) {
+        svcSel.innerHTML = `<option value="">Selecciona primero una categoría</option>`;
+        svcSel.removeAttribute('data-selected');
+      }
+
+      if (empSel) {
+        empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
+        empSel.disabled = true;
+        empSel.value = '';
+        empSel.removeAttribute('data-preselect');
+      }
+
+      clone.querySelector('#servicio_main')?.removeAttribute('id');
+      clone.querySelector('#categoria_main')?.removeAttribute('id');
+
+      serviciosWrapper.appendChild(clone);
+
+      reindexRows();
+      recalcAll();
+
+      setLockUI();
+      renderCalendar();
+      refreshHorasDisponibles();
+    }
+
+    if (btnAddServicio) btnAddServicio.addEventListener('click', addRow);
+
+    (async () => {
+      const rows = serviciosWrapper.querySelectorAll('.servicio-row');
+      if (!rows.length) return;
+
+      for (const row of rows) {
+        const catSel = row.querySelector('select[data-role="categoria"]');
+        const svcSel = row.querySelector('select[data-role="servicio"]');
+        if (!catSel || !svcSel) continue;
+
+        const selectedId = svcSel.dataset.selected || svcSel.value || "";
+        buildOptionsForServiceSelect(svcSel, catSel.value, selectedId);
+        svcSel.dataset.selected = selectedId;
+
+        const empSel = row.querySelector('select[data-role="empleado"]');
+        const preEmp = empSel?.dataset.preselect || null;
+
+        const currentServiceId = selectedId || svcSel.value || null;
+        if (currentServiceId) {
+          await loadEmpleadosForRow(row, currentServiceId, preEmp);
+        }
+      }
+
+      reindexRows();
+      recalcAll();
+
+      setLockUI();
+
+      if (dtState.selectedDate) {
+        const d = ymdToDate(dtState.selectedDate);
+        if (d) dtState.calendarMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+      }
+
+      renderCalendar();
+      await refreshHorasDisponibles();
+    })();
+
+    serviciosWrapper.addEventListener('change', async (e) => {
+      const catSel = e.target.closest('select[data-role="categoria"]');
+      if (catSel) {
+        const row = catSel.closest('.servicio-row');
+        const svcSel = row?.querySelector('select[data-role="servicio"]');
+        if (!row || !svcSel) return;
+
+        buildOptionsForServiceSelect(svcSel, catSel.value, "");
+
+        const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
+        const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
+        if (precioInp) precioInp.value = '';
+        if (durInp) durInp.value = '';
+
+        const empSel = row.querySelector('select[data-role="empleado"]');
+        if (empSel) {
+          empSel.innerHTML = `<option value="">Selecciona un servicio primero</option>`;
+          empSel.disabled = true;
+          empSel.value = '';
+          empSel.removeAttribute('data-preselect');
+        }
+
+        recalcAll();
+
+        setLockUI();
+        renderCalendar();
+        refreshHorasDisponibles();
+        return;
+      }
+
+      const svcSel = e.target.closest('select[data-role="servicio"]');
+      if (svcSel) {
+        const row = svcSel.closest('.servicio-row');
+        const opt = svcSel.options[svcSel.selectedIndex];
+        if (!row || !opt) return;
+
+        const precioInp = row.querySelector('input[data-role="precio_snapshot"]');
+        const durInp    = row.querySelector('input[data-role="duracion_snapshot"]');
+
+        const precio   = opt.dataset.precio ?? '';
+        const duracion = opt.dataset.duracion ?? '';
+
+        if (precioInp && (precioInp.value === '' || precioInp.value == 0)) precioInp.value = precio;
+        if (durInp && (durInp.value === '' || durInp.value == 0)) durInp.value = duracion;
+
+        await loadEmpleadosForRow(row, svcSel.value || null);
+
+        recalcAll();
+
+        setLockUI();
+        renderCalendar();
+        await refreshHorasDisponibles();
+        return;
+      }
+
+      const empSel = e.target.closest('select[data-role="empleado"]');
+      if (empSel) {
+        setLockUI();
+        renderCalendar();
+        await refreshHorasDisponibles();
+        return;
+      }
+    });
+
+    serviciosWrapper.addEventListener('input', (e) => {
+      if (
+        e.target.matches('input[data-role="duracion_snapshot"]') ||
+        e.target.matches('input[data-role="precio_snapshot"]')
+      ) {
+        recalcAll();
+      }
+    });
+  }
+
+  // Método de pago (solo completada)
+  const estadoSelect = document.getElementById('estado_cita');
+  const metodoWrap   = document.getElementById('metodo_pago_wrap');
+  const metodoSelect = document.getElementById('metodo_pago');
+
+  function toggleMetodoPago() {
+    const show = (estadoSelect?.value === 'completada');
+    if (metodoWrap) metodoWrap.style.display = show ? '' : 'none';
+    if (metodoSelect) {
+      metodoSelect.required = show;
+      if (!show) metodoSelect.value = '';
+    }
+  }
+  if (estadoSelect) estadoSelect.addEventListener('change', toggleMetodoPago);
+  toggleMetodoPago();
+
+  // Buscador de clientes
+  const CLIENTES = @json($clientesForJs);
+  const input    = document.getElementById('cliente_search');
+  const dropdown = document.getElementById('cliente_dropdown');
+  const results  = document.getElementById('cliente_results');
+  const hidden   = document.getElementById('cliente_id');
+
+  function hideResults() {
+    dropdown.classList.add('hidden');
+    results.innerHTML = '';
+  }
+
+  function showResults(items) {
+    if (!items.length) {
+      results.innerHTML = `<div class="px-4 py-3 text-sm text-gray-500">Sin resultados</div>`;
+      dropdown.classList.remove('hidden');
+      return;
+    }
+
+    results.innerHTML = items.map(c => `
+      <button type="button"
+        class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm"
+        data-id="${c.id}"
+        data-label="${escapeHtml(c.label || '')}">
+        <div class="font-medium text-gray-800">${escapeHtml(c.nombre || 'Sin nombre')}</div>
+        ${c.email ? `<div class="text-gray-500">${escapeHtml(c.email)}</div>` : ''}
+      </button>
+    `).join('');
+
+    dropdown.classList.remove('hidden');
+  }
+
+  if (input) {
     input.addEventListener('input', () => {
-        const q = input.value.trim().toLowerCase();
+      const q = input.value.trim().toLowerCase();
 
-        if (!q) {
-            hidden.value = '';
-            hideResults();
-            return;
-        }
-
-        const filtered = CLIENTES.filter(c =>
-            (c.nombre || '').toLowerCase().includes(q) ||
-            (c.email  || '').toLowerCase().includes(q)
-        ).slice(0, 8);
-
-        showResults(filtered);
-    });
-
-    results.addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-id]');
-        if (!btn) return;
-
-        hidden.value = btn.dataset.id;
-        input.value  = btn.dataset.label || '';
+      if (!q) {
+        if (hidden) hidden.value = '';
         hideResults();
-    });
+        return;
+      }
 
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('#cliente_search') && !e.target.closest('#cliente_dropdown')) {
-            hideResults();
-        }
+      const filtered = CLIENTES.filter(c =>
+        (c.nombre || '').toLowerCase().includes(q) ||
+        (c.email  || '').toLowerCase().includes(q)
+      ).slice(0, 8);
+
+      showResults(filtered);
     });
+  }
+
+  if (results) {
+    results.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-id]');
+      if (!btn) return;
+
+      if (hidden) hidden.value = btn.dataset.id;
+      if (input)  input.value  = btn.dataset.label || '';
+      hideResults();
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#cliente_search') && !e.target.closest('#cliente_dropdown')) {
+      hideResults();
+    }
+  });
 });
 </script>
-
 @endpush

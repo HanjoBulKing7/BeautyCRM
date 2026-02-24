@@ -118,3 +118,8 @@
     transform: none;
   }
 }
+
+/* ===== AOS smoothing (no rompe nada) ===== */
+.bb-people img[data-aos]{
+  will-change: transform, opacity;
+}

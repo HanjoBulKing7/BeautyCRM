@@ -17,12 +17,37 @@
                                     >
                                 </div>
 
-                                <h4 class="bb-svcCard__name">{{ $servicio->nombre_servicio }}</h4>
+                                <div class="bb-svcCard__body" style="text-align:center; padding: 14px 16px;">
+                                    <h4 class="bb-svcCard__name" style="margin: 10px 0 6px;">
+                                        {{ $servicio->nombre_servicio }}
+                                    </h4>
 
-                                <a class="bb-svcCard__link"
-                                    href="{{ route('agendarcita.create', ['servicio' => $servicio->id_servicio]) }}">
+                                    @if(!empty($servicio->descripcion))
+                                        <p class="bb-svcCard__desc" style="margin: 0 0 10px; opacity: .85; line-height: 1.5;">
+                                            {{ \Illuminate\Support\Str::limit($servicio->descripcion, 140) }}
+                                        </p>
+                                    @else
+                                        <p class="bb-svcCard__desc" style="margin: 0 0 10px; opacity: .65;">
+                                            Sin descripción.
+                                        </p>
+                                    @endif
+
+                                    <div class="bb-svcCard__meta" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom: 12px;">
+                                        <span class="bb-svcCard__metaItem" style="padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,.08);">
+                                            <strong>Duración:</strong> {{ (int) $servicio->duracion_minutos }} min
+                                        </span>
+
+                                        <span class="bb-svcCard__metaItem" style="padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,.08);">
+                                            <strong>Precio:</strong> ${{ number_format((float) $servicio->precio, 2) }}
+                                        </span>
+                                    </div>
+
+                                    <a class="bb-svcCard__link"
+                                       href="{{ route('agendarcita.create', ['servicio' => $servicio->id_servicio]) }}"
+                                       style="display:inline-flex; justify-content:center; align-items:center; text-decoration:none;">
                                         Agendar
-                                </a>
+                                    </a>
+                                </div>
                             </article>
                         @endforeach
                     </div>

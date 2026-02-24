@@ -21,7 +21,6 @@ use App\Models\ServicioHorario;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-
 class CitaController extends Controller
 {
     protected $googleCalendar;
@@ -31,14 +30,40 @@ class CitaController extends Controller
         $this->googleCalendar = $googleCalendar;
     }
 
-    public function horasDisponibles(Request $request)
-    {
-        $date      = $request->query('date');
-        $servicios = $request->query('servicios', []);
-        $empleados = $request->query('empleados', []); // opcional
+    // ============================================================
+    // ✅ Helpers para disponibilidad (reutilizables)
+    // ============================================================
 
+    private function extractDateServiciosEmpleados(Request $request): array
+    {
+        // ✅ soporta fecha/date
+        $date = $request->query('fecha') ?? $request->query('date') ?? $request->input('fecha_cita') ?? $request->input('date');
+
+        $items = $request->query('items');
+        if (!is_array($items)) $items = $request->input('items');
+
+        // ✅ si viene items[0][id_servicio]...
+        if (is_array($items) && count($items) > 0) {
+            $servicios = collect($items)->pluck('id_servicio')->map(fn($v) => (int)$v)->filter()->unique()->values()->all();
+            $empleados = collect($items)->pluck('id_empleado')->map(fn($v) => (int)$v)->filter()->unique()->values()->all();
+
+            return [$date, $servicios, $empleados];
+        }
+
+        // ✅ fallback legacy: servicios[]=, empleados[]=
+        $servicios = $request->query('servicios', $request->input('servicios', []));
+        $empleados = $request->query('empleados', $request->input('empleados', []));
+
+        $servicios = collect(is_array($servicios) ? $servicios : [])->map(fn($v) => (int)$v)->filter()->unique()->values()->all();
+        $empleados = collect(is_array($empleados) ? $empleados : [])->map(fn($v) => (int)$v)->filter()->unique()->values()->all();
+
+        return [$date, $servicios, $empleados];
+    }
+
+    private function computeSlotsForDate(string $date, array $servicios, array $empleados = []): array
+    {
         if (!$date || !is_array($servicios) || count($servicios) === 0) {
-            return response()->json([]);
+            return [];
         }
 
         $fecha = Carbon::parse($date);
@@ -50,15 +75,15 @@ class CitaController extends Controller
             ->unique()
             ->values();
 
-        // 🔥 tus servicios usan PK id_servicio
+        // 🔥 servicios usan PK id_servicio
         $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
-        if ($serviciosDb->isEmpty()) return response()->json([]);
+        if ($serviciosDb->isEmpty()) return [];
 
-        // Duración total (ajusta el campo si en tu tabla se llama distinto)
+        // Duración total
         $totalMin = (int) $ids->sum(fn($id) => (int)($serviciosDb[$id]->duracion_minutos ?? 0));
         if ($totalMin <= 0) $totalMin = 30;
 
-        // ✅ helper robusto: "HH:MM" o "HH:MM:SS" -> minutos del día
+        // helper robusto: "HH:MM" o "HH:MM:SS" -> minutos del día
         $toMinutes = function ($time) {
             $t = substr((string)$time, 0, 5); // HH:MM
             if (!str_contains($t, ':')) return 0;
@@ -66,7 +91,7 @@ class CitaController extends Controller
             return ($h * 60) + $m;
         };
 
-        // ✅ OJO: en tu tabla es servicio_id (no id_servicio)
+        // ✅ en tu tabla es servicio_id
         $horarios = ServicioHorario::whereIn('servicio_id', $ids)
             ->where('dia_semana', $dow)
             ->get()
@@ -75,7 +100,7 @@ class CitaController extends Controller
         // Si algún servicio no tiene horarios ese día => no hay disponibilidad
         foreach ($ids as $idSrv) {
             if (!isset($horarios[$idSrv]) || $horarios[$idSrv]->isEmpty()) {
-                return response()->json([]);
+                return [];
             }
         }
 
@@ -88,19 +113,16 @@ class CitaController extends Controller
                 $sMin = $toMinutes($h->hora_inicio);
                 $eMin = $toMinutes($h->hora_fin);
 
-                // cruza medianoche (22:00 -> 02:00): para el día actual, hasta 24:00
-                if ($eMin <= $sMin) {
-                    $eMin = 24 * 60;
-                }
+                // cruza medianoche: para el día actual, hasta 24:00
+                if ($eMin <= $sMin) $eMin = 24 * 60;
 
-                // seguridad
                 $sMin = max(0, min($sMin, 24 * 60));
                 $eMin = max(0, min($eMin, 24 * 60));
 
                 if ($eMin > $sMin) $intervals[] = [$sMin, $eMin];
             }
 
-            if (empty($intervals)) return response()->json([]);
+            if (empty($intervals)) return [];
             $intervalsPerService[] = $intervals;
         }
 
@@ -116,7 +138,7 @@ class CitaController extends Controller
                 }
             }
             $common = $newCommon;
-            if (empty($common)) return response()->json([]);
+            if (empty($common)) return [];
         }
 
         // 3) Slots cada 30 min
@@ -149,7 +171,17 @@ class CitaController extends Controller
                 $end   = $start->copy()->addMinutes($totalMin);
 
                 foreach ($citas as $c) {
-                    $cStart = Carbon::createFromFormat('H:i:s', $c->hora_cita);
+                    // robusto: soporta H:i:s o H:i
+                    $raw = (string)($c->hora_cita ?? '');
+                    $raw8 = substr($raw, 0, 8);
+                    $raw5 = substr($raw, 0, 5);
+
+                    try {
+                        $cStart = Carbon::createFromFormat('H:i:s', $raw8);
+                    } catch (\Exception $e) {
+                        $cStart = Carbon::createFromFormat('H:i', $raw5);
+                    }
+
                     $dur    = (int)($c->duracion_total_minutos ?? 60);
                     $cEnd   = $cStart->copy()->addMinutes(max(1, $dur));
 
@@ -159,8 +191,86 @@ class CitaController extends Controller
             }));
         }
 
-        return response()->json($slots);
+        return $slots;
     }
+
+    // ============================================================
+    // ✅ AJAX: horas disponibles (para tu grid JS)
+    // ============================================================
+
+    public function horasDisponibles(Request $request)
+    {
+        [$date, $servicios, $empleados] = $this->extractDateServiciosEmpleados($request);
+
+        if (!$date || empty($servicios)) {
+            return response()->json([
+                'horas' => [],
+                'slots' => [],
+            ]);
+        }
+
+        $slots = $this->computeSlotsForDate((string)$date, (array)$servicios, (array)$empleados);
+
+        // ✅ para tu JS nuevo (grid): array de strings "HH:MM"
+        $horas = array_values(array_map(fn($s) => $s['value'], $slots));
+
+        // ✅ compat: dejo slots también
+        return response()->json([
+            'horas' => $horas,
+            'slots' => $slots,
+        ]);
+    }
+
+    // ============================================================
+    // ✅ AJAX: disponibilidad por mes (dots/disabled por día lleno)
+    // ============================================================
+
+    public function availabilityMonth(Request $request)
+    {
+        $month = (string) $request->query('month', '');
+        if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'month debe ser YYYY-MM',
+            ], 422);
+        }
+
+        // items[] preferido; fallback a servicios[]/empleados[]
+        [$ignoreDate, $servicios, $empleados] = $this->extractDateServiciosEmpleados($request);
+
+        $start = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
+        $today = Carbon::today();
+
+        $days = [];
+        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            $ymd = $d->format('Y-m-d');
+
+            if ($d->lt($today)) {
+                $days[$ymd] = ['disabled' => true, 'slots' => 0];
+                continue;
+            }
+
+            if (empty($servicios) || empty($empleados)) {
+                // si aún no hay empleados/servicios, lo marcamos "no disponible"
+                $days[$ymd] = ['disabled' => true, 'slots' => 0];
+                continue;
+            }
+
+            $slots = $this->computeSlotsForDate($ymd, $servicios, $empleados);
+            $days[$ymd] = ['disabled' => count($slots) === 0, 'slots' => count($slots)];
+        }
+
+        return response()->json([
+            'ok' => true,
+            'month' => $month,
+            'days' => $days,
+        ]);
+    }
+
+    // ============================================================
+    // (lo demás lo dejo tal como lo tenías, solo toques mínimos)
+    // ============================================================
 
     /**
      * Devuelve ventanas permitidas por servicio para esa fecha.
@@ -171,13 +281,11 @@ class CitaController extends Controller
         $date = \Carbon\Carbon::parse($fecha);
         $dow = (int)$date->dayOfWeekIso; // 1=Lunes...7=Domingo
 
-        // Trae horarios de TODOS los servicios
         $horarios = \App\Models\ServicioHorario::query()
             ->whereIn('servicio_id', $servicioIds->all())
             ->where('dia_semana', $dow)
             ->get(['servicio_id','hora_inicio','hora_fin']);
 
-        // ✅ Agrupar por servicio_id (correcto)
         $byService = $horarios->groupBy('servicio_id');
 
         foreach ($servicioIds as $sid) {
@@ -303,7 +411,6 @@ class CitaController extends Controller
         $servicioId = (int) $request->query('servicio_id', 0);
         if ($servicioId <= 0) return response()->json([]);
 
-        // ✅ ahora usamos relación categoria (id_categoria) -> categorias_servicios.nombre
         $servicio = Servicio::with('categoria')->where('id_servicio', $servicioId)->first();
         if (!$servicio) return response()->json([]);
 
@@ -339,15 +446,16 @@ class CitaController extends Controller
 
         return response()->json(
             $empleados->map(fn ($e) => [
-                'id' => $e->id,
-                'label' => trim($e->nombre.' '.$e->apellido),
+                'id'      => (int)$e->id,
+                'nombre'  => (string)($e->nombre ?? ''),
+                'apellido'=> (string)($e->apellido ?? ''),
+                'label'   => trim(($e->nombre ?? '').' '.($e->apellido ?? '')),
             ])->values()
         );
     }
 
     public function index()
     {
-        // ✅ ya no existe 'servicio' directo en cita; ahora es 'servicios' (pivot)
         $citas = Cita::with(['cliente', 'empleado', 'servicios'])
             ->orderBy('fecha_cita', 'desc')
             ->orderBy('hora_cita', 'desc')
@@ -355,7 +463,6 @@ class CitaController extends Controller
 
         $calendarEvents = $citas->map(function ($cita) {
             $start = \Carbon\Carbon::parse($cita->fecha_cita->format('Y-m-d') . ' ' . $cita->hora_cita);
-
             $firstServicio = $cita->servicios->first();
 
             return [
@@ -372,7 +479,6 @@ class CitaController extends Controller
 
         $isGoogleConnected = GoogleToken::where('user_id', auth()->id())->exists();
 
-        // ✅ MANTENEMOS tal cual tu lógica defensiva duplicada
         try {
             $isConnected = class_exists('App\Models\GoogleToken') &&
                         \App\Models\GoogleToken::where('user_id', auth()->id())->exists();
@@ -395,13 +501,11 @@ class CitaController extends Controller
     {
         $clientes = Cliente::select('id', 'nombre', 'email')->get();
 
-        // ✅ servicios con categoria (relación)
         $servicios = Servicio::with('categoria')->get();
 
-        // ✅ empleados igual que tu query actual
         $empleados = Empleado::query()
             ->leftJoin('users', 'users.id', '=', 'empleados.user_id')
-            ->where('users.role_id', 2) // ✅ SOLO EMPLEADOS
+            ->where('users.role_id', 2)
             ->select([
                 'empleados.id as id',
                 'empleados.nombre',
@@ -425,7 +529,6 @@ class CitaController extends Controller
             ];
         })->values();
 
-        // ✅ categorías para el select (solo nombres, derivadas de servicios)
         $serviciosForJs = $servicios->map(function ($s) {
             $catName = $s->categoria->nombre ?? 'Sin categoría';
 
@@ -465,23 +568,22 @@ class CitaController extends Controller
         ));
     }
 
-   public function store(Request $request)
-{
-    $validated = $request->validate([
-        'cliente_id'   => ['required', 'exists:clientes,id'],
-        'fecha_cita'   => ['required', 'date'],
-        'hora_cita'    => ['required'],
+    public function store(Request $request)
+    {
+        // ✅ compat: si tu UI nueva manda items[], lo tratamos como servicios[]
+        if (!$request->has('servicios') && $request->has('items')) {
+            $request->merge(['servicios' => $request->input('items')]);
+        }
 
-        'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
-        'observaciones'=> ['nullable', 'string'],
-        'descuento'    => ['nullable', 'numeric', 'min:0'],
+        $validated = $request->validate([
+            'cliente_id'   => ['required', 'exists:clientes,id'],
+            'fecha_cita'   => ['required', 'date'],
+            'hora_cita'    => ['required'],
 
-        // ✅ FIX: método de pago (solo si completada)
-        'metodo_pago'  => [
-            'nullable',
-            Rule::requiredIf(fn () => $request->input('estado_cita') === 'completada'),
-            Rule::in(['efectivo','tarjeta_credito','tarjeta_debito','transferencia']),
-        ],
+            'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
+            'metodo_pago'  => ['nullable', Rule::in(['efectivo','tarjeta_credito','tarjeta_debito','transferencia']), 'required_if:estado_cita,completada'],
+            'observaciones'=> ['nullable', 'string'],
+            'descuento'    => ['nullable', 'numeric', 'min:0'],
 
         'servicios'                     => ['required', 'array', 'min:1'],
         'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
@@ -526,10 +628,8 @@ class CitaController extends Controller
         $totalDuracion += $duracion;
     }
 
-    $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
-
-    // ✅ FIX: ahora sí sale del validated (ya existe y está validado)
-    $metodoPago = $validated['metodo_pago'] ?? null;
+        $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
+        $metodoPago = $validated['metodo_pago'] ?? null;
 
     $cita = Cita::create([
         'cliente_id'            => $validated['cliente_id'],
@@ -545,14 +645,14 @@ class CitaController extends Controller
 
     $cita->servicios()->sync($pivotData);
 
-    if ($cita->estado_cita === 'confirmada') {
-        try {
-            Mail::to($cita->cliente->email)->send(new CitaConfirmadaMail($cita));
-        } catch (\Exception $e) {
-            Log::error('Error enviando correo de confirmación: '.$e->getMessage());
+        if ($cita->estado_cita === 'confirmada') {
+            try {
+                Mail::to($cita->cliente->email)->send(new CitaConfirmadaMail($cita));
+            } catch (\Exception $e) {
+                Log::error('Error enviando correo de confirmación: '.$e->getMessage());
+            }
         }
-    }
-        // ✅ MANTENEMOS tu bloque Google tal cual
+
         $token = GoogleToken::first();
         if ($token) {
             try {
@@ -582,9 +682,8 @@ class CitaController extends Controller
         }
 
         if ($cita->estado_cita === 'completada') {
-            $this->crearVentaDesdeCita($cita, $metodoPago);
+            $this->crearVentaDesdeCita($cita, (string)$metodoPago);
         }
-
 
         return redirect()->route('admin.citas.index')->with('success', 'Cita creada correctamente.');
     }
@@ -597,12 +696,11 @@ class CitaController extends Controller
 
     public function edit(Cita $cita)
     {
-        // ✅ carga también categoria para poder armar "categoria" string en JS
         $cita->load(['servicios.categoria']);
 
         $empleados = Empleado::query()
             ->leftJoin('users', 'users.id', '=', 'empleados.user_id')
-            ->where('users.role_id', 2) // ✅ SOLO EMPLEADOS
+            ->where('users.role_id', 2)
             ->select([
                 'empleados.id as id',
                 'empleados.nombre',
@@ -618,8 +716,6 @@ class CitaController extends Controller
         $empleadosPorDepto = $empleados->groupBy(fn($e) => $e->departamento ?: 'Sin departamento');
 
         $clientes = Cliente::select('id', 'nombre', 'email')->get();
-
-        // ✅ servicios con categoria (para el form)
         $servicios = Servicio::with('categoria')->get();
 
         $serviciosForJs = $servicios->map(function ($s) {
@@ -670,42 +766,40 @@ class CitaController extends Controller
         ));
     }
 
-   public function update(Request $request, $id)
-{
-    $cita = Cita::findOrFail($id);
-    $oldEstado = $cita->estado_cita;
+    public function update(Request $request, $id)
+    {
+        // ✅ compat: si tu UI nueva manda items[], lo tratamos como servicios[]
+        if (!$request->has('servicios') && $request->has('items')) {
+            $request->merge(['servicios' => $request->input('items')]);
+        }
 
-    // ✅ FIX: primero valida, luego lees $validated
-    $validated = $request->validate([
-        'cliente_id'   => ['required', 'exists:clientes,id'],
-        'fecha_cita'   => ['required', 'date'],
-        'hora_cita'    => ['required'],
+        $cita = Cita::findOrFail($id);
+        $oldEstado = $cita->estado_cita;
 
-        'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
-        'observaciones'=> ['nullable', 'string'],
-        'descuento'    => ['nullable', 'numeric', 'min:0'],
+        $validated = $request->validate([
+            'cliente_id'   => ['required', 'exists:clientes,id'],
+            'fecha_cita'   => ['required', 'date'],
+            'hora_cita'    => ['required'],
 
-        // ✅ FIX: método de pago (solo si completada)
-        'metodo_pago'  => [
-            'nullable',
-            Rule::requiredIf(fn () => $request->input('estado_cita') === 'completada'),
-            Rule::in(['efectivo','tarjeta_credito','tarjeta_debito','transferencia']),
-        ],
+            'estado_cita'  => ['required', Rule::in(['pendiente','confirmada','cancelada','completada'])],
+            'metodo_pago'  => ['nullable', Rule::in(['efectivo','tarjeta_credito','tarjeta_debito','transferencia']), 'required_if:estado_cita,completada'],
+            'observaciones'=> ['nullable', 'string'],
+            'descuento'    => ['nullable', 'numeric', 'min:0'],
 
-        'servicios'                     => ['required', 'array', 'min:1'],
-        'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
-        'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],
-        'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
-        'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
-    ]);
+            'servicios'                     => ['required', 'array', 'min:1'],
+            'servicios.*.id_servicio'       => ['required', 'exists:servicios,id_servicio'],
+            'servicios.*.id_empleado'       => ['nullable', 'exists:empleados,id'],
+            'servicios.*.precio_snapshot'   => ['nullable', 'numeric', 'min:0'],
+            'servicios.*.duracion_snapshot' => ['nullable', 'integer', 'min:0'],
+        ]);
 
-    $metodoPago = $validated['metodo_pago'] ?? null;
+        $metodoPago = $validated['metodo_pago'] ?? null;
 
-    $ids = collect($validated['servicios'])
-        ->pluck('id_servicio')
-        ->map(fn($v) => (int) $v)
-        ->unique()
-        ->values();
+        $ids = collect($validated['servicios'])
+            ->pluck('id_servicio')
+            ->map(fn($v) => (int) $v)
+            ->unique()
+            ->values();
 
     $serviciosDb = Servicio::whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
 
@@ -737,7 +831,7 @@ class CitaController extends Controller
         $totalDuracion += $duracion;
     }
 
-    $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
+        $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
 
     $cita->update([
         'cliente_id'            => $validated['cliente_id'],
@@ -775,23 +869,20 @@ class CitaController extends Controller
         }
 
         if ($cita->estado_cita === 'completada') {
-            $this->crearVentaDesdeCita($cita, $metodoPago);
+            $this->crearVentaDesdeCita($cita, (string)$metodoPago);
         }
-
 
         return redirect()->route('admin.citas.index')->with('success', 'Cita actualizada correctamente.');
     }
 
     //=======================================================================
-    //CREAR VENTA DESDE CITA FUNCIÓN ========================================
+    // CREAR VENTA DESDE CITA
     private function crearVentaDesdeCita(Cita $cita, string $formaPago): Venta
     {
         return DB::transaction(function () use ($cita, $formaPago) {
 
-            // Traer servicios con pivot
             $cita->loadMissing(['servicios']);
 
-            // subtotal = suma de snapshots
             $subtotal = (float) $cita->servicios->sum(function ($s) {
                 return (float) ($s->pivot->precio_snapshot ?? $s->precio ?? 0);
             });
@@ -799,16 +890,14 @@ class CitaController extends Controller
             $descuento = (float) ($cita->descuento ?? 0);
             $total = max($subtotal - $descuento, 0);
 
-            // ✅ Fecha + hora SIN "double time"
             $fechaVenta = Carbon::parse($cita->fecha_cita)->setTimeFromTimeString($cita->hora_cita);
 
-            // 1 venta por cita
             return Venta::updateOrCreate(
                 ['id_cita' => $cita->id_cita],
                 [
                     'fecha_venta'            => $fechaVenta,
                     'total'                  => $total,
-                    'forma_pago'             => $formaPago,     // ✅ ya NO null
+                    'forma_pago'             => $formaPago,
                     'estado_venta'           => 'pagada',
                     'metodo_pago_especifico' => null,
                     'referencia_pago'        => null,

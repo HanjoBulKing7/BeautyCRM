@@ -644,3 +644,264 @@
   background: rgba(184,134,11,0.12);
   box-shadow: 0 16px 30px rgba(184,134,11,0.12);
 }
+/* =========================================================
+   LAYOUT: Calendario a la izquierda / Horas + Seleccionados a la derecha
+========================================================= */
+.bb-datetimeGrid{
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 10px;
+}
+@media (max-width: 1024px){
+  .bb-datetimeGrid{ grid-template-columns: 1fr; }
+}
+.bb-datetimeGrid__right{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Caja suave dentro del panel */
+.bb-datetimeBox{
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: linear-gradient(180deg, rgba(244,235,221,0.45), rgba(255,255,255,0.95));
+  padding: 14px;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.05);
+}
+
+/* =========================================================
+   Servicios seleccionados — versión compacta (para el panel derecho)
+========================================================= */
+.bb-selectedList--compact{
+  gap: 10px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+.bb-selectedCard--compact{
+  grid-template-columns: 86px 1fr;
+  gap: 12px;
+}
+.bb-selectedCard--compact .bb-selectedCard__media{
+  height: 86px;
+}
+.bb-selectedCard--compact .bb-selectedCard__img{
+  height: 86px;
+  min-height: 86px;
+}
+.bb-selectedCard--compact .bb-selectedCard__info{
+  padding: 10px 12px;
+}
+.bb-selectedCard--compact .bb-selected__name{
+  font-size: 14px;
+  margin: 0 0 6px;
+}
+.bb-selectedCard--compact .bb-selected__meta{
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.bb-selectedCard--compact .bb-selected__meta li{
+  margin: 0;
+}
+.bb-selectedCard--compact .bb-selectedCard__remove{
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+}
+.bb-selectedCard--compact .bb-selectedCard__emp .bb-hint{
+  display: none;
+}
+.bb-selectedCard--compact .bb-label{
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.bb-selectedCard--compact .bb-select{
+  padding: 10px 10px;
+  border-radius: 12px;
+}
+
+@media (max-width: 900px){
+  .bb-selectedList--compact{
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+  .bb-selectedCard--compact{
+    grid-template-columns: 1fr;
+  }
+  .bb-selectedCard--compact .bb-selectedCard__media{
+    height: auto;
+  }
+  .bb-selectedCard--compact .bb-selectedCard__img{
+    height: 180px;
+    min-height: 180px;
+  }
+}
+/* =========================================================
+   SELECTED (COMPACT GRID) — Servicios seleccionados arriba
+   Pegar al FINAL de public/css/agendarcita.css
+========================================================= */
+
+/* Grid para cards seleccionadas */
+.bb-selectedList--compact{
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 340px));
+  gap: 16px;
+  align-items: stretch;
+  justify-content: start;
+}
+
+/* Card vertical (imagen arriba, info abajo) */
+.bb-selectedList--compact .bb-selectedCard{
+  position: relative;
+  display: flex !important;
+  flex-direction: column !important;
+
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.06);
+}
+
+/* Imagen */
+.bb-selectedList--compact .bb-selectedCard__media{
+  background: #f4ebdd;
+}
+.bb-selectedList--compact .bb-selectedCard__img{
+  width: 100%;
+  height: 180px;
+  min-height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Info */
+.bb-selectedList--compact .bb-selectedCard__info{
+  padding: 12px 14px 14px;
+}
+.bb-selectedList--compact .bb-selected__name{
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  margin: 0 0 8px;
+  color: rgba(26,26,26,0.90);
+}
+.bb-selectedList--compact .bb-selected__meta{
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  color: rgba(26,26,26,0.72);
+  line-height: 1.6;
+}
+
+/* Remove (X) */
+.bb-selectedList--compact .bb-selectedCard__remove{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(184,134,11,0.35);
+  background: rgba(255,255,255,0.92);
+  color: #b8860b;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+}
+.bb-selectedList--compact .bb-selectedCard__remove:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+.bb-selectedList--compact .bb-selectedCard__remove:disabled{
+  opacity: .7;
+  cursor: default;
+}
+
+/* Responsive */
+@media (max-width: 640px){
+  .bb-selectedList--compact{
+    grid-template-columns: 1fr;
+  }
+  .bb-selectedList--compact .bb-selectedCard__img{
+    height: 220px;
+    min-height: 220px;
+  }
+}
+
+/* (Opcional) Layout 2 columnas para calendario + horas si no lo tenías */
+.bb-datetimeGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px){
+  .bb-datetimeGrid{
+    grid-template-columns: 1fr;
+  }
+}
+/* ===== FIX: selected cards en grid (vertical) ===== */
+#agendarcita .bb-selectedList--compact{
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selectedCard{
+  /* mata el layout viejo (2 columnas) */
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: 1fr !important; /* por si algún CSS insiste */
+  align-items: stretch !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selectedCard__media{
+  width: 100% !important;
+  height: auto !important;     /* mata el height:100% viejo */
+}
+
+#agendarcita .bb-selectedList--compact .bb-selectedCard__img{
+  width: 100% !important;
+  height: 180px !important;
+  min-height: 180px !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selectedCard__info{
+  padding: 12px 14px 14px !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selected__name{
+  font-family: "Inter", sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+  margin: 0 0 8px !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selected__meta{
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selected__meta li{
+  margin: 0 !important;
+}
+

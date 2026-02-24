@@ -250,16 +250,17 @@
 
         // ✅ click en día: abre create con date preseleccionada
         dateClick: (info) => {
-          const url = new URL(`{{ route('admin.citas.create') }}`, window.location.origin);
+          const url = new URL(@json(route('admin.citas.create')));
           url.searchParams.set('date', info.dateStr);
           window.location.href = url.toString();
         },
 
         // ✅ click en evento: manda a editar (o show si prefieres)
         eventClick: (info) => {
-          // si en tus events mandas "id" como id de cita, esto funciona:
-          window.location.href = `{{ url('/admin/citas') }}/${info.event.id}/edit`;
+          const template = @json(route('admin.citas.edit', ['cita' => '__ID__']));
+          window.location.href = template.replace('__ID__', info.event.id);
         },
+
 
         // Tooltip simple
         eventMouseEnter(info) {

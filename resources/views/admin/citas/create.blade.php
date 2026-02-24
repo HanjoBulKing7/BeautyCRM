@@ -1,17 +1,23 @@
 @extends('layouts.app')
 
-@section('content')
-    <div class="max-w-4xl mx-auto">
-        <h2 class="text-xl font-semibold mb-4">Crear Cita</h2>
+@section('title', 'Crear Cita')
+@section('page-title', 'Crear Cita')
 
-        @include('admin.citas._form', [
-            'mode'   => 'create',
-            'action' => route('admin.citas.store'),
-            'clientes' => $clientes,
-            'servicios' => $servicios,
-            'empleados' => $empleados,
-            'fechaPrefill' => $fechaPrefill, 
-            'serviciosForJs' => $serviciosForJs, 
-        ])
-    </div>
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/agendarcita.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/admin-citas-booking.css') }}">
+@endpush
+
+@section('content')
+  <div id="adminBookingRoot">
+    @include('admin.citas._form', [
+      'mode'         => 'create',
+      'action'       => route('admin.citas.store'),
+      'cita'         => null,
+      'clientes'     => $clientes,
+      'servicios'    => $servicios,
+      'categorias'   => $categorias,
+      'fechaPrefill' => $fechaPrefill ?? request('date'),
+    ])
+  </div>
 @endsection

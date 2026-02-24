@@ -4,7 +4,7 @@
   const serviciosMap = ctx.servicios || {}; // { [id]: {id_servicio, id_categoria, nombre_servicio, precio, descuento, duracion_minutos, imagen...} }
   const categorias = Array.isArray(ctx.categorias) ? ctx.categorias : [];
 
-  // ✅ NUEVO: empleados por servicio + carga para balanceo
+  // ✅ empleados por servicio + carga para balanceo
   const empleadosPorServicio = ctx.empleadosPorServicio || {}; // { [servicioId]: [{id,nombre,apellido}] }
   const cargaEmpleados = ctx.cargaEmpleados || {}; // { [empleadoId]: total }
 
@@ -110,7 +110,7 @@
     });
   }
 
-  // ✅ Balanceo: escoger empleado con menor carga (próximos 14 días)
+  // ✅ Balanceo: escoger empleado con menor carga
   function pickDefaultEmpleado(servicioId) {
     const list = empleadosPorServicio[String(servicioId)] || empleadosPorServicio[servicioId] || [];
     if (!Array.isArray(list) || list.length === 0) return null;
@@ -156,7 +156,6 @@
     const locked = !isAllEmployeesSelected();
     elDatetimeLock.style.display = locked ? 'block' : 'none';
 
-    // si está locked, limpia calendario/horas
     if (locked) {
       state.monthAvailability = null;
       resetDateTimeUI();
@@ -282,8 +281,6 @@
       return `<option value="${e.id}" ${sel}>${escapeHtml(name || ('Empleado #' + e.id))}</option>`;
     }).join('');
 
-    // OJO: no ponemos placeholder vacío porque ya auto-asignamos por defecto,
-    // pero el usuario puede cambiarlo
     return `
       <select class="bb-select bb-emp-select">
         ${opts}
@@ -307,7 +304,7 @@
       const imgSrc = resolveServiceImg(s);
 
       return `
-        <article class="bb-selectedCard" data-index="${idx}" data-service-id="${it.id_servicio}" data-order="${it.orden}">
+        <article class="bb-selectedCard bb-selectedCard--compact" data-index="${idx}" data-service-id="${it.id_servicio}" data-order="${it.orden}">
           <div class="bb-selectedCard__media">
             <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(name)}" class="bb-selectedCard__img" loading="lazy" />
           </div>
@@ -355,7 +352,7 @@
       });
     });
 
-    // empleado change (por card)
+    // empleado change
     elSelectedList.querySelectorAll('.bb-emp-select').forEach((sel, idx) => {
       sel.addEventListener('change', async () => {
         state.items[idx].id_empleado = sel.value ? Number(sel.value) : null;
@@ -402,7 +399,7 @@
     url.searchParams.set('month', mk);
     setItemsParams(url, state.items);
 
-    const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' }});
+    const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
     if (!res.ok) return;
 
     const data = await res.json().catch(() => null);
@@ -451,17 +448,15 @@
           const isSelected = state.selectedDate === ymd;
 
           const av = state.monthAvailability?.[ymd];
-          // si aún no hay availability (locked), tratamos como "neutral"
           const hasAv = !!av;
           const isDisabledByAv = hasAv ? !!av.disabled : false;
 
           const locked = !isAllEmployeesSelected();
           const disabled = locked || isPast || isDisabledByAv;
 
-          // ✅ dot: gold si disponible, red si no, gris si locked/no data
-          let dotClass = 'is-muted';
-          if (locked || !hasAv) dotClass = 'is-muted';
-          else dotClass = isDisabledByAv ? 'is-red' : 'is-gold';
+          // ✅ SOLO punto dorado cuando el día está habilitado (sin punto rojo para deshabilitados)
+          const showGoldDot = !locked && hasAv && !isPast && !isDisabledByAv;
+          const dotHtml = showGoldDot ? '<span class="bb-cal__dot is-gold" aria-hidden="true"></span>' : '';
 
           return `
             <button type="button"
@@ -469,7 +464,7 @@
               data-date="${ymd}"
               ${disabled ? 'disabled' : ''}>
               <span class="bb-cal__day">${cell.getDate()}</span>
-              <span class="bb-cal__dot ${dotClass}" aria-hidden="true"></span>
+              ${dotHtml}
             </button>
           `;
         }).join('')}
@@ -533,7 +528,7 @@
     url.searchParams.set('fecha', state.selectedDate);
     setItemsParams(url, state.items);
 
-    const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' }});
+    const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
     if (!res.ok) {
       if (elTimesHint) elTimesHint.textContent = 'No se pudieron cargar horas.';
       return;

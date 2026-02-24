@@ -77,7 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeBtn = header.querySelector(".Normal-close-menu");
   const menu = header.querySelector(".Normal-menu");
   const backdrop = header.querySelector(".Normal-header-backdrop");
-  const menuLinks = header.querySelectorAll(".Normal-menu-link, .Normal-menu-footer-cta");
+  const menuLinks = header.querySelectorAll(".Normal-menu-link, a.Normal-menu-footer-cta");
+
 
   // =========================
   // MENU TOGGLE
@@ -91,12 +92,16 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const closeMenu = () => {
-    header.classList.remove("Normal-menu-is-active");
-    document.body.classList.remove("overflow-hidden");
+  header.classList.remove("Normal-menu-is-active");
+  document.body.classList.remove("overflow-hidden");
 
-    burger?.setAttribute("aria-expanded", "false");
-    menu?.setAttribute("aria-hidden", "true");
-  };
+  burger?.setAttribute("aria-expanded", "false");
+  menu?.setAttribute("aria-hidden", "true");
+
+  // ✅ nuevo: cerrar dropdowns al cerrar menú
+  closeAllDropdowns?.();
+};
+
 
   burger?.addEventListener("click", () => {
     const isOpen = header.classList.contains("Normal-menu-is-active");
@@ -113,6 +118,55 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeMenu();
   });
+// =========================
+// USER DROPDOWN (auth)
+// =========================
+const userDropdowns = header.querySelectorAll(".Normal-user-dropdown");
+
+const closeAllDropdowns = () => {
+  userDropdowns.forEach((dd) => {
+    dd.classList.remove("is-open");
+    const trigger = dd.querySelector(".Normal-user-trigger");
+    trigger?.setAttribute("aria-expanded", "false");
+  });
+};
+
+userDropdowns.forEach((dd) => {
+  const trigger = dd.querySelector(".Normal-user-trigger");
+  const userMenu = dd.querySelector(".Normal-user-menu");
+  if (!trigger || !userMenu) return;
+
+  trigger.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const isOpen = dd.classList.contains("is-open");
+    closeAllDropdowns();
+    if (!isOpen) {
+      dd.classList.add("is-open");
+      trigger.setAttribute("aria-expanded", "true");
+    }
+  });
+
+  // Evita que clicks dentro del menú lo cierren por el document click
+  userMenu.addEventListener("click", (e) => e.stopPropagation());
+
+  // Si eligen opción del dropdown: cierra dropdown y (si es móvil) cierra menú
+  userMenu.querySelectorAll("a, button").forEach((el) => {
+    el.addEventListener("click", () => {
+      closeAllDropdowns();
+      if (header.classList.contains("Normal-menu-is-active")) closeMenu();
+    });
+  });
+});
+
+// click fuera => cerrar dropdown
+document.addEventListener("click", () => closeAllDropdowns());
+
+// ESC => cerrar dropdown (además del menú)
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeAllDropdowns();
+});
 
   // =========================
   // HEADER SCROLL (tu lógica)

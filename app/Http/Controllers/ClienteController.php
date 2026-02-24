@@ -119,4 +119,17 @@ class ClienteController extends Controller
         }
         return null;
     }
+    public function misReservas()
+{
+    $user = auth()->user();
+
+    $citas = \App\Models\Cita::with(['servicios', 'empleado'])
+        ->where('cliente_id', $user->id) // ajusta si tu cliente_id apunta a otra tabla/perfil
+        ->orderBy('fecha_cita', 'desc')
+        ->orderBy('hora_cita', 'desc')
+        ->get();
+
+    return view('misreservas', compact('citas'));
+}
+
 }

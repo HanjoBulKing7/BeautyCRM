@@ -106,3 +106,65 @@
     grid-template-columns: 1fr;
   }
 }
+/* ===== Fix: texto invisible en cards ===== */
+.bb-svcCard__body,
+.bb-svcCard__name,
+.bb-svcCard__desc,
+.bb-svcCard__meta,
+.bb-svcCard__pill,
+.bb-svcCard__pill strong{
+  color: rgba(26,26,26,.88) !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: rgba(26,26,26,.88) !important;
+}
+
+/* ===== Layout centrado ===== */
+.bb-svcCard__body{
+  text-align: center;
+  padding: 14px 16px 18px;
+}
+
+.bb-svcCard__name{
+  margin: 10px 0 6px;
+  font-weight: 900;
+}
+
+.bb-svcCard__desc{
+  margin: 0 0 12px;
+  line-height: 1.5;
+  font-size: 13px;
+  opacity: .85 !important; /* queda visible pero más suave */
+}
+
+.bb-svcCard__meta{
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.bb-svcCard__pill{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(244,235,221,.45);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.bb-svcCard__link{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 900;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(184,134,11,.40);
+  background: rgba(184,134,11,.10);
+  color: rgba(26,26,26,.90) !important;
+}
