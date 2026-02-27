@@ -1,21 +1,18 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600;800&display=swap");
 
-.bb-most {
-  padding: clamp(64px, 7vw, 110px) 16px;
-  background: #ffffff;
+.bb-most{
+  padding: clamp(54px, 6vw, 90px) 16px;
+  background: #fff;
 }
-
-.bb-most__container {
+.bb-most__container{
   max-width: 1120px;
   margin: 0 auto;
 }
-
-.bb-most__header {
+.bb-most__header{
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 26px;
 }
-
-.bb-most__title {
+.bb-most__title{
   font-family: "Playfair Display", serif;
   font-weight: 700;
   font-size: clamp(28px, 4vw, 50px);
@@ -24,16 +21,21 @@
   margin: 0;
   color: #1a1a1a;
 }
+.bb-most__empty{
+  opacity: .75;
+  text-align: center;
+  width: 100%;
+}
 
-/* Grid 4 cards */
-.bb-most__grid {
+/* ✅ MISMO GRID que "Nuestros servicios" */
+.bb-cat__grid{
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: clamp(14px, 2vw, 22px);
 }
 
-/* Card */
-.bb-card {
+/* ✅ MISMA CARD (bb-svcCard) */
+.bb-svcCard{
   border-radius: 22px;
   overflow: hidden;
   border: 1px solid rgba(0,0,0,0.08);
@@ -41,20 +43,17 @@
   background: #fff;
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
-
-.bb-card:hover {
+.bb-svcCard:hover{
   transform: translateY(-4px);
   box-shadow: 0 26px 55px rgba(0,0,0,0.10);
 }
-
-.bb-card__img {
+.bb-svcCard__img{
   aspect-ratio: 1 / 1;
   width: 100%;
   overflow: hidden;
   background: #f3f0ea;
 }
-
-.bb-card__img img {
+.bb-svcCard__img img{
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -62,80 +61,30 @@
   transform: scale(1.03);
   transition: transform 600ms ease;
 }
-
-.bb-card:hover .bb-card__img img {
+.bb-svcCard:hover .bb-svcCard__img img{
   transform: scale(1.08);
 }
 
-.bb-card__name {
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  font-size: 16px;
-  margin: 14px 16px 8px;
-  color: #1a1a1a;
-}
-
-.bb-card__link {
-  display: inline-flex;
-  margin: 0 16px 16px;
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  text-decoration: none;
-  color: rgba(26,26,26,0.9);
-  border-bottom: 1px solid rgba(0,0,0,0.25);
-  padding-bottom: 3px;
-  transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
-}
-
-.bb-card__link:hover {
-  color: #b8860b;
-  border-color: #b8860b;
-  transform: translateY(-1px);
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .bb-most__grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 520px) {
-  .bb-most__grid {
-    grid-template-columns: 1fr;
-  }
-}
-/* ===== Fix: texto invisible en cards ===== */
-.bb-svcCard__body,
-.bb-svcCard__name,
-.bb-svcCard__desc,
-.bb-svcCard__meta,
-.bb-svcCard__pill,
-.bb-svcCard__pill strong{
-  color: rgba(26,26,26,.88) !important;
-  opacity: 1 !important;
-  -webkit-text-fill-color: rgba(26,26,26,.88) !important;
-}
-
-/* ===== Layout centrado ===== */
+/* ✅ Body centrado como tu diseño */
 .bb-svcCard__body{
   text-align: center;
   padding: 14px 16px 18px;
 }
-
 .bb-svcCard__name{
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
   margin: 10px 0 6px;
-  font-weight: 900;
+  color: rgba(26,26,26,.92);
 }
-
 .bb-svcCard__desc{
   margin: 0 0 12px;
   line-height: 1.5;
   font-size: 13px;
-  opacity: .85 !important; /* queda visible pero más suave */
+  color: rgba(26,26,26,.78);
 }
 
+/* Pills Duración / Precio */
 .bb-svcCard__meta{
   display: flex;
   justify-content: center;
@@ -143,8 +92,8 @@
   flex-wrap: wrap;
   margin-bottom: 14px;
 }
-
-.bb-svcCard__pill{
+.bb-svcCard__pill,
+.bb-svcCard__metaItem{
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -154,17 +103,34 @@
   background: rgba(244,235,221,.45);
   font-size: 12.5px;
   font-weight: 700;
+  color: rgba(26,26,26,.88);
 }
 
+/* Botón dorado tipo pill */
 .bb-svcCard__link{
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  font-weight: 900;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
   padding: 10px 18px;
   border-radius: 999px;
   border: 1px solid rgba(184,134,11,.40);
   background: rgba(184,134,11,.10);
-  color: rgba(26,26,26,.90) !important;
+  color: rgba(26,26,26,.90);
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+.bb-svcCard__link:hover{
+  transform: translateY(-1px);
+  background: rgba(184,134,11,.14);
+  border-color: rgba(184,134,11,.55);
+}
+
+/* Responsive */
+@media (max-width: 1024px){
+  .bb-cat__grid{ grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px){
+  .bb-cat__grid{ grid-template-columns: 1fr; }
 }

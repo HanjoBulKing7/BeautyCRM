@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Bentham&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lobster&display=swap");
 @import url("https://unpkg.com/boxicons@latest/css/boxicons.min.css");
 
 /* ===========================
@@ -7,75 +7,80 @@
 *,
 *::before,
 *::after {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  list-style: none;
-  list-style-type: none;
-  text-decoration: none;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    list-style: none;
+    list-style-type: none;
+    text-decoration: none;
 }
 
 html {
-  box-sizing: inherit;
-  scroll-behavior: smooth;
-  height: -webkit-fill-available;
+    box-sizing: inherit;
+    scroll-behavior: smooth;
+    height: -webkit-fill-available;
 }
 
 body {
-  font-family: "Roboto", sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  height: -webkit-fill-available;
-  color: #6b7280;
-  background-color: #ffffff;
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    height: -webkit-fill-available;
+    color: #6b7280;
+    background-color: #ffffff;
 }
 
 body.overflow-hidden {
-  overflow: hidden;
+    overflow: hidden;
 }
 
 main {
-  overflow: hidden;
+    overflow: hidden;
 }
 
 a,
 button {
-  cursor: pointer;
-  border: none;
-  outline: none;
-  user-select: none;
-  background: none;
-  box-shadow: none;
-  text-decoration: none;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    user-select: none;
+    background: none;
+    box-shadow: none;
+    text-decoration: none;
 }
 
 img,
 video {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  object-fit: cover;
+    display: block;
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
 }
 
 .Normal-title,
 .Normal-subtitle {
-  font-family: "Bentham", serif;
+    font-family: "Bentham", serif;
 }
 
 .container {
-  max-width: 1462px;
-  height: auto;
-  margin: 0 auto;
-  padding: 0 24px;
+    max-width: 1462px;
+    height: auto;
+    margin: 0 auto;
+    padding: 0 24px;
 }
 
 /* ===========================
    THEME
    =========================== */
 :root {
-  --normal-gold: #b8860b;
-  --normal-gray: #6b7280;
-  --normal-ink: #374151;
+    --normal-gold: #b8860b;
+    --normal-gray: #6b7280;
+    --normal-ink: #374151;
 }
 
 /* ===========================
@@ -85,243 +90,248 @@ video {
    - ✅ sin sombra debajo
    =========================== */
 .Normal-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999;
-  width: 100%;
-  height: auto;
-  margin: 0 auto;
-  transition: transform 260ms ease, background 260ms ease, backdrop-filter 260ms ease;
-  will-change: transform;
-  /* ✅ no shadow */
-  box-shadow: none !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+    transition:
+        transform 260ms ease,
+        background 260ms ease,
+        backdrop-filter 260ms ease;
+    will-change: transform;
+    /* ✅ no shadow */
+    box-shadow: none !important;
 }
 
 /* visible/hidden por JS */
 .Normal-header.is-visible {
-  transform: translateY(0);
+    transform: translateY(0);
 }
 .Normal-header.is-hidden {
-  transform: translateY(-110%);
+    transform: translateY(-110%);
 }
 
 .Normal-header-container {
-  width: 100%;
-  padding: 0 25px;
+    width: 100%;
+    padding: 0 25px;
 }
 
 /* Navbar base (más compacto) */
 .Normal-navbar {
-  width: 100%;
-  padding: 20px 0; /* ✅ reduced base height */
-  transition: padding 260ms ease, background 260ms ease;
-  /* ✅ sin sombra */
-  box-shadow: none !important;
-  border-bottom: none !important;
+    width: 100%;
+    padding: 20px 0; /* ✅ reduced base height */
+    transition:
+        padding 260ms ease,
+        background 260ms ease;
+    /* ✅ sin sombra */
+    box-shadow: none !important;
+    border-bottom: none !important;
 }
 
 /* layout interno */
 .Normal-navbar .Normal-header-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 /* Estado al hacer scroll (shrink extra)
    ✅ sin sombra
 */
 .Normal-header.on-scroll {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  /* ✅ sin sombra */
-  box-shadow: none !important;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    /* ✅ sin sombra */
+    box-shadow: none !important;
 }
 .Normal-header.on-scroll .Normal-navbar {
-  padding: 14px 0; /* ✅ shrink extra */
-  box-shadow: none !important;
+    padding: 14px 0; /* ✅ shrink extra */
+    box-shadow: none !important;
 }
 
 /* Brand */
 .Normal-brand {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 }
 .Normal-brand img {
-  max-width: 120px;
-  height: auto;
+    max-width: 120px;
+    height: auto;
 }
 
 /* ===========================
    BURGER (Mobile)
    =========================== */
 .Normal-burger {
-  position: relative;
-  display: inline-flex; /* ✅ visible in mobile */
-  cursor: pointer;
-  user-select: none;
-  order: -1;
-  padding: 6px;
-  border-radius: 8px;
-  border: 1px solid rgba(184, 134, 11, 0.28); /* ✅ dorado suave */
-  background: rgba(255, 255, 255, 0.85);
-  visibility: visible;
-  transform: rotate(0deg);
-  transition: 0.25s ease-in-out;
-  margin-right: 24px;
+    position: relative;
+    display: inline-flex; /* ✅ visible in mobile */
+    cursor: pointer;
+    user-select: none;
+    order: -1;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(184, 134, 11, 0.28); /* ✅ dorado suave */
+    background: rgba(255, 255, 255, 0.85);
+    visibility: visible;
+    transform: rotate(0deg);
+    transition: 0.25s ease-in-out;
+    margin-right: 24px;
 }
 
 .Normal-burger-line-wrapper {
-  height: 20px;
-  width: 20px;
-  position: relative;
+    height: 20px;
+    width: 20px;
+    position: relative;
 }
 
 .Normal-burger-line {
-  position: absolute;
-  display: block;
-  left: 0;
-  width: 20px;
-  height: 2px;
-  opacity: 1;
-  border-radius: 20px;
-  transform: rotate(0deg);
-  transition: 0.25s ease-in-out;
-  /* ✅ dorado */
-  background-color: var(--normal-gold);
+    position: absolute;
+    display: block;
+    left: 0;
+    width: 20px;
+    height: 2px;
+    opacity: 1;
+    border-radius: 20px;
+    transform: rotate(0deg);
+    transition: 0.25s ease-in-out;
+    /* ✅ dorado */
+    background-color: var(--normal-gold);
 }
 
 .Normal-burger-line:nth-child(1) {
-  top: 0px;
+    top: 0px;
 }
 .Normal-burger-line:nth-child(2) {
-  top: 0.5rem;
-  width: 70%;
+    top: 0.5rem;
+    width: 70%;
 }
 .Normal-burger-line:nth-child(3) {
-  top: 1rem;
+    top: 1rem;
 }
 
 .Normal-burger.is-active .Normal-burger-line:nth-child(1) {
-  top: 0.5rem;
-  transform: rotate(135deg);
+    top: 0.5rem;
+    transform: rotate(135deg);
 }
 .Normal-burger.is-active .Normal-burger-line:nth-child(2) {
-  opacity: 0;
-  visibility: hidden;
+    opacity: 0;
+    visibility: hidden;
 }
 .Normal-burger.is-active .Normal-burger-line:nth-child(3) {
-  top: 0.5rem;
-  transform: rotate(-135deg);
+    top: 0.5rem;
+    transform: rotate(-135deg);
 }
 
 /* Botón cerrar (en header del menú móvil) */
 .Normal-close-menu {
-  background-color: #ffffff;
-  border: 1px solid rgba(184, 134, 11, 0.22);
+    background-color: #ffffff;
+    border: 1px solid rgba(184, 134, 11, 0.22);
 }
 
 /* ===========================
    MENU (Mobile sidebar)
    =========================== */
 .Normal-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 320px;
-  height: 100vh;
-  padding: 0;
-  overflow: hidden;
-  transition: all 0.35s ease-in-out;
-  transform: translateX(-150%);
-  z-index: 10000;
-  background-color: #ffffff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 320px;
+    height: 100vh;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.35s ease-in-out;
+    transform: translateX(-150%);
+    z-index: 10000;
+    background-color: #ffffff;
 }
 
 .Normal-menu-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid rgba(184, 134, 11, 0.18); /* ✅ dorado suave */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(184, 134, 11, 0.18); /* ✅ dorado suave */
 }
 
 .Normal-menu-inner {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding: 22px;
-  row-gap: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 22px;
+    row-gap: 18px;
 }
 
 .Normal-menu-link {
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--normal-gray);
-  transition: all 0.2s ease;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--normal-gray);
+    transition: all 0.2s ease;
 }
 .Normal-menu-link:hover {
-  color: var(--normal-gold);
+    color: var(--normal-gold);
 }
 
 /* Activo (lo pone el JS en .Normal-header) */
 .Normal-menu-is-active .Normal-menu {
-  transform: translateX(0%);
+    transform: translateX(0%);
 }
 
 /* ===========================
    BACKDROP (Mobile)
    =========================== */
 .Normal-header-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9998;
-  width: 100vw;
-  height: 100vh;
-  background-color: #000;
-  visibility: hidden;
-  opacity: 0;
-  transition: all 0.35s ease-in-out;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9998;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.35s ease-in-out;
 }
 
 .Normal-menu-is-active .Normal-header-backdrop {
-  visibility: visible;
-  opacity: 0.3;
+    visibility: visible;
+    opacity: 0.3;
 }
 
 /* ===========================
    CTA RIGHT
    =========================== */
 .Normal-menu-block {
-  display: flex;
-  column-gap: 30px;
-  margin-left: auto;
-  align-items: center;
+    display: flex;
+    column-gap: 30px;
+    margin-left: auto;
+    align-items: center;
 }
 
 .Normal-menu-block-link {
-  color: var(--normal-gray);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 17px;
-  font-weight: 500;
-  text-align: center;
-  margin-left: auto;
-  transition: all 0.2s ease-in-out;
+    color: var(--normal-gray);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 17px;
+    font-weight: 500;
+    text-align: center;
+    margin-left: auto;
+    transition: all 0.2s ease-in-out;
 }
 
 .Normal-menu-block-link:hover {
-  color: var(--normal-gold);
+    color: var(--normal-gold);
 }
 
 .Normal-menu-block-link .bx {
-  font-size: 20px;
+    font-size: 20px;
 }
 
 /* ===========================
@@ -330,308 +340,312 @@ video {
    - menú inline
    =========================== */
 @media (min-width: 992px) {
-  .container {
-    padding: 0 80px;
-  }
+    .container {
+        padding: 0 80px;
+    }
 
-  .Normal-header-container {
-    padding: 0 80px;
-  }
+    .Normal-header-container {
+        padding: 0 80px;
+    }
 
-  /* ✅ Burger fuera en desktop */
-  .Normal-burger {
-    display: none !important;
-    visibility: hidden !important;
-  }
+    /* ✅ Burger fuera en desktop */
+    .Normal-burger {
+        display: none !important;
+        visibility: hidden !important;
+    }
 
-  /* ✅ Menú ya no es sidebar */
-  .Normal-menu {
-    position: relative;
-    width: auto;
-    height: auto;
-    margin-left: auto;
-    margin-right: auto;
-    background: none;
-    top: unset;
-    left: 0;
-    right: unset;
-    transform: none !important;
-    overflow: visible;
-    transition: none;
-  }
+    /* ✅ Menú ya no es sidebar */
+    .Normal-menu {
+        position: relative;
+        width: auto;
+        height: auto;
+        margin-left: auto;
+        margin-right: auto;
+        background: none;
+        top: unset;
+        left: 0;
+        right: unset;
+        transform: none !important;
+        overflow: visible;
+        transition: none;
+    }
 
-  /* ✅ Header del menú oculto */
-  .Normal-menu-header {
-    display: none !important;
-  }
+    /* ✅ Header del menú oculto */
+    .Normal-menu-header {
+        display: none !important;
+    }
 
-  /* ✅ Links en fila */
-  .Normal-menu-inner {
-    display: flex;
-    flex-direction: row;
-    column-gap: 50px;
-    margin: 0 auto;
-    padding: 0;
-    row-gap: 0;
-    align-items: center;
-  }
+    /* ✅ Links en fila */
+    .Normal-menu-inner {
+        display: flex;
+        flex-direction: row;
+        column-gap: 50px;
+        margin: 0 auto;
+        padding: 0;
+        row-gap: 0;
+        align-items: center;
+    }
 
-  /* ✅ Backdrop no aplica */
-  .Normal-header-backdrop {
-    display: none !important;
-  }
+    /* ✅ Backdrop no aplica */
+    .Normal-header-backdrop {
+        display: none !important;
+    }
 
-  /* CTA spacing desktop */
-  .Normal-menu-block {
-    margin-left: 86px;
-    column-gap: 50px;
-  }
+    /* CTA spacing desktop */
+    .Normal-menu-block {
+        margin-left: 86px;
+        column-gap: 50px;
+    }
 
-  .Normal-menu-block-link:hover,
-  .Normal-menu-link:hover {
-    color: var(--normal-gold);
-  }
+    .Normal-menu-block-link:hover,
+    .Normal-menu-link:hover {
+        color: var(--normal-gold);
+    }
 }
 
 /* ===========================
    MOBILE tweak (muy pequeño)
    =========================== */
 @media (max-width: 575.98px) {
-  .Normal-navbar {
-    padding: 16px 0;
-  }
-  .Normal-header.on-scroll .Normal-navbar {
-    padding: 12px 0;
-  }
+    .Normal-navbar {
+        padding: 16px 0;
+    }
+    .Normal-header.on-scroll .Normal-navbar {
+        padding: 12px 0;
+    }
 
-  .Normal-brand img {
-    max-width: 105px;
-  }
+    .Normal-brand img {
+        max-width: 105px;
+    }
 }
 /* ===========================
    FIX: SOLO MÓVIL (<= 991.98px)
    - logo izq / burger der
    - menú full-screen 100%
    =========================== */
-@media (max-width: 991.98px){
+@media (max-width: 991.98px) {
+    /* Header: logo izquierda, burger derecha */
+    .Normal-navbar .Normal-header-container {
+        justify-content: space-between; /* SOLO móvil */
+    }
 
-  /* Header: logo izquierda, burger derecha */
-  .Normal-navbar .Normal-header-container{
-    justify-content: space-between; /* SOLO móvil */
-  }
+    .Normal-burger {
+        order: 0; /* ya no "order:-1" */
+        margin-right: 0;
+        margin-left: 16px;
+    }
 
-  .Normal-burger{
-    order: 0;            /* ya no "order:-1" */
-    margin-right: 0;
-    margin-left: 16px;
-  }
+    /* Menú móvil FULL SCREEN */
+    .Normal-menu {
+        width: 100vw; /* antes 320px */
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(-110%); /* oculto */
+    }
 
-  /* Menú móvil FULL SCREEN */
-  .Normal-menu{
-    width: 100vw;        /* antes 320px */
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    transform: translateX(-110%); /* oculto */
-  }
+    /* Links */
+    .Normal-menu-inner {
+        width: 100%;
+        padding: 22px;
+        row-gap: 18px;
+    }
 
-  /* Links */
-  .Normal-menu-inner{
-    width: 100%;
-    padding: 22px;
-    row-gap: 18px;
-  }
+    /* Footer al fondo */
+    .Normal-menu-footer {
+        margin-top: auto;
+        width: 100%;
+        padding: 18px 22px 26px;
+        border-top: 1px solid rgba(184, 134, 11, 0.18);
+    }
 
-  /* Footer al fondo */
-  .Normal-menu-footer{
-    margin-top: auto;
-    width: 100%;
-    padding: 18px 22px 26px;
-    border-top: 1px solid rgba(184, 134, 11, 0.18);
-  }
+    .Normal-menu-footer-cta {
+        display: inline-flex;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        color: #374151;
+        border: 1px solid rgba(184, 134, 11, 0.28);
+        background: rgba(255, 255, 255, 0.92);
+        transition: 0.2s ease;
+    }
+    .Normal-menu-footer-cta:hover {
+        color: var(--normal-gold);
+        border-color: rgba(184, 134, 11, 0.4);
+    }
 
-  .Normal-menu-footer-cta{
-    display: inline-flex;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 14px 16px;
-    border-radius: 12px;
-    font-weight: 600;
-    color: #374151;
-    border: 1px solid rgba(184, 134, 11, 0.28);
-    background: rgba(255,255,255,.92);
-    transition: 0.2s ease;
-  }
-  .Normal-menu-footer-cta:hover{
-    color: var(--normal-gold);
-    border-color: rgba(184, 134, 11, 0.40);
-  }
-
-  /* En móvil ocultamos el CTA desktop (el de arriba derecha) */
-  .Normal-menu-block{ display: none !important; }
+    /* En móvil ocultamos el CTA desktop (el de arriba derecha) */
+    .Normal-menu-block {
+        display: none !important;
+    }
 }
 
 /* Desktop: NO TOCAR (pero aseguramos que el footer móvil no aparezca) */
-@media (min-width: 992px){
-  .Normal-menu-footer{ display:none !important; }
+@media (min-width: 992px) {
+    .Normal-menu-footer {
+        display: none !important;
+    }
 }
 /* ===========================
    MÓVIL: layout centrado como tu screenshot
    =========================== */
-@media (max-width: 991.98px){
+@media (max-width: 991.98px) {
+    /* Header del menú (top bar) */
+    .Normal-menu-header {
+        position: relative;
+        height: 72px;
+        padding: 14px 18px;
+        justify-content: flex-end; /* solo para mantener la tacha a la derecha */
+    }
 
-  /* Header del menú (top bar) */
-  .Normal-menu-header{
-    position: relative;
-    height: 72px;
-    padding: 14px 18px;
-    justify-content: flex-end; /* solo para mantener la tacha a la derecha */
-  }
+    /* Tacha (close) arriba derecha */
+    .Normal-close-menu {
+        position: absolute;
+        top: 12px;
+        right: 14px;
+        margin: 0;
+    }
 
-  /* Tacha (close) arriba derecha */
-  .Normal-close-menu{
-    position: absolute;
-    top: 12px;
-    right: 14px;
-    margin: 0;
-  }
+    /* Logo: centrado y más abajo que la tacha */
+    .Normal-menu-header .Normal-brand {
+        position: absolute;
+        left: 50%;
+        top: 44px; /* 👈 baja el logo */
+        transform: translateX(-50%);
+        margin: 0;
+    }
+    .Normal-menu-header .Normal-brand img {
+        height: 44px; /* ajusta si lo quieres más grande */
+        width: auto;
+    }
 
-  /* Logo: centrado y más abajo que la tacha */
-  .Normal-menu-header .Normal-brand{
-    position: absolute;
-    left: 50%;
-    top: 44px;                 /* 👈 baja el logo */
-    transform: translateX(-50%);
-    margin: 0;
-  }
-  .Normal-menu-header .Normal-brand img{
-    height: 44px;              /* ajusta si lo quieres más grande */
-    width: auto;
-  }
+    /* Links centrados y más hacia el centro de la pantalla */
+    .Normal-menu-inner {
+        padding: 0 22px;
+        margin: 0;
+        width: 100%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
 
-  /* Links centrados y más hacia el centro de la pantalla */
-  .Normal-menu-inner{
-    padding: 0 22px;
-    margin: 0;
-    width: 100%;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+        /* 👇 coloca el bloque de links más “al centro” */
+        padding-top: 180px;
+        row-gap: 22px;
+    }
 
-    /* 👇 coloca el bloque de links más “al centro” */
-    padding-top: 180px;
-    row-gap: 22px;
-  }
+    .Normal-menu-link {
+        display: inline-block;
+        font-size: 18px;
+    }
 
-  .Normal-menu-link{
-    display: inline-block;
-    font-size: 18px;
-  }
+    /* CTA (login/admin): más arriba, como parte del menú */
+    .Normal-menu-footer {
+        margin-top: 32px; /* separación respecto a links */
+        border-top: none; /* ya no se ve como “footer” */
+        padding: 0 22px 26px;
+        display: flex;
+        justify-content: center;
+    }
 
-  /* CTA (login/admin): más arriba, como parte del menú */
-  .Normal-menu-footer{
-    margin-top: 32px;          /* separación respecto a links */
-    border-top: none;          /* ya no se ve como “footer” */
-    padding: 0 22px 26px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .Normal-menu-footer-cta{
-    width: auto;               /* que no se vea como botón gigante */
-    min-width: 220px;
-    border-radius: 14px;
-    padding: 12px 18px;
-  }
+    .Normal-menu-footer-cta {
+        width: auto; /* que no se vea como botón gigante */
+        min-width: 220px;
+        border-radius: 14px;
+        padding: 12px 18px;
+    }
 }
 /* ===========================
    USER DROPDOWN
    =========================== */
-.Normal-user-dropdown{
-  position: relative;
-  display: inline-flex;
-  align-items: center;
+.Normal-user-dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
 }
 
-.Normal-user-trigger{
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+.Normal-user-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.Normal-user-chevron{
-  font-size: 18px;
-  transition: transform .2s ease;
+.Normal-user-chevron {
+    font-size: 18px;
+    transition: transform 0.2s ease;
 }
 
-.Normal-user-dropdown.is-open .Normal-user-chevron{
-  transform: rotate(180deg);
+.Normal-user-dropdown.is-open .Normal-user-chevron {
+    transform: rotate(180deg);
 }
 
-.Normal-user-menu{
-  position: absolute;
-  top: calc(100% + 12px);
-  right: 0;
-  min-width: 220px;
-  padding: 10px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.98);
-  border: 1px solid rgba(184, 134, 11, 0.22);
-  box-shadow: 0 14px 36px rgba(0,0,0,0.10);
-  display: none;
-  z-index: 12000;
+.Normal-user-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 220px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(184, 134, 11, 0.22);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.1);
+    display: none;
+    z-index: 12000;
 }
 
-.Normal-user-dropdown.is-open .Normal-user-menu{
-  display: block;
+.Normal-user-dropdown.is-open .Normal-user-menu {
+    display: block;
 }
 
-.Normal-user-item{
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  color: var(--normal-ink);
-  font-size: 15px;
-  font-weight: 500;
-  transition: background .2s ease, color .2s ease;
+.Normal-user-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    color: var(--normal-ink);
+    font-size: 15px;
+    font-weight: 500;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
-.Normal-user-item .bx{
-  font-size: 18px;
-  color: var(--normal-gold);
+.Normal-user-item .bx {
+    font-size: 18px;
+    color: var(--normal-gold);
 }
 
-.Normal-user-item:hover{
-  background: rgba(184, 134, 11, 0.10);
-  color: var(--normal-gold);
+.Normal-user-item:hover {
+    background: rgba(184, 134, 11, 0.1);
+    color: var(--normal-gold);
 }
 
-.Normal-user-form{
-  margin: 0;
+.Normal-user-form {
+    margin: 0;
 }
 
 /* En móvil: el dropdown se despliega "en flujo" dentro del menú */
-@media (max-width: 991.98px){
-  .Normal-menu-footer .Normal-user-dropdown{
-    width: 100%;
-    justify-content: center;
-    flex-direction: column;
-  }
+@media (max-width: 991.98px) {
+    .Normal-menu-footer .Normal-user-dropdown {
+        width: 100%;
+        justify-content: center;
+        flex-direction: column;
+    }
 
-  .Normal-menu-footer .Normal-user-menu{
-    position: static;
-    margin-top: 10px;
-    width: 100%;
-    max-width: 320px;
-  }
+    .Normal-menu-footer .Normal-user-menu {
+        position: static;
+        margin-top: 10px;
+        width: 100%;
+        max-width: 320px;
+    }
 
-  .Normal-menu-footer .Normal-user-item{
-    justify-content: center;
-  }
+    .Normal-menu-footer .Normal-user-item {
+        justify-content: center;
+    }
 }

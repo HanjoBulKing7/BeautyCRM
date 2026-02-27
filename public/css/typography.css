@@ -1,0 +1,50 @@
+/* Typography system centralizado
+   - Fuente principal: Inter (aplicada al body)
+   - Lobster: sólo para H1 principales del hero y branding
+*/
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lobster&display=swap");
+
+:root {
+    --font-main: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-hero: "Lobster", var(--font-main);
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    font-family: var(--font-main) !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* For brand/logo elements - use Lobster only when explicitly using .brand-logo */
+.brand-logo,
+.brand,
+.site-logo {
+    font-family: var(--font-hero);
+}
+
+/* Hero main H1s should use Lobster. Use a specific selector to avoid accidental usage */
+.hero-h1,
+.home-hero h1,
+.intro h1 {
+    font-family: var(--font-hero);
+}
+
+/* Ensure other headings inherit the main font (no Lobster) */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-main);
+}
+
+/* Prevent components from explicitly using Lobster unless .brand-logo or .hero-h1 is set */
+*[style*="Lobster"] {
+    font-family: var(--font-main) !important;
+}

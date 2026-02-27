@@ -1,145 +1,155 @@
-@import url("https://fonts.googleapis.com/css2?family=Lobster&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lobster&family=Inter:wght@300;400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap");
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  background: #fff;
-  color: #fff;
-  font-weight: 400;
-  font-style: normal;
-  font-family: "Roboto", system-ui;
+    background: #fff;
+    color: #fff;
+    font-weight: 400;
+    font-style: normal;
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
 }
 
 /* ✅ Importante: el hero debe quedar arriba de cualquier pin/absolute posterior */
 .hero-wrapper {
-  position: relative;
-  width: 100%;
-  z-index: 999;       /* <- clave para que NO se vean los videos encima */
-  isolation: isolate; /* crea stacking context limpio */
+    position: relative;
+    width: 100%;
+    z-index: 999; /* <- clave para que NO se vean los videos encima */
+    isolation: isolate; /* crea stacking context limpio */
 }
 
 /* Contenedores */
 .hero-content {
-  position: relative;
-  width: 100%;
-  z-index: 1;
+    position: relative;
+    width: 100%;
+    z-index: 1;
 }
 
 /* Para posicionar bien el intro + imagen */
 .hero-wrapper-element {
-  position: relative;
-  width: 100%;
-  height: 100vh;      /* ✅ asegura cubrir pantalla durante el pin */
-  min-height: 100vh;
-  overflow: hidden;   /* ✅ evita “asomar” contenido de abajo durante escalados */
+    position: relative;
+    width: 100%;
+    height: 100vh; /* ✅ asegura cubrir pantalla durante el pin */
+    min-height: 100vh;
+    overflow: hidden; /* ✅ evita “asomar” contenido de abajo durante escalados */
 }
 
 /* Intro */
 .hero-intro {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  display: flex;
-  width: 100%;
-  height: 100vh;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  color: #fff;
-  padding: 0 20px;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+    padding: 0 20px;
 }
 
 /* Título */
 .hero-intro h1 {
-  font-family: "Lobster", system-ui;
-  font-weight: 700;
-  line-height: 1;
-  font-size: clamp(2.8rem, 7vw, 6rem);
+    font-family: "Lobster", system-ui;
+    font-weight: 700;
+    line-height: 1;
+    font-size: clamp(2.8rem, 7vw, 6rem);
 }
 
 /* Subtítulo */
 .hero-intro p {
-  margin-top: 12px;
-  font-family: "Roboto", system-ui;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  font-size: clamp(0.95rem, 2vw, 1.3rem);
-  opacity: 0.95;
+    margin-top: 12px;
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: clamp(0.95rem, 2vw, 1.3rem);
+    opacity: 0.95;
 }
 
 /* Content */
 .hero-content {
-  overflow-x: hidden;
+    overflow-x: hidden;
 }
 
 /* Secciones */
 .hero-content .hero-section {
-  width: 100%;
-  height: 100vh;
+    width: 100%;
+    height: 100vh;
 }
 
 .hero-content .hero-section.hero-main-section {
-  background-image: url("/images/Beige%20Blogger%20Moderna%20Personal%20Sitio%20web.png");
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-color: #000; /* ✅ evita ver “abajo” mientras carga la img */
-  overflow: hidden;
+    background-image: url("/images/Beige%20Blogger%20Moderna%20Personal%20Sitio%20web.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-color: #000; /* ✅ evita ver “abajo” mientras carga la img */
+    overflow: hidden;
 }
 
 /* About */
 .hero-about-section {
-  padding: 150px 30px;
-  height: auto;
+    padding: 150px 30px;
+    height: auto;
 }
 
 .hero-about-section p {
-  position: relative;
-  color: #fff;
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-  font-size: 1.5rem;
-  line-height: 2.5rem;
+    position: relative;
+    color: #fff;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 2.5rem;
 }
 
 /* Imagen foreground */
 .hero-image-container {
-  width: 100%;
-  height: 100vh;
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  perspective: 500px;
-  overflow: hidden;
+    width: 100%;
+    height: 100vh;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    perspective: 500px;
+    overflow: hidden;
 }
 
 .hero-image-container img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  position: relative;
-  z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    position: relative;
+    z-index: 1;
 }
 
-
 @media (max-width: 575.98px) {
-  .hero-about-section p {
-    font-size: 1.15rem;
-    line-height: 2rem;
-  }
+    .hero-about-section p {
+        font-size: 1.15rem;
+        line-height: 2rem;
+    }
 
-  .hero-intro p {
-    letter-spacing: 0.12em;
-  }
+    .hero-intro p {
+        letter-spacing: 0.12em;
+    }
 }
 /* ============================
    ✅ BeautyBonita Premium Title
@@ -147,63 +157,78 @@ body {
 ============================ */
 
 /* El timeline de scroll (como en la demo) */
-.hero-wrapper-element{
-  view-timeline-name: --bb-scroll;
-  view-timeline-axis: block;
+.hero-wrapper-element {
+    view-timeline-name: --bb-scroll;
+    view-timeline-axis: block;
 }
 
-.hero-intro .bb-title{
-  display: grid;
-  gap: 0.18em;
-  margin: 0;
-  line-height: 1;
-  text-align: center;
+.hero-intro .bb-title {
+    display: grid;
+    gap: 0.18em;
+    margin: 0;
+    line-height: 1;
+    text-align: center;
 }
 
-.hero-intro .bb-title__kicker{
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.38em;
-  font-size: clamp(0.85rem, 1.35vw, 1.15rem);
-  color: rgba(255,255,255,0.88);
+.hero-intro .bb-title__kicker {
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.38em;
+    font-size: clamp(0.85rem, 1.35vw, 1.15rem);
+    color: rgba(255, 255, 255, 0.88);
 }
 
-.hero-intro .bb-title__main{
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 400;
-  text-transform: uppercase;
-  font-size: clamp(2.8rem, 7vw, 6.3rem);
-  letter-spacing: 0.03em;
-  text-shadow: 0 14px 42px rgba(0,0,0,0.35);
-  transform: scale(1);
-  will-change: transform, opacity;
+.hero-intro .bb-title__main {
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    font-size: clamp(2.8rem, 7vw, 6.3rem);
+    letter-spacing: 0.03em;
+    text-shadow: 0 14px 42px rgba(0, 0, 0, 0.35);
+    transform: scale(1);
+    will-change: transform, opacity;
 }
 
 /* Animaciones (equivalentes a scale-up + fade-away) */
 @keyframes bb-scale-up {
-  to { transform: scale(1.35); }
+    to {
+        transform: scale(1.35);
+    }
 }
 @keyframes bb-fade-away {
-  to { opacity: 0; }
+    to {
+        opacity: 0;
+    }
 }
 
 /* Solo aplica si el navegador soporta scroll-driven animations */
 @supports (animation-timeline: --bb-scroll) {
+    .hero-intro .bb-title__kicker {
+        animation: bb-fade-away both linear;
+        animation-timeline: --bb-scroll;
+        animation-range: exit 20% exit 90%;
+    }
 
-  .hero-intro .bb-title__kicker{
-    animation: bb-fade-away both linear;
-    animation-timeline: --bb-scroll;
-    animation-range: exit 20% exit 90%;
-  }
-
-  .hero-intro .bb-title__main{
-    animation:
-      bb-scale-up both ease-in-out,
-      bb-fade-away both linear;
-    animation-timeline: --bb-scroll;
-    animation-range:
-      exit 0% exit 100%,
-      exit 55% exit 90%;
-  }
+    .hero-intro .bb-title__main {
+        animation:
+            bb-scale-up both ease-in-out,
+            bb-fade-away both linear;
+        animation-timeline: --bb-scroll;
+        animation-range:
+            exit 0% exit 100%,
+            exit 55% exit 90%;
+    }
 }

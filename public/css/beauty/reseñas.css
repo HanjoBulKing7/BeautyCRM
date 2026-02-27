@@ -1,0 +1,114 @@
+.reviews-section {
+    padding: 100px 20px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.reviews-container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.reviews-title {
+    font-size: 36px;
+    margin-bottom: 40px;
+    font-weight: 500;
+    color: #111;
+}
+
+.reviews-rating {
+    margin-bottom: 60px;
+}
+
+.rating-number {
+    font-size: 48px;
+    font-weight: 600;
+    color: #c6a75e; /* dorado elegante */
+}
+
+.stars {
+    font-size: 22px;
+    color: #c6a75e;
+    letter-spacing: 4px;
+    margin: 10px 0;
+}
+
+.reviews-count {
+    font-size: 14px;
+    color: #777;
+}
+
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+}
+
+.review-card {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(198, 167, 94, 0.2);
+    transition: 0.3s ease;
+}
+
+.review-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(198, 167, 94, 0.15);
+}
+
+.review-text {
+    font-size: 16px;
+    line-height: 1.7;
+    color: #333;
+    margin-bottom: 25px;
+}
+
+.review-author {
+    font-weight: 500;
+    color: #c6a75e;
+}
+
+.google-btn {
+    display: inline-block;
+    margin-top: 60px;
+    padding: 14px 40px;
+    border-radius: 30px;
+    background: #c6a75e;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    letter-spacing: 1px;
+    transition: 0.3s ease;
+}
+
+.google-btn:hover {
+    background: #b8954f;
+}
+.review-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.review-badge{
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(198, 167, 94, 0.35);
+    color:#c6a75e;
+    white-space:nowrap;
+}
+
+.review-badge--google{
+    background: rgba(198, 167, 94, 0.10);
+}
+
+@media (max-width: 950px){
+    .reviews-grid{ grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px){
+    .reviews-grid{ grid-template-columns: 1fr; gap: 24px; }
+}

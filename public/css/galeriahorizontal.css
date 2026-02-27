@@ -1,202 +1,225 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.2;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
 .horizontal-main-wrapper {
-  background-color: #ffffff;
-  color: #292929;
-  font-family: sans-serif;
-  font-size: 1rem;
-  line-height: 1.5;
-  transition: color 0.3s, background-color 0.3s;
+    background-color: #ffffff;
+    color: #292929;
+    font-family: sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    transition:
+        color 0.3s,
+        background-color 0.3s;
 }
 
 .horizontal-heading {
-  font-size: 2.5rem;
-  height: 50vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-shadow: 0.04em 0.04rem 0 #81b5ab;
+    font-size: 2.5rem;
+    height: 50vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0.04em 0.04rem 0 #81b5ab;
 }
 
 .horizontal-section {
-  overflow: hidden;
+    overflow: hidden;
 }
 
 .horizontal-wrapper {
-  height: 100vh;
+    height: 100vh;
 }
 
 .horizontal-list {
-  justify-content: flex-start;
-  align-items: center;
-  height: 100%;
-  display: flex;
-  position: relative;
-  padding: 0.2rem;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+    display: flex;
+    position: relative;
+    padding: 0.2rem;
 }
 
 .horizontal-item {
-  width: 100vw;
-  height: 100%;
-  display: flex;
-  position: absolute;
-  inset: 0%;
-  box-shadow: rgb(149, 157, 165, 0.2) 0px 8px 24px;
-  overflow: hidden;
+    width: 100vw;
+    height: 100%;
+    display: flex;
+    position: absolute;
+    inset: 0%;
+    box-shadow: rgb(149, 157, 165, 0.2) 0px 8px 24px;
+    overflow: hidden;
 }
 
 .horizontal-item_number {
-  font-size: 1.5rem;
-  height: 3rem;
-  width: 3rem;
-  margin-bottom: 0.5rem;
-  border-radius: 50%;
-  background-color: #000;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 400;
-  position: absolute;
-  top: 6rem;
-  left: 3rem;
+    font-size: 1.5rem;
+    height: 3rem;
+    width: 3rem;
+    margin-bottom: 0.5rem;
+    border-radius: 50%;
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 400;
+    position: absolute;
+    top: 6rem;
+    left: 3rem;
 }
 
 .horizontal-item_content {
-  background-color: #fff;
-  color: #292929;
-  flex-flow: column;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 3rem;
-  display: flex;
-  position: relative;
-  width: 50%;
+    background-color: #fff;
+    color: #292929;
+    flex-flow: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 3rem;
+    display: flex;
+    position: relative;
+    width: 50%;
 }
 
 .horizontal-item_media {
-  object-fit: cover;
-  width: 50%;
-  height: 100%;
+    object-fit: cover;
+    width: 50%;
+    height: 100%;
 }
 
 .horizontal-item_p {
-  margin-bottom: 1rem;
+    margin-bottom: 1rem;
 }
 
 .horizontal-padding-global {
-  padding-left: 2.5rem;
-  padding-right: 2.5rem;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
 }
 
 .horizontal-padding-vertical {
-  padding: 2rem;
+    padding: 2rem;
 }
 
 /* Clases utilitarias que podrías necesitar */
 .horizontal-container-medium {
-  max-width: 1200px;
-  margin: 0 auto;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .horizontal-max-width-large {
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
 }
 /* ✅ Override tipografía: Inter (sin borrar nada) */
-.horizontal-main-wrapper{
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+.horizontal-main-wrapper {
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        Arial,
+        sans-serif;
 }
 
-.horizontal-heading{
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 600; /* elegante, no tan pesado */
-  letter-spacing: 0.02em; /* toque pro */
+.horizontal-heading {
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+    font-weight: 600; /* elegante, no tan pesado */
+    letter-spacing: 0.02em; /* toque pro */
 }
 
 /* ✅ Link "Agendar cita" (sin romper nada) */
-.horizontal-cta{
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  margin-top: .75rem;
+.horizontal-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
 
-  font-weight: 600;
-  text-decoration: none;
-  color: #292929;
+    font-weight: 600;
+    text-decoration: none;
+    color: #292929;
 
-  border-bottom: 2px solid rgba(184, 134, 11, 0.35);
-  padding-bottom: 2px;
+    border-bottom: 2px solid rgba(184, 134, 11, 0.35);
+    padding-bottom: 2px;
 
-  transition: color .2s ease, border-color .2s ease, transform .2s ease;
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
 }
 
-.horizontal-cta:hover{
-  color: #b8860b;
-  border-bottom-color: #b8860b;
-  transform: translateY(-1px);
+.horizontal-cta:hover {
+    color: #b8860b;
+    border-bottom-color: #b8860b;
+    transform: translateY(-1px);
 }
-.horizontal-cta:focus-visible{
-  outline: 2px solid #b8860b;
-  outline-offset: 4px;
-  border-bottom-color: #b8860b;
-  color: #b8860b;
+.horizontal-cta:focus-visible {
+    outline: 2px solid #b8860b;
+    outline-offset: 4px;
+    border-bottom-color: #b8860b;
+    color: #b8860b;
 }
 /* ✅ Fix: quitar efecto "doble" y adelgazar el título */
-.horizontal-heading{
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 600;        /* 400 si la quieres aún más delgada */
-  text-shadow: none;       /* 👈 quita el “duplicado” */
-  text-transform: uppercase;
+.horizontal-heading {
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+    font-weight: 600; /* 400 si la quieres aún más delgada */
+    text-shadow: none; /* 👈 quita el “duplicado” */
+    text-transform: uppercase;
 
-  letter-spacing: 0.02em;  /* toque elegante (opcional) */
+    letter-spacing: 0.02em; /* toque elegante (opcional) */
 }
 
 @media (max-width: 575.98px) {
-  .horizontal-heading {
-    font-size: 2.5rem;
-  }
+    .horizontal-heading {
+        font-size: 2.5rem;
+    }
 
-  .horizontal-item {
-    display: flex;
-    flex-direction: column;
-  }
+    .horizontal-item {
+        display: flex;
+        flex-direction: column;
+    }
 
-  .horizontal-item_content,
-  .horizontal-item_media {
-    height: 50vh;
-    width: 100%;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
+    .horizontal-item_content,
+    .horizontal-item_media {
+        height: 50vh;
+        width: 100%;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
 
-  .horizontal-item_content {
-    padding: 1.5rem;
-  }
+    .horizontal-item_content {
+        padding: 1.5rem;
+    }
 
-  .horizontal-item_number {
-    font-size: 0.5rem;
-    top: 1.5rem;
-    left: 1.5rem;
-    height: 2rem;
-    width: 2rem;
-  }
+    .horizontal-item_number {
+        font-size: 0.5rem;
+        top: 1.5rem;
+        left: 1.5rem;
+        height: 2rem;
+        width: 2rem;
+    }
 
-  .horizontal-padding-vertical {
-    padding: 1rem;
-  }
+    .horizontal-padding-vertical {
+        padding: 1rem;
+    }
 
-  .horizontal-padding-global {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
+    .horizontal-padding-global {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
 }

@@ -9,9 +9,9 @@
     {{-- Tailwind CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     
-    {{-- Google Fonts --}}
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    {{-- Tipografía centralizada --}}
+    <link rel="stylesheet" href="{{ asset('css/typography.css') }}">
+
     {{-- Aquí se cargarán los estilos de los módulos --}}
     @stack('styles')
 </head>

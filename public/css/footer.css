@@ -4,117 +4,121 @@
    =========================== */
 
 .Normal-footer {
-  padding-top: 50px;
-  padding-bottom: 50px;
-  background-color: #ffffff;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    background-color: #ffffff;
 }
 
 .Normal-footer-row {
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
-  gap: 50px;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 50px;
 }
 
 /* Columna logo */
 .Normal-footer-column-logo {
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .Normal-footer-logo {
-  margin-bottom: 19px;
-  width: 60%;
+    margin-bottom: 19px;
+    width: 60%;
 }
 
 .Normal-footer-copy {
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 32px;
-  color: #6b7280;
-  margin-bottom: 24px;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 32px;
+    color: #6b7280;
+    margin-bottom: 24px;
 }
 
 .Normal-footer-copy-rights {
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 500;
-  margin-top: auto;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: auto;
 }
 
 /* Columnas links */
 .Normal-footer-column-link {
-  width: auto;
+    width: auto;
 }
 
 .Normal-footer-heading {
-  font-size: 24px;
-  color: #b8860b;
-  font-weight: 700;
-  margin-bottom: 24px;
-  font-family: "Roboto", sans-serif;
+    font-size: 24px;
+    color: #b8860b;
+    font-weight: 700;
+    margin-bottom: 24px;
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
 }
 
 .Normal-footer-links-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .Normal-footer-links-item a {
-  color: #6b7280;
-  font-size: 18px;
-  line-height: 32px;
-  transition: all 0.3s ease;
+    color: #6b7280;
+    font-size: 18px;
+    line-height: 32px;
+    transition: all 0.3s ease;
 }
 
 .Normal-footer-links-item a:hover {
-  color: #b8860b;
+    color: #b8860b;
 }
 
 /* Línea superior divisora del footer */
 .Normal-footer-section {
-  border-top: 1px solid #E8DCCB; /* beige */
+    border-top: 1px solid #e8dccb; /* beige */
 }
 
 /* (Opcional) si quieres que sea todavía más sutil */
 @supports (border-top: 0.5px solid #000) {
-  .Normal-footer-section {
-    border-top: 0.5px solid #E8DCCB;
-  }
+    .Normal-footer-section {
+        border-top: 0.5px solid #e8dccb;
+    }
 }
-
 
 /* ===========================
    Responsive (footer)
    =========================== */
 @media (min-width: 768px) {
-  .Normal-footer-row {
-    flex-direction: row;
-    gap: 60px;
-  }
+    .Normal-footer-row {
+        flex-direction: row;
+        gap: 60px;
+    }
 
-  .Normal-footer-column-logo {
-    max-width: 420px;
-  }
+    .Normal-footer-column-logo {
+        max-width: 420px;
+    }
 }
 
 @media (min-width: 992px) {
-  .Normal-footer-row {
-    gap: 100px;
-    flex-direction: row;
-  }
+    .Normal-footer-row {
+        gap: 100px;
+        flex-direction: row;
+    }
 
-  .Normal-footer {
-    padding-top: 200px;
-    padding-bottom: 120px;
-  }
+    .Normal-footer {
+        padding-top: 200px;
+        padding-bottom: 120px;
+    }
 }
 
 @media (min-width: 1400px) {
-  .Normal-footer-row {
-    gap: 200px;
-  }
+    .Normal-footer-row {
+        gap: 200px;
+    }
 }

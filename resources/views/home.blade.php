@@ -6,6 +6,8 @@
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/beauty/people.css') }}">
   <link rel="stylesheet" href="{{ asset('css/beauty/homehero.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/beauty/imagenes.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/beauty/reseñas.css') }}">
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
 @endpush
 
@@ -15,8 +17,10 @@
 
   @include('beauty.homehero')
   @include('beauty.people')
-  @include('beauty.about-salon')
+  @include('beauty.app-metrics')
+  @include('beauty.imagenes')
   @include('beauty.donde-encontrarnos')
+  @include('beauty.resenas')
 
   @include('beauty.partials.footer')
 @endsection
