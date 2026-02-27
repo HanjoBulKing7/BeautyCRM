@@ -1,0 +1,1007 @@
+{{-- resources/views/reportes/semanal.blade.php --}}
+
+@php
+use Carbon\Carbon;
+
+$scope = 'semanal';
+
+// Si viene como $datos['semanal'], lo aplanamos
+if (isset($datos['semanal'])) {
+    $datos = $datos['semanal'];
+}
+$datos = $datos ?? []; // ✅ importante
+
+// ✅ Misma lógica que controlador (jueves a miércoles)
+$fechaInicio  = Carbon::parse($fecha);
+$fechaFin     = $fechaInicio->copy()->addDays(6);
+$semanaNumero = $fechaInicio->week;
+$anio         = $fechaInicio->year;
+
+// =======================
+// RUTAS SEMANALES
+// =======================
+$rutasSemPorEmpleado = collect(data_get($datos, 'rutas_semanales.por_empleado', []));
+$rutasPorDia         = collect(data_get($datos, 'rutas_semanales.por_dia', []));
+
+$estadRutas       = data_get($datos, 'rutas_semanales.estadisticas', null);
+$totalRutasSemana = (int)($estadRutas->total_rutas ?? $rutasSemPorEmpleado->count());
+
+// Totales de rutas
+$totalVentasRutas  = 0;
+$totalGastosRutas  = 0;
+$totalBalanceRutas = 0;
+
+// ✅ DEVOLUCIONES
+$totalDevProdUnid  = 0;
+$totalDevProdMonto = 0;
+$totalDevEfectivo  = 0;
+
+foreach ($rutasSemPorEmpleado as $ruta) {
+    $ventasMonto = (float)($ruta->total_ventas_monto ?? 0);
+    $gastosMonto = (float)($ruta->gastos_ruta ?? 0);
+
+    $totalVentasRutas  += $ventasMonto;
+    $totalGastosRutas  += $gastosMonto;
+    $totalBalanceRutas += ($ventasMonto - $gastosMonto);
+
+    $totalDevProdUnid  += (int)($ruta->total_devoluciones ?? 0);
+    $totalDevProdMonto += (float)($ruta->total_devoluciones_monto ?? 0);
+
+    // ✅ soporta ambos nombres (igual que diario)
+    $totalDevEfectivo  += (float)($ruta->devoluciones_efectivo_monto ?? $ruta->devoluciones_efectivo ?? 0);
+}
+
+$totalDevTotal = (float)$totalDevProdMonto + (float)$totalDevEfectivo;
+
+$colorBalanceRutas = $totalBalanceRutas >= 0
+    ? 'text-green-600 dark:text-green-400'
+    : 'text-red-600 dark:text-red-400';
+
+// Labels y montos para gráfica (ventas por ruta)
+$labelsRutasSemana = $rutasSemPorEmpleado->map(function ($ruta) {
+    $base = $ruta->nombre_ruta ?? ('Ruta ' . ($ruta->ruta_id ?? ''));
+    return trim(explode(' - ', $base)[0]);
+})->values()->toArray();
+
+$montosRutasSemana = $rutasSemPorEmpleado
+    ->map(fn($ruta) => (float)($ruta->total_ventas_monto ?? 0))
+    ->values()->toArray();
+
+// Labels y montos para gráfica por día
+$labelsRutasPorDia = $rutasPorDia
+    ->map(fn($dia) => ucfirst(Carbon::parse($dia->fecha)->translatedFormat('D'))) // Jue, Vie, Sáb...
+    ->values()->toArray();
+
+
+$montosRutasPorDia = $rutasPorDia
+    ->map(fn($dia) => (float)($dia->ventas_totales ?? 0))
+    ->values()->toArray();
+
+// =======================
+// VENTAS INDIVIDUALES
+// =======================
+$ventasPorDia        = collect(data_get($datos, 'ventas_por_dia', []));
+$montoTotalSemana    = (float)$ventasPorDia->sum('monto_total');
+$gastosSemanaGeneral = (float) data_get($datos, 'gastos', 0);
+$balanceVentas       = $montoTotalSemana - $gastosSemanaGeneral;
+
+$colorBalanceVentas = $balanceVentas >= 0
+    ? 'text-green-600 dark:text-green-400'
+    : 'text-red-600 dark:text-red-400';
+
+// Datos para gráfica semanal (ventas individuales por día)
+$labelsVentasSemana = $ventasPorDia
+    ->map(fn($dia) => Carbon::parse($dia->fecha_venta)->format('d/m'))
+    ->values()->toArray();
+
+$montosVentasSemana = $ventasPorDia
+    ->map(fn($dia) => (float)$dia->monto_total)
+    ->values()->toArray();
+
+// =======================
+// MODAL DATA (SEMANAL) ✅ igual que diario
+// =======================
+$gastosDetalleSemana     = collect(data_get($datos, 'gastos_detalle', []));
+$gastosRutaDetalleSemana = collect(data_get($datos, 'gastos_ruta_detalle', []));
+$gastosRutaTotalesSemana = collect(data_get($datos, 'gastos_ruta_totales', []));
+
+$categoriaLabel = function ($c) {
+    try { return \App\Models\Gasto::CATEGORIAS[$c] ?? ($c ?? '-'); } catch (\Throwable $e) { return $c ?? '-'; }
+};
+$metodoLabel = function ($m) {
+    try { return \App\Models\Gasto::METODOS_PAGO[$m] ?? ($m ?? '-'); } catch (\Throwable $e) { return $m ?? '-'; }
+};
+
+$resumenCatGeneralesSemana = $gastosDetalleSemana->groupBy('categoria')
+    ->map(fn($rows) => $rows->sum(fn($r) => (float)($r->monto ?? 0)))->sortDesc();
+
+$resumenMetodoGeneralesSemana = $gastosDetalleSemana->groupBy('metodo_pago')
+    ->map(fn($rows) => $rows->sum(fn($r) => (float)($r->monto ?? 0)))->sortDesc();
+
+$resumenCatRutasSemana = $gastosRutaDetalleSemana->groupBy('categoria')
+    ->map(fn($rows) => $rows->sum(fn($r) => (float)($r->monto ?? 0)))->sortDesc();
+
+$resumenMetodoRutasSemana = $gastosRutaDetalleSemana->groupBy('metodo_pago')
+    ->map(fn($rows) => $rows->sum(fn($r) => (float)($r->monto ?? 0)))->sortDesc();
+
+// ✅ JSON GASTOS RUTA (para modal ruta_detalle)
+$gastosRutaDetalleSemanaJson = $gastosRutaDetalleSemana->map(fn($g) => [
+    'ruta_id'         => $g->ruta_id ?? null,
+    'fecha'           => $g->fecha ?? null,
+    'categoria'       => $g->categoria ?? null,
+    'categoria_label' => $categoriaLabel($g->categoria ?? null),
+    'descripcion'     => $g->descripcion ?? null,
+    'monto'           => (float)($g->monto ?? 0),
+
+    // opcionales (si tu query los trae, el modal arma mejor el título)
+    'ruta_nombre'     => $g->ruta_nombre ?? null,
+    'empleado'        => $g->empleado ?? null,
+])->values()->all();
+
+/**
+ * ✅ CLAVE:
+ * Convertimos el detalle de ventas al formato que tu JS ya usa.
+ * Y soportamos distintas keys (por si tu controller semanal lo manda diferente).
+ */
+$ventasRutaDetalleSemanaJson = collect(
+    data_get(
+        $datos,
+        'rutas_semanales.ventas_detalle',
+        data_get($datos, 'rutas_movimientos_detalle', [])
+    )
+)->map(function ($v) {
+
+    $ventasUnid = (int)($v->ventas ?? $v->ventas_unidades ?? 0);
+    $devUnid    = (int)($v->devoluciones ?? $v->devoluciones_unidades ?? 0);
+
+    $precioU = (float)($v->precio_unitario ?? $v->unit_price ?? $v->precio ?? 0);
+
+    // si ya viene devoluciones_monto lo respetamos; si no, lo calculamos
+    $devProdMonto = (float)($v->devoluciones_monto ?? ($devUnid * $precioU));
+
+    // devolución efectivo
+    $devEfecMonto = (float)(
+        $v->devoluciones_efectivo_monto ??
+        $v->devolucion_efectivo ??
+        $v->devoluciones_efectivo ??
+        0
+    );
+
+    // total devoluciones ($)
+    $devTotMonto = (float)($v->devoluciones_total_monto ?? ($devProdMonto + $devEfecMonto));
+
+    return [
+        'ruta_id'     => $v->ruta_id ?? null,
+        'fecha'       => $v->fecha ?? ($v->fecha_venta ?? null),
+        'producto'    => $v->producto ?? ($v->nombre_producto ?? null),
+
+        // opcionales para título
+        'ruta_nombre' => $v->ruta_nombre ?? ($v->nombre_ruta ?? null),
+        'empleado'    => $v->empleado ?? null,
+
+        // ✅ para el JS (usa ventas/devoluciones)
+        'ventas'       => $ventasUnid,
+        'devoluciones' => $devUnid,
+
+        // ✅ aliases por compatibilidad
+        'ventas_unidades'       => $ventasUnid,
+        'devoluciones_unidades' => $devUnid,
+
+        'precio_unitario'    => $precioU,
+        'devoluciones_monto' => $devProdMonto,
+
+        'devoluciones_efectivo_monto' => $devEfecMonto,
+        'devolucion_efectivo'         => $devEfecMonto, // alias
+
+        'devoluciones_total_monto' => $devTotMonto,
+
+        'total' => (float)($v->total ?? 0),
+    ];
+})
+// ✅ FILTRO: solo filas con ventas o devoluciones (o devolución en efectivo)
+->filter(fn($row) =>
+    ((int)($row['ventas'] ?? 0) > 0) ||
+    ((int)($row['devoluciones'] ?? 0) > 0) ||
+    ((float)($row['devoluciones_efectivo_monto'] ?? 0) > 0)
+)
+->values()->all();
+
+$gastosRutaTotalesSemanaJson = $gastosRutaTotalesSemana->map(fn($rt) => [
+    'ruta_id'     => $rt->ruta_id ?? null,
+    'ruta_nombre' => $rt->ruta_nombre ?? null,
+    'empleado'    => $rt->empleado ?? null,
+    'total_ruta'  => (float)($rt->total_ruta ?? 0),
+])->values()->all();
+@endphp
+
+
+{{-- ✅ helper para mostrar tabla desktop / cards móvil --}}
+<style>
+  @media (max-width: 767.98px) {
+    .tabla-desktop { display: none !important; }
+    .cards-movil { display: block !important; }
+  }
+  @media (min-width: 768px) {
+    .tabla-desktop { display: block !important; }
+    .cards-movil { display: none !important; }
+  }
+</style>
+
+<!-- Título + selector de semana -->
+<h4 class="font-semibold text-lg mb-2 flex items-center justify-between">
+    <div class="flex items-center">
+        <i class="fas fa-calendar-week text-blue-500 mr-2"></i>
+        Reporte Semanal
+        @if($sucursal_id && $sucursales->where('id', $sucursal_id)->first())
+            <span class="ml-4 text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-300">
+                Sucursal: {{ $sucursales->where('id', $sucursal_id)->first()->nombre }}
+            </span>
+        @endif
+    </div>
+
+    <div class="flex items-center gap-2">
+        <input
+            type="text"
+            id="semana_selector"
+            class="border rounded-lg px-3 py-2 text-sm bg-white cursor-pointer focus:ring-blue-500 focus:border-blue-500 w-48 dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+            placeholder="Seleccionar semana"
+            value="Semana {{ $semanaNumero }}, {{ $anio }}"
+            readonly
+        >
+    </div>
+</h4>
+
+<div class="text-sm text-gray-500 mb-4 flex items-center dark:text-gray-400">
+    <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>
+    <span>
+        <strong>Semana {{ $semanaNumero }} ·</strong>
+        {{ $fechaInicio->translatedFormat('d M Y') }} — {{ $fechaFin->translatedFormat('d M Y') }}
+    </span>
+</div>
+
+@if($datos && ($ventasPorDia->count() > 0 || (isset($datos['rutas_semanales']) && $totalRutasSemana > 0)))
+
+    <!-- TABS: RUTAS / INDIVIDUALES -->
+    <div class="flex items-center gap-2 mb-4">
+        <button type="button" id="btn-tab-semanal-rutas"
+            class="px-3 py-1.5 text-xs font-medium rounded-full border bg-blue-50 text-blue-600 border-blue-500">
+            Ventas por ruta
+        </button>
+        <button type="button" id="btn-tab-semanal-individuales"
+            class="px-3 py-1.5 text-xs font-medium rounded-full border bg-white text-gray-600 border-transparent hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
+            Ventas individuales
+        </button>
+    </div>
+
+    <!-- =======================
+         PANEL: RUTAS SEMANALES
+    ======================== -->
+    <div id="panel-semanal-rutas">
+        @if(isset($datos['rutas_semanales']) && $totalRutasSemana > 0)
+
+            {{-- ✅ FILA SUPERIOR: GRÁFICA (izq) + CARDS (der) --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                <!-- Gráfica grande (2/3) -->
+                <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex flex-col">
+                            <h5 class="text-sm font-semibold text-gray-800 flex items-center dark:text-gray-200">
+                                <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
+                                Ventas de rutas en la semana
+                            </h5>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">
+                                {{ $fechaInicio->translatedFormat('d M') }} — {{ $fechaFin->translatedFormat('d M') }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="btn-chart-rutas-por-ruta"
+                                class="px-2.5 py-1 text-[11px] rounded-full border bg-blue-50 text-blue-600 border-blue-500">
+                                Por ruta
+                            </button>
+                            <button type="button" id="btn-chart-rutas-por-dia"
+                                class="px-2.5 py-1 text-[11px] rounded-full border bg-white text-gray-600 border-transparent hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
+                                Por día
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="card-chart-rutas-ruta"
+                        class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        {{-- ✅ mantener tamaño anterior --}}
+                        <div class="h-64">
+                            <canvas id="chart-rutas-semana"
+                                data-labels='@json($labelsRutasSemana)'
+                                data-montos='@json($montosRutasSemana)'></canvas>
+                        </div>
+                    </div>
+
+                    <div id="card-chart-rutas-dia"
+                        class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700 hidden">
+                        <div class="h-64">
+                            <canvas id="chart-rutas-semana-dia"
+                                data-labels='@json($labelsRutasPorDia)'
+                                data-montos='@json($montosRutasPorDia)'></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards delgados (1/3) -->
+                <div class="space-y-3">
+                    {{-- Gastos --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="text-[11px] font-semibold text-gray-500 uppercase dark:text-gray-400">
+                                    Gastos ruta
+                                </div>
+                                <div class="mt-1 text-xl font-semibold text-pink-600 dark:text-pink-400">
+                                    ${{ number_format((float)$totalGastosRutas, 2) }}
+                                </div>
+                            </div>
+
+                            {{-- ✅ estilo previo (link) --}}
+                            <button type="button"
+                                class="inline-flex items-center text-[11px] font-semibold text-blue-600 hover:underline whitespace-nowrap"
+                                data-open-gastos="semanal" data-which="rutas">
+                                <i class="fas fa-list-ul mr-1 text-[10px]"></i>
+                                Ver detalle
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Ventas + devoluciones --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="text-[11px] font-semibold text-gray-500 uppercase dark:text-gray-400">
+                            Ventas ruta
+                        </div>
+                        <div class="mt-1 text-xl font-semibold text-green-600 dark:text-green-400">
+                            ${{ number_format((float)$totalVentasRutas, 2) }}
+                        </div>
+
+                        <div class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                            Devoluciones:
+                            <span class="font-semibold text-red-600 dark:text-red-400">
+                                ${{ number_format((float)$totalDevTotal, 2) }}
+                            </span>
+                            <div class="text-[10px] text-gray-400 dark:text-gray-500">
+                                prod: ${{ number_format((float)$totalDevProdMonto, 2) }} · efec: ${{ number_format((float)$totalDevEfectivo, 2) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Balance --}}
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div class="text-[11px] font-semibold text-gray-500 uppercase dark:text-gray-400">
+                                Balance
+                            </div>
+                            <div class="text-[10px] text-gray-400 dark:text-gray-500">Ventas - Gastos</div>
+                        </div>
+
+                        <div class="mt-1 text-xl font-semibold {{ $colorBalanceRutas }}">
+                            ${{ number_format((float)$totalBalanceRutas, 2) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ✅ ABAJO: REPORTE POR RUTA EN GRANDE (tabla desktop + cards móvil) --}}
+            <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-users text-blue-500"></i>
+                        <h5 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                            Reporte por ruta (detalle)
+                        </h5>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <select id="filtro-ruta-tabla-semanal"
+                            class="border rounded-lg px-3 py-2 text-xs bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-white w-64">
+                            <option value="all">Todas</option>
+                            @foreach($rutasSemPorEmpleado as $rt)
+                                <option value="{{ $rt->ruta_id }}">
+                                    {{ $rt->nombre_ruta ?? ('Ruta #' . $rt->ruta_id) }} — {{ $rt->empleado }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <button type="button" id="btn-detalle-ruta-semanal"
+                            class="px-3 py-2 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                            Ver detalle
+                        </button>
+                    </div>
+                </div>
+
+                @if($rutasSemPorEmpleado->count() > 0)
+
+                    {{-- ✅ TABLA DESKTOP (SIEMPRE visible en compu) --}}
+                    <div class="tabla-desktop overflow-x-auto max-h-[560px]">
+                        <table class="min-w-full text-sm" id="tabla-rutas-empleado-semanal">
+                            <thead class="bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2 text-left font-semibold">Empleado</th>
+                                    <th class="px-3 py-2 text-left font-semibold">Ruta</th>
+                                    <th class="px-3 py-2 text-left font-semibold">Ventas (unid / $)</th>
+                                    <th class="px-3 py-2 text-left font-semibold">Gastos</th>
+                                    <th class="px-3 py-2 text-left font-semibold">Balance</th>
+                                    <th class="px-3 py-2 text-left font-semibold">Devoluciones</th>
+                                    <th class="px-3 py-2 text-left font-semibold">Acción</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-[12px]">
+                                @php
+                                    $totalUnidades=0; $totalVentasTabla=0; $totalGastosTabla=0; $totalBalanceTabla=0;
+                                    $totalDevProdUnidTabla=0; $totalDevProdMontoTabla=0; $totalDevEfectivoTabla=0;
+                                @endphp
+
+                                @foreach($rutasSemPorEmpleado as $ruta)
+                                    @php
+                                        $ventasMonto  = (float)($ruta->total_ventas_monto ?? 0);
+                                        $gastosMonto  = (float)($ruta->gastos_ruta ?? 0);
+                                        $balanceRuta  = $ventasMonto - $gastosMonto;
+
+                                        $devProdUnid  = (int)($ruta->total_devoluciones ?? 0);
+                                        $devProdMonto = (float)($ruta->total_devoluciones_monto ?? 0);
+                                        $devEfectivo  = (float)($ruta->devoluciones_efectivo ?? 0);
+                                        $devTotal     = $devProdMonto + $devEfectivo;
+
+                                        $totalUnidades          += (int)($ruta->total_ventas_unidades ?? 0);
+                                        $totalVentasTabla       += $ventasMonto;
+                                        $totalGastosTabla       += $gastosMonto;
+                                        $totalBalanceTabla      += $balanceRuta;
+
+                                        $totalDevProdUnidTabla  += $devProdUnid;
+                                        $totalDevProdMontoTabla += $devProdMonto;
+                                        $totalDevEfectivoTabla  += $devEfectivo;
+                                    @endphp
+
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                                        data-ruta-row="1"
+                                        data-ruta-id="{{ $ruta->ruta_id }}"
+                                    >
+                                        <td class="px-3 py-2 text-gray-700 dark:text-gray-200">{{ $ruta->empleado }}</td>
+                                        <td class="px-3 py-2 text-gray-700 dark:text-gray-200">{{ $ruta->nombre_ruta ?? 'Sin nombre' }}</td>
+
+                                        <td class="px-3 py-2">
+                                            <div class="flex flex-col leading-tight">
+                                                <span class="text-[11px] text-gray-500 dark:text-gray-400">
+                                                    Unid.: {{ (int)($ruta->total_ventas_unidades ?? 0) }}
+                                                </span>
+                                                <span class="font-semibold text-green-600 dark:text-green-400">
+                                                    ${{ number_format($ventasMonto, 2) }}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-3 py-2 font-semibold text-pink-600 dark:text-pink-400">
+                                            ${{ number_format($gastosMonto, 2) }}
+                                        </td>
+
+                                        <td class="px-3 py-2 font-semibold {{ $balanceRuta >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                            ${{ number_format($balanceRuta, 2) }}
+                                        </td>
+
+                                        <td class="px-3 py-2">
+                                            <div class="flex flex-col leading-tight text-xs">
+                                                <span class="text-red-600 dark:text-red-400 font-semibold">
+                                                    Prod: ${{ number_format($devProdMonto, 2) }} ({{ $devProdUnid }} unid.)
+                                                </span>
+                                                <span class="text-orange-600 dark:text-orange-400 font-semibold">
+                                                    Efectivo: ${{ number_format($devEfectivo, 2) }}
+                                                </span>
+                                                <span class="text-gray-700 dark:text-gray-200 font-semibold">
+                                                    Total: ${{ number_format($devTotal, 2) }}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-3 py-2">
+                                            {{-- ✅ conserva tu trigger --}}
+                                            <button type="button"
+                                                class="inline-flex items-center text-xs font-semibold text-blue-600 hover:underline"
+                                                data-open-ruta-detalle="semanal"
+                                                data-ruta-id="{{ $ruta->ruta_id }}">
+                                                <i class="fas fa-search mr-1 text-[11px]"></i>
+                                                Detalle
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+
+                                @php $totalDevTotalTabla = (float)$totalDevProdMontoTabla + (float)$totalDevEfectivoTabla; @endphp
+
+                                <tr class="bg-gray-50 dark:bg-gray-800/80 font-semibold" data-totales-row="1">
+                                    <td class="px-3 py-2 dark:text-gray-200" colspan="2">TOTALES</td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex flex-col leading-tight">
+                                            <span class="text-[11px] text-gray-500 dark:text-gray-400">Unid.: {{ (int)$totalUnidades }}</span>
+                                            <span class="text-green-600 dark:text-green-400">${{ number_format((float)$totalVentasTabla, 2) }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2 text-pink-600 dark:text-pink-400">${{ number_format((float)$totalGastosTabla, 2) }}</td>
+                                    <td class="px-3 py-2 {{ $totalBalanceTabla >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                        ${{ number_format((float)$totalBalanceTabla, 2) }}
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex flex-col leading-tight text-xs">
+                                            <span class="text-red-600 dark:text-red-400">Prod: {{ (int)$totalDevProdUnidTabla }} unid.</span>
+                                            <span class="text-orange-600 dark:text-orange-400">Efectivo: ${{ number_format((float)$totalDevEfectivoTabla, 2) }}</span>
+                                            <span class="text-gray-700 dark:text-gray-200">Total: ${{ number_format((float)$totalDevTotalTabla, 2) }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2 text-gray-400 dark:text-gray-500">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- ✅ CARDS MÓVIL --}}
+                    <div class="cards-movil space-y-3">
+                        @foreach($rutasSemPorEmpleado as $ruta)
+                            @php
+                                $ventasMonto  = (float)($ruta->total_ventas_monto ?? 0);
+                                $gastosMonto  = (float)($ruta->gastos_ruta ?? 0);
+                                $balanceRuta  = $ventasMonto - $gastosMonto;
+
+                                $devProdUnid  = (int)($ruta->total_devoluciones ?? 0);
+                                $devProdMonto = (float)($ruta->total_devoluciones_monto ?? 0);
+                                $devEfectivo  = (float)($ruta->devoluciones_efectivo ?? 0);
+                                $devTotal     = $devProdMonto + $devEfectivo;
+                            @endphp
+
+                            <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700"
+                                 data-ruta-card="1"
+                                 data-ruta-id="{{ $ruta->ruta_id }}">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div class="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                                            {{ $ruta->nombre_ruta ?? 'Sin nombre' }}
+                                        </div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">
+                                            {{ $ruta->empleado ?? '-' }}
+                                        </div>
+                                    </div>
+
+                                    <button type="button"
+                                        class="inline-flex items-center text-xs font-semibold text-blue-600 hover:underline"
+                                        data-open-ruta-detalle="semanal"
+                                        data-ruta-id="{{ $ruta->ruta_id }}">
+                                        <i class="fas fa-search mr-1 text-[11px]"></i>
+                                        Detalle
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 mt-3 text-xs">
+                                    <div>
+                                        <div class="text-[10px] uppercase text-gray-400 dark:text-gray-500">Ventas</div>
+                                        <div class="font-semibold text-green-600 dark:text-green-400">
+                                            ${{ number_format($ventasMonto, 2) }}
+                                        </div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">
+                                            Unid.: {{ (int)($ruta->total_ventas_unidades ?? 0) }}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-[10px] uppercase text-gray-400 dark:text-gray-500">Gastos</div>
+                                        <div class="font-semibold text-pink-600 dark:text-pink-400">
+                                            ${{ number_format($gastosMonto, 2) }}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-[10px] uppercase text-gray-400 dark:text-gray-500">Balance</div>
+                                        <div class="font-semibold {{ $balanceRuta >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                            ${{ number_format($balanceRuta, 2) }}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-[10px] uppercase text-gray-400 dark:text-gray-500">Devoluciones</div>
+                                        <div class="font-semibold text-red-600 dark:text-red-400">
+                                            ${{ number_format($devTotal, 2) }}
+                                        </div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">
+                                            Prod: {{ $devProdUnid }} unid.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                    Prod: ${{ number_format($devProdMonto, 2) }} · Efe: ${{ number_format($devEfectivo, 2) }}
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                @else
+                    <div class="text-center py-6 text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                        <p>No hay rutas registradas por empleado.</p>
+                    </div>
+                @endif
+            </div>
+
+        @else
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-inbox text-4xl mb-3"></i>
+                <p>No hay datos de rutas para la semana seleccionada.</p>
+            </div>
+        @endif
+    </div>
+
+    <!-- =======================
+         PANEL: VENTAS INDIVIDUALES
+    ======================== -->
+    <div id="panel-semanal-individuales" class="hidden">
+        <div class="bg-white p-4 rounded-xl border mt-2 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h5 class="font-semibold text-gray-700 mb-4 flex items-center dark:text-gray-300">
+                <i class="fas fa-store text-green-500 mr-2"></i>
+                Reporte Ventas Individuales
+            </h5>
+
+            @if($ventasPorDia->count() > 0)
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="text-[11px] font-semibold text-gray-500 uppercase dark:text-gray-400">
+                                    Gastos de la semana
+                                </div>
+                                <div class="mt-1 text-xl font-semibold text-pink-600 dark:text-pink-400">
+                                    ${{ number_format((float)$gastosSemanaGeneral, 2) }}
+                                </div>
+                            </div>
+
+                            <button type="button"
+                                class="inline-flex items-center text-[11px] font-semibold text-blue-600 hover:underline whitespace-nowrap"
+                                data-open-gastos="semanal" data-which="generales">
+                                <i class="fas fa-list-ul mr-1 text-[10px]"></i>
+                                Ver detalle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-semibold text-gray-500 uppercase dark:text-gray-400">
+                                Total ventas
+                            </span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-blue-50 text-blue-600">
+                                {{ (int)$ventasPorDia->sum('total_ventas') }} ventas
+                            </span>
+                        </div>
+                        <div class="mt-1 text-xl font-semibold text-blue-600 dark:text-blue-400">
+                            ${{ number_format((float)$montoTotalSemana, 2) }}
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-semibold text-gray-500 uppercase dark:text-gray-400">
+                                Balance neto
+                            </span>
+                            <span class="text-[10px] text-gray-400 dark:text-gray-500">Ventas - Gastos</span>
+                        </div>
+                        <div class="mt-1 text-xl font-semibold {{ $colorBalanceVentas }}">
+                            ${{ number_format((float)$balanceVentas, 2) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <h5 class="text-sm font-semibold text-gray-800 flex items-center dark:text-gray-200">
+                            <i class="fas fa-chart-line text-blue-500 mr-2"></i>
+                            Ventas individuales por día
+                        </h5>
+                        <span class="text-xs text-gray-400 dark:text-gray-500">
+                            {{ $fechaInicio->translatedFormat('d M') }} — {{ $fechaFin->translatedFormat('d M') }}
+                        </span>
+                    </div>
+
+                    <div class="h-64">
+                        <canvas id="chart-ventas-semana-dia"
+                            data-labels='@json($labelsVentasSemana)'
+                            data-montos='@json($montosVentasSemana)'></canvas>
+                    </div>
+                </div>
+            @else
+                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-inbox text-4xl mb-3"></i>
+                    <p>No hay datos de ventas individuales para la semana seleccionada.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+@else
+    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+        <i class="fas fa-inbox text-4xl mb-3"></i>
+        <p>No hay datos para la semana seleccionada</p>
+        <p class="text-sm mt-2">
+            Semana: {{ $fechaInicio->format('d/m/Y') }} - {{ $fechaFin->format('d/m/Y') }}
+        </p>
+    </div>
+@endif
+
+
+{{-- =========================
+    ✅ INCLUDES MODALS (SEMANAL)
+========================= --}}
+@include('reportes.partials.modals.gastos', [
+    'scope' => 'semanal',
+    'titulo' => 'Detalle de gastos (semanal)',
+    'rangoTexto' => $fechaInicio->translatedFormat('d M Y') . ' — ' . $fechaFin->translatedFormat('d M Y'),
+    'totalGenerales' => $gastosSemanaGeneral,
+    'totalRutas'     => $totalGastosRutas,
+    'gastosGenerales'=> $gastosDetalleSemana,
+    'gastosRutas'    => $gastosRutaDetalleSemana,
+    'gastosRutasTotales' => $gastosRutaTotalesSemana,
+    'gastosRutasTotalesJson' => $gastosRutaTotalesSemanaJson,
+    'resumenCatGenerales' => $resumenCatGeneralesSemana,
+    'resumenMetodoGenerales' => $resumenMetodoGeneralesSemana,
+    'resumenCatRutas' => $resumenCatRutasSemana,
+    'resumenMetodoRutas' => $resumenMetodoRutasSemana,
+    'categoriaLabel' => $categoriaLabel,
+    'metodoLabel'    => $metodoLabel,
+])
+
+@include('reportes.partials.modals.ruta_detalle', [
+    'scope' => 'semanal',
+    'titulo' => 'Detalle de ruta',
+    'rangoTexto' => $fechaInicio->translatedFormat('d M Y') . ' — ' . $fechaFin->translatedFormat('d M Y'),
+    'ventasRutaDetalleJson' => $ventasRutaDetalleSemanaJson,
+    'gastosRutaDetalleJson' => $gastosRutaDetalleSemanaJson,
+])
+
+@include('reportes.partials.modals.scripts')
+
+{{-- Dependencias de UI (solo una vez) --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/weekSelect/weekSelect.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/weekSelect/weekSelect.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ==========================
+  // TABS SEMANAL: RUTAS / INDIVIDUALES
+  // ==========================
+  const btnRutasSem   = document.getElementById('btn-tab-semanal-rutas');
+  const btnIndSem     = document.getElementById('btn-tab-semanal-individuales');
+  const panelRutasSem = document.getElementById('panel-semanal-rutas');
+  const panelIndSem   = document.getElementById('panel-semanal-individuales');
+
+  function activarTabSemanal(tab) {
+    if (!btnRutasSem || !btnIndSem || !panelRutasSem || !panelIndSem) return;
+
+    const isRutas = tab === 'rutas';
+
+    panelRutasSem.classList.toggle('hidden', !isRutas);
+    panelIndSem.classList.toggle('hidden', isRutas);
+
+    btnRutasSem.classList.toggle('bg-blue-50', isRutas);
+    btnRutasSem.classList.toggle('text-blue-600', isRutas);
+    btnRutasSem.classList.toggle('border-blue-500', isRutas);
+
+    btnIndSem.classList.toggle('bg-blue-50', !isRutas);
+    btnIndSem.classList.toggle('text-blue-600', !isRutas);
+    btnIndSem.classList.toggle('border-blue-500', !isRutas);
+  }
+
+  btnRutasSem?.addEventListener('click', () => activarTabSemanal('rutas'));
+  btnIndSem?.addEventListener('click', () => activarTabSemanal('individuales'));
+  activarTabSemanal('rutas');
+
+
+  // ==========================
+  // Selector ruta -> botón "Ver detalle"
+  // ==========================
+  const selRuta = document.getElementById('filtro-ruta-tabla-semanal');
+  const btnDetalle = document.getElementById('btn-detalle-ruta-semanal');
+
+  function filtrarRutasUI(rutaId) {
+    // desktop rows
+    document.querySelectorAll('[data-ruta-row="1"]').forEach(row => {
+      const id = row.getAttribute('data-ruta-id');
+      row.classList.toggle('hidden', (rutaId !== 'all' && rutaId !== id));
+    });
+
+    // móvil cards
+    document.querySelectorAll('[data-ruta-card="1"]').forEach(card => {
+      const id = card.getAttribute('data-ruta-id');
+      card.classList.toggle('hidden', (rutaId !== 'all' && rutaId !== id));
+    });
+
+    // totales: solo cuando "all"
+    document.querySelectorAll('[data-totales-row="1"]').forEach(tr => {
+      tr.classList.toggle('hidden', rutaId !== 'all');
+    });
+  }
+
+  if (selRuta && btnDetalle) {
+    selRuta.addEventListener('change', function () {
+      const val = this.value || 'all';
+      btnDetalle.disabled = (val === 'all');
+      filtrarRutasUI(val);
+    });
+
+    btnDetalle.addEventListener('click', function () {
+      const rutaId = selRuta.value;
+      if (!rutaId || rutaId === 'all') return;
+
+      // intenta click del botón de fila (desktop/móvil)
+      const rowBtn = document.querySelector(`[data-open-ruta-detalle="semanal"][data-ruta-id="${rutaId}"]`);
+      if (rowBtn) rowBtn.click();
+    });
+
+    // estado inicial
+    filtrarRutasUI(selRuta.value || 'all');
+  }
+
+
+  // =======================
+  // CHART HELPERS (evitar duplicados)
+  // =======================
+  function renderBarChart(canvas, labels, data) {
+    if (!canvas || typeof Chart === 'undefined') return;
+    try {
+      if (canvas._chart) canvas._chart.destroy();
+      canvas._chart = new Chart(canvas, {
+        type: 'bar',
+        data: { labels, datasets: [{ data, borderRadius: 8, maxBarThickness: 44 }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} } }
+      });
+    } catch (e) {}
+  }
+
+  function renderLineChart(canvas, labels, data) {
+    if (!canvas || typeof Chart === 'undefined') return;
+    try {
+      if (canvas._chart) canvas._chart.destroy();
+      canvas._chart = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets: [{ data, tension: 0.35, fill: false }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} } }
+      });
+    } catch (e) {}
+  }
+
+  // =======================
+  // GRÁFICAS RUTAS
+  // =======================
+  const canvasRutasSemana    = document.getElementById('chart-rutas-semana');
+  const canvasRutasSemanaDia = document.getElementById('chart-rutas-semana-dia');
+
+  if (canvasRutasSemana) {
+    const labelsRuta = JSON.parse(canvasRutasSemana.dataset.labels || '[]');
+    const montosRuta = JSON.parse(canvasRutasSemana.dataset.montos || '[]');
+    if (labelsRuta.length && montosRuta.length) renderBarChart(canvasRutasSemana, labelsRuta, montosRuta);
+  }
+
+  if (canvasRutasSemanaDia) {
+    const labelsDia = JSON.parse(canvasRutasSemanaDia.dataset.labels || '[]');
+    const montosDia = JSON.parse(canvasRutasSemanaDia.dataset.montos || '[]');
+    if (labelsDia.length && montosDia.length) renderBarChart(canvasRutasSemanaDia, labelsDia, montosDia);
+  }
+
+  const btnChartRutasRuta  = document.getElementById('btn-chart-rutas-por-ruta');
+  const btnChartRutasDia   = document.getElementById('btn-chart-rutas-por-dia');
+  const cardChartRutasRuta = document.getElementById('card-chart-rutas-ruta');
+  const cardChartRutasDia  = document.getElementById('card-chart-rutas-dia');
+
+  function activarChartRutas(tipo) {
+    if (!cardChartRutasRuta || !cardChartRutasDia) return;
+    const isRuta = tipo === 'ruta';
+
+    cardChartRutasRuta.classList.toggle('hidden', !isRuta);
+    cardChartRutasDia.classList.toggle('hidden', isRuta);
+
+    btnChartRutasRuta?.classList.toggle('bg-blue-50', isRuta);
+    btnChartRutasRuta?.classList.toggle('text-blue-600', isRuta);
+    btnChartRutasRuta?.classList.toggle('border-blue-500', isRuta);
+
+    btnChartRutasDia?.classList.toggle('bg-blue-50', !isRuta);
+    btnChartRutasDia?.classList.toggle('text-blue-600', !isRuta);
+    btnChartRutasDia?.classList.toggle('border-blue-500', !isRuta);
+  }
+
+  btnChartRutasRuta?.addEventListener('click', () => activarChartRutas('ruta'));
+  btnChartRutasDia?.addEventListener('click', () => activarChartRutas('dia'));
+  activarChartRutas('ruta');
+
+
+  // =======================
+  // GRÁFICA INDIVIDUALES (por día)
+  // =======================
+  const canvasVentasDia = document.getElementById('chart-ventas-semana-dia');
+  if (canvasVentasDia) {
+    const labels = JSON.parse(canvasVentasDia.dataset.labels || '[]');
+    const data   = JSON.parse(canvasVentasDia.dataset.montos || '[]');
+    if (labels.length && data.length) renderLineChart(canvasVentasDia, labels, data);
+  }
+
+
+  // =======================
+  // ✅ FLATPICKR: SEMANA JUEVES -> MIÉRCOLES (NO QUITAR)
+  // =======================
+  const START_DAY = 4; // Jueves
+
+  function getStartOfCustomWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = (day - START_DAY + 7) % 7;
+    d.setDate(d.getDate() - diff);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  // ISO week number (para que coincida con Carbon->week del jueves)
+  function getISOWeekYear(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;      // 1..7
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return { week: weekNo, year: d.getUTCFullYear() };
+  }
+
+  function formatYMD(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function updateSemanaLabel(fp, anyDate) {
+    const start = getStartOfCustomWeek(anyDate);
+    const info = getISOWeekYear(start);
+    fp.input.value = `Semana ${info.week}, ${info.year}`;
+  }
+
+  if (typeof flatpickr !== 'undefined') {
+    flatpickr("#semana_selector", {
+      locale: { ...flatpickr.l10ns.es, firstDayOfWeek: START_DAY },
+      weekNumbers: true,
+      defaultDate: "{{ $fechaInicio->format('Y-m-d') }}",
+      plugins: (typeof weekSelectPlugin !== 'undefined')
+        ? [ new weekSelectPlugin({ weekNumbers: true }) ]
+        : [],
+
+      onReady(selectedDates, dateStr, instance) {
+        const baseDate = selectedDates?.[0] || new Date("{{ $fechaInicio->format('Y-m-d') }}");
+        updateSemanaLabel(instance, baseDate);
+      },
+
+      onChange(selectedDates, dateStr, instance) {
+        if (!selectedDates.length) return;
+
+        const start = getStartOfCustomWeek(selectedDates[0]);
+        updateSemanaLabel(instance, start);
+
+        const fechaInicio = formatYMD(start);
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('fecha', fechaInicio);
+        url.searchParams.set('tipo', 'semanal');
+
+        const sucursalSelect = document.getElementById('sucursal_id');
+        if (sucursalSelect && sucursalSelect.value) url.searchParams.set('sucursal_id', sucursalSelect.value);
+
+        window.location.href = url.toString();
+      }
+    });
+  }
+
+});
+</script>

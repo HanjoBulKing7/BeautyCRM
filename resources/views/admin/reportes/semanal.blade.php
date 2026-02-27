@@ -3,6 +3,10 @@
 
   $inicio = \Carbon\Carbon::parse(data_get($rango,'inicio'));
   $fin    = \Carbon\Carbon::parse(data_get($rango,'fin'));
+  
+  // Variables para compatibilidad de interfaz
+  $semanaNumero = $inicio->weekOfYear;
+  $anio         = $inicio->year;
 
   $ventas = data_get($stats, 'ventas', []);
   $citas  = data_get($stats, 'citas', []);
@@ -11,82 +15,117 @@
   $metodos = collect(data_get($ventas, 'metodos_pago', []));
   $topServicios = collect(data_get($stats, 'servicios.top', []));
   $topEmpleados = collect(data_get($stats, 'empleados.top', []));
-@endphp
 
-<div class="mb-5 text-sm text-gray-500 dark:text-gray-400">
-  Semana: <b>{{ $inicio->format('d/m/Y') }}</b> → <b>{{ $fin->format('d/m/Y') }}</b>
-</div>
-
-  {{-- Cards --}}
-  @include('admin.reportes.partials.cards')
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-  <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Métodos de pago</h3>
-    @if($metodos->isEmpty())
-      <p class="text-gray-500 dark:text-gray-400">Sin datos.</p>
-    @else
-      <ul class="space-y-2">
-        @foreach($metodos as $m)
-          <li class="flex justify-between text-sm">
-            <span class="text-gray-700 dark:text-gray-200"> {{ $m->metodo_label ?? $m->metodo ?? '-' }} </span>
-            <span class="text-gray-700 dark:text-gray-200">{{ $mxn($m->monto ?? 0) }}</span>
-          </li>
-        @endforeach
-      </ul>
-    @endif
-  </div>
-
-  <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Top servicios</h3>
-    @if($topServicios->isEmpty())
-      <p class="text-gray-500 dark:text-gray-400">Sin datos.</p>
-    @else
-      <ul class="space-y-2">
-        @foreach($topServicios as $s)
-          <li class="flex justify-between text-sm">
-            <span class="text-gray-700 dark:text-gray-200">{{ $s->servicio ?? '-' }}</span>
-            <span class="text-gray-700 dark:text-gray-200">{{ (int)($s->veces ?? 0) }}</span>
-          </li>
-        @endforeach
-      </ul>
-    @endif
-  </div>
-
-  <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Top empleados</h3>
-    @if($topEmpleados->isEmpty())
-      <p class="text-gray-500 dark:text-gray-400">Sin datos.</p>
-    @else
-      <ul class="space-y-2">
-        @foreach($topEmpleados as $e)
-          <li class="flex justify-between text-sm">
-            <span class="text-gray-700 dark:text-gray-200">{{ $e->empleado ?? '(Sin nombre)' }}</span>
-            <span class="text-gray-700 dark:text-gray-200">{{ $mxn($e->ingresos ?? 0) }}</span>
-          </li>
-        @endforeach
-      </ul>
-    @endif
-  </div>
-</div>
-
-{{-- ===========================
-     NUEVO BLOQUE: Gráfica + Resumen (igual que Diario)
-=========================== --}}
-@php
   $resumenChart = data_get($ventas, 'resumen_chart', null);
   $resumenPagos = data_get($ventas, 'resumen_pagos', null);
 @endphp
 
+<h4 class="font-semibold text-lg mb-2 flex items-center text-gray-800 dark:text-gray-100">
+    <i class="fas fa-calendar-week text-blue-500 mr-2"></i>
+    Reporte Semanal
+</h4>
+
+<div class="text-sm text-gray-500 mb-4 flex items-center dark:text-gray-400">
+    <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+    <span>
+        <strong>Semana {{ $semanaNumero }} ·</strong>
+        {{ $inicio->translatedFormat('d M Y') }} — {{ $fin->translatedFormat('d M Y') }}
+    </span>
+</div>
+
+{{-- Cards Superiores --}}
+@include('admin.reportes.partials.cards')
+
+{{-- ===========================
+     Listas Top
+=========================== --}}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+  
+  {{-- Métodos de Pago --}}
+  <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+    <h5 class="text-sm font-semibold text-gray-800 flex items-center mb-3 dark:text-gray-200">
+        <i class="fas fa-wallet text-blue-500 mr-2"></i>
+        Métodos de pago
+    </h5>
+    @if($metodos->isEmpty())
+      <div class="text-center py-4 text-gray-400 dark:text-gray-500 text-xs">Sin datos.</div>
+    @else
+      <div class="space-y-2 mt-2">
+        @foreach($metodos as $m)
+          <div class="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
+            <span class="text-gray-600 dark:text-gray-300">{{ $m->metodo_label ?? $m->metodo ?? '-' }}</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $mxn($m->monto ?? 0) }}</span>
+          </div>
+        @endforeach
+      </div>
+    @endif
+  </div>
+
+  {{-- Top Servicios --}}
+  <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+    <h5 class="text-sm font-semibold text-gray-800 flex items-center mb-3 dark:text-gray-200">
+        <i class="fas fa-star text-yellow-500 mr-2"></i>
+        Top servicios
+    </h5>
+    @if($topServicios->isEmpty())
+      <div class="text-center py-4 text-gray-400 dark:text-gray-500 text-xs">Sin datos.</div>
+    @else
+      <div class="space-y-2 mt-2">
+        @foreach($topServicios as $s)
+          <div class="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
+            <span class="text-gray-600 dark:text-gray-300 truncate pr-2">{{ $s->servicio ?? '-' }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-semibold">
+                {{ (int)($s->veces ?? 0) }} citas
+            </span>
+          </div>
+        @endforeach
+      </div>
+    @endif
+  </div>
+
+  {{-- Top Empleados --}}
+  <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+    <h5 class="text-sm font-semibold text-gray-800 flex items-center mb-3 dark:text-gray-200">
+        <i class="fas fa-user-tie text-green-500 mr-2"></i>
+        Top empleados
+    </h5>
+    @if($topEmpleados->isEmpty())
+      <div class="text-center py-4 text-gray-400 dark:text-gray-500 text-xs">Sin datos.</div>
+    @else
+      <div class="space-y-2 mt-2">
+        @foreach($topEmpleados as $e)
+          <div class="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
+            <span class="text-gray-600 dark:text-gray-300 truncate pr-2">{{ $e->empleado ?? '(Sin nombre)' }}</span>
+            <span class="font-semibold text-green-600 dark:text-green-400">{{ $mxn($e->ingresos ?? 0) }}</span>
+          </div>
+        @endforeach
+      </div>
+    @endif
+  </div>
+
+</div>
+
+{{-- ===========================
+     Gráfica + Resumen
+=========================== --}}
 @if($resumenChart && $resumenPagos)
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 mb-8">
 
-    {{-- Gráfica --}}
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-5 bg-white dark:bg-gray-900">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Resumen de ventas</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Ventas por método de pago</p>
+    {{-- Gráfica (Ocupa 2/3 en escritorio) --}}
+    <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+      <div class="flex items-center justify-between mb-3">
+          <div class="flex flex-col">
+              <h5 class="text-sm font-semibold text-gray-800 flex items-center dark:text-gray-200">
+                  <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
+                  Ventas por método de pago
+              </h5>
+              <span class="text-xs text-gray-400 dark:text-gray-500">
+                  Resumen de la semana seleccionada
+              </span>
+          </div>
+      </div>
 
-      <div style="height:220px">
+      <div class="h-64 mt-4">
         <canvas id="resumenPagosChart-semanal"
                 data-labels='@json(data_get($resumenChart,"labels",[]))'
                 data-values='@json(data_get($resumenChart,"values",[]))'></canvas>
@@ -94,82 +133,105 @@
 
       @php $mixto = (float) data_get($resumenPagos,'mixto.monto',0); @endphp
       @if($mixto > 0)
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-          Nota: “Mixto” se suma al total, pero no aparece como barra.
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-4 italic">
+          * Nota: Los pagos en formato "Mixto" se suman al total general, pero no se desglosan como barra individual en la gráfica.
         </p>
       @endif
     </div>
 
-    {{-- Resumen --}}
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-5 bg-white dark:bg-gray-900">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Resumen</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Desglose por método</p>
+    {{-- Resumen Total (Ocupa 1/3 en escritorio) --}}
+    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+      <h5 class="text-sm font-semibold text-gray-800 flex items-center mb-4 dark:text-gray-200">
+          <i class="fas fa-receipt text-blue-500 mr-2"></i>
+          Resumen General
+      </h5>
 
-      <div class="space-y-3 text-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-gray-600 dark:text-gray-300">Efectivo</span>
-          <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $mxn(data_get($resumenPagos,'efectivo.monto',0)) }}</span>
+      <div class="space-y-4 text-sm mt-2">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-2">
+          <span class="text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold">Efectivo</span>
+          <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $mxn(data_get($resumenPagos,'efectivo.monto',0)) }}</span>
         </div>
 
-        <div class="flex items-center justify-between">
-          <span class="text-gray-600 dark:text-gray-300">Transferencia</span>
-          <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $mxn(data_get($resumenPagos,'transferencia.monto',0)) }}</span>
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-2">
+          <span class="text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold">Transferencia</span>
+          <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $mxn(data_get($resumenPagos,'transferencia.monto',0)) }}</span>
         </div>
 
-        <div class="flex items-center justify-between">
-          <span class="text-gray-600 dark:text-gray-300">Tarjeta</span>
-          <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $mxn(data_get($resumenPagos,'tarjeta.monto',0)) }}</span>
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-2">
+          <span class="text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold">Tarjeta</span>
+          <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $mxn(data_get($resumenPagos,'tarjeta.monto',0)) }}</span>
         </div>
 
         @if((float)data_get($resumenPagos,'mixto.monto',0) > 0)
-          <div class="flex items-center justify-between">
-            <span class="text-gray-600 dark:text-gray-300">Mixto</span>
-            <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $mxn(data_get($resumenPagos,'mixto.monto',0)) }}</span>
+          <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-2">
+            <span class="text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold">Mixto</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $mxn(data_get($resumenPagos,'mixto.monto',0)) }}</span>
           </div>
         @endif
 
         @if((float)data_get($resumenPagos,'otros.monto',0) > 0)
-          <div class="flex items-center justify-between">
-            <span class="text-gray-600 dark:text-gray-300">Otros</span>
-            <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $mxn(data_get($resumenPagos,'otros.monto',0)) }}</span>
+          <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-2">
+            <span class="text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold">Otros</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $mxn(data_get($resumenPagos,'otros.monto',0)) }}</span>
           </div>
         @endif
 
-        <hr class="my-3 border-gray-200 dark:border-gray-800">
-
-        <div class="flex items-center justify-between">
-          <span class="text-gray-700 dark:text-gray-200 font-medium">Total</span>
-          <span class="font-bold text-gray-900 dark:text-gray-100">{{ $mxn(data_get($resumenPagos,'total.monto',0)) }}</span>
+        <div class="flex items-center justify-between pt-2">
+          <span class="text-gray-800 dark:text-gray-200 font-bold uppercase text-xs">TOTAL INGRESOS</span>
+          <span class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ $mxn(data_get($resumenPagos,'total.monto',0)) }}</span>
         </div>
       </div>
     </div>
 
   </div>
+@endif
 
-  {{-- Script del chart (semanal) --}}
-  @push('scripts')
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const el = document.getElementById('resumenPagosChart-semanal');
-    if (!el || typeof Chart === 'undefined') return;
+{{-- Scripts --}}
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    const labels = JSON.parse(el.dataset.labels || '[]');
-    const values = JSON.parse(el.dataset.values || '[]');
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // =======================
+  // CHART.JS: Gráfica
+  // =======================
+  const elChart = document.getElementById('resumenPagosChart-semanal');
+  if (elChart && typeof Chart !== 'undefined') {
+    const labels = JSON.parse(elChart.dataset.labels || '[]');
+    const values = JSON.parse(elChart.dataset.values || '[]');
 
-    // evita duplicados
-    if (el._chartInstance) el._chartInstance.destroy();
+    if (elChart._chartInstance) elChart._chartInstance.destroy();
 
-    el._chartInstance = new Chart(el, {
+    elChart._chartInstance = new Chart(elChart, {
       type: 'bar',
-      data: { labels, datasets: [{ label: 'Monto', data: values }] },
+      data: { 
+          labels, 
+          datasets: [{ 
+              label: 'Monto', 
+              data: values,
+              backgroundColor: '#3b82f6', // blue-500
+              borderRadius: 6,
+              maxBarThickness: 50
+          }] 
+      },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
+        scales: { 
+            y: { 
+                beginAtZero: true,
+                grid: {
+                    color: document.documentElement.classList.contains('dark') ? '#374151' : '#f3f4f6'
+                }
+            },
+            x: {
+                grid: { display: false }
+            }
+        }
       }
     });
-  });
-  </script>
-  @endpush
-@endif
+  }
+});
+</script>
+@endpush

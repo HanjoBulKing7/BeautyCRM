@@ -48,57 +48,48 @@
 
   <!-- ✅ TABLA (DESKTOP) -->
   <div class="clientes-table">
-    <div class="bb-card">
+    <div class="bb-glass-card">
       <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-gray-800">
-            <tr class="text-left text-gray-600 dark:text-gray-300">
-              <th class="px-4 py-3">Cliente</th>
-              <th class="px-4 py-3">Email</th>
-              <th class="px-4 py-3">Teléfono</th>
-              <th class="px-4 py-3 text-right">Acciones</th>
+        <table class="min-w-full">
+          <thead class="bb-thead bg-gray-50 dark:bg-gray-800">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Cliente</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Email</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Teléfono</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody>
             @forelse($clientes as $cliente)
               @php $cid = $cliente->id; @endphp
-
               <tr class="bb-row">
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-3">
-                    <span class="bb-icon-pill flex items-center justify-center"
-                          style="width:34px;height:34px;border-radius:12px;">
+                    <span class="bb-icon-pill flex items-center justify-center" style="width:34px;height:34px;border-radius:12px;">
                       <i class="fas fa-user text-sm leading-none relative -top-px"></i>
                     </span>
-
-                    <div class="min-w-0">
-                      <div class="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                    <div>
+                      <div class="text-sm font-semibold text-gray-900 dark:text-white">
                         {{ $cliente->nombre ?? $cliente->name ?? 'Cliente' }}
                       </div>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">
-                        ID: #{{ $cid ?? '-' }}
-                      </div>
+                      <div class="text-xs text-gray-500">ID: #{{ $cid ?? '-' }}</div>
                     </div>
                   </div>
                 </td>
-
                 <td class="px-4 py-3">
-                  <span class="text-gray-700 dark:text-gray-200">
+                  <span class="text-sm text-gray-700 dark:text-gray-200">
                     {{ $cliente->email ?? '—' }}
                   </span>
                 </td>
-
                 <td class="px-4 py-3">
-                  <span class="text-gray-700 dark:text-gray-200">
+                  <span class="text-sm text-gray-700 dark:text-gray-200">
                     {{ $cliente->telefono ?? $cliente->phone ?? 'No especificado' }}
                   </span>
                 </td>
-
                 <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center justify-end gap-2">
-
                     <a href="{{ route('admin.clientes.show', $cid) }}"
-                      class="bb-action inline-flex items-center justify-center leading-none"
+                      class="bb-action inline-flex items-center justify-center leading-none text-gray-700 dark:text-gray-200"
                       title="Ver">
                       <svg class="w-4 h-4 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -107,7 +98,6 @@
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                       </svg>
                     </a>
-
                     <a href="{{ route('admin.clientes.edit', $cid) }}"
                       class="bb-action bb-action-edit inline-flex items-center justify-center leading-none"
                       title="Editar">
@@ -116,8 +106,7 @@
                               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l9.586-9.586z"/>
                       </svg>
                     </a>
-
-                    <form action="{{ route('admin.clientes.destroy', $cid) }}" method="POST" class="m-0 p-0 flex"
+                    <form action="{{ route('admin.clientes.destroy', $cid) }}" method="POST" class="m-0 p-0 inline-flex items-center"
                           onsubmit="return confirm('¿Eliminar cliente?');">
                       @csrf
                       @method('DELETE')
@@ -130,23 +119,25 @@
                         </svg>
                       </button>
                     </form>
-
                   </div>
                 </td>
               </tr>
-
             @empty
               <tr>
-                <td colspan="4" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
-                  No hay clientes registrados.
+                <td colspan="4" class="px-4 py-10 text-center">
+                  <div class="text-gray-500 dark:text-gray-300">
+                    <div class="mx-auto bb-icon-pill" style="width:56px;height:56px;border-radius:18px;">
+                      <span class="text-2xl">✨</span>
+                    </div>
+                    <p class="font-semibold mt-3 text-gray-800 dark:text-white">No hay clientes registrados</p>
+                    <p class="text-sm">Crea tu primer cliente para comenzar</p>
+                  </div>
                 </td>
               </tr>
             @endforelse
           </tbody>
-
         </table>
       </div>
-
       @if(method_exists($clientes, 'hasPages') && $clientes->hasPages())
         <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
           {{ $clientes->links() }}

@@ -426,7 +426,10 @@
       </div>
 
       <div class="p-4">
-        @if(Auth::user()->role_id == 3)
+        @php $user = Auth::user(); @endphp
+        @if(!$user)
+          <script>window.location.href = '{{ route('login') }}';</script>
+        @elseif($user->role_id == 3)
           @include('components.sidebar-admin')
         @else
           @include('components.sidebar-cliente')
@@ -436,15 +439,17 @@
 
     <div class="p-4 border-t border-gray-200">
       <div class="flex items-center space-x-3 mb-3">
+        @if($user)
         <div class="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-bold text-lg">
-          {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+          {{ strtoupper(substr($user->name, 0, 2)) }}
         </div>
         <div>
-          <p class="font-semibold text-gray-800">{{ Auth::user()->name }}</p>
+          <p class="font-semibold text-gray-800">{{ $user->name }}</p>
           <p class="text-sm text-gray-500 capitalize">
-            {{ Auth::user()->role_id == 3 ? 'Administrador' : 'Cliente' }}
+            {{ $user->role_id == 3 ? 'Administrador' : 'Cliente' }}
           </p>
         </div>
+        @endif
       </div>
 
       <form action="{{ route('logout') }}" method="POST">

@@ -268,8 +268,14 @@
 
         {{-- FECHA + HORA (Calendario izq / Horas der) --}}
         @php
-          $fechaInit = old('fecha_cita', $cita->fecha_cita ?? ($fechaPrefill ?? ''));
-          $horaInit  = old('hora_cita',  $cita->hora_cita ?? '');
+ $fechaInit = old('fecha_cita',
+    !empty($cita?->fecha_cita)
+      ? \Carbon\Carbon::parse($cita->fecha_cita)->format('Y-m-d')
+      : ($fechaPrefill ?? '')
+  );
+
+  $horaInitRaw = old('hora_cita', $cita->hora_cita ?? '');
+  $horaInit = $horaInitRaw ? substr((string)$horaInitRaw, 0, 5) : '';
         @endphp
 
         <div class="md:col-span-2">

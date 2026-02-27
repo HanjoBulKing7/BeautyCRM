@@ -1,20 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-6 max-w-7xl">
 
   {{-- ✅ Header --}}
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
     <div id="bb-dashboard-header">
-      <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+      <h1 class="text-2xl font-extrabold text-gray-800 flex items-center gap-3 dark:text-gray-100">
         <span class="bb-icon-pill">
-          <svg class="w-5 h-5 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1m3 0a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h14z"/>
-          </svg>
+          <i class="fas fa-layer-group text-xl bb-gold"></i>
         </span>
         Dashboard de Citas
       </h1>
+      <p class="text-sm text-gray-500 mt-1 ml-14 dark:text-gray-400">Control general de tu agenda y ventas del día.</p>
     </div>
 
     <div class="flex gap-2 sm:justify-end">
@@ -22,60 +20,55 @@
          data-bb-modal="1"
          data-title="Registrar cita"
          data-url="{{ route('admin.citas.create') }}"
-         class="bb-btn-gold">➕ Registrar cita</a>
-
-      {{-- ❌ Quitado: Ver ventas --}}
-      {{-- <a href="{{ route('admin.ventas.index') }}" ...>💰 Ver ventas</a> --}}
+         class="bb-btn-gold shadow-lg hover:shadow-xl transition-shadow">
+         <i class="fas fa-plus"></i> Nueva Cita
+      </a>
     </div>
   </div>
 
-  {{-- ✅ Resumen --}}
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-    <div class="bb-glass-card p-4">
-      <div class="flex items-center gap-3">
-        <div class="bb-icon-pill" style="width:42px;height:42px;">
-          <i class="fas fa-money-bill-wave text-xl bb-gold"></i>
-        </div>
-        <div>
-          <p class="text-sm text-gray-500">Generado</p>
-          <p class="text-xl font-extrabold bb-gold">${{ number_format($generado ?? 0, 2) }}</p>
-        </div>
+  {{-- ✅ Resumen (Tarjetas) --}}
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+    {{-- Generado --}}
+    <div class="bb-glass-card p-5 flex items-center gap-4 transition-transform hover:-translate-y-1">
+      <div class="bb-icon-pill bg-white shadow-sm" style="width:48px;height:48px;">
+        <i class="fas fa-wallet text-2xl bb-gold"></i>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Generado</p>
+        <p class="text-2xl font-black bb-gold">${{ number_format($generado ?? 0, 2) }}</p>
       </div>
     </div>
 
-    <div class="bb-glass-card p-4">
-      <div class="flex items-center gap-3">
-        <div class="bb-icon-pill" style="width:42px;height:42px;">
-          <i class="fas fa-calendar-check text-xl bb-gold"></i>
-        </div>
-        <div>
-          <p class="text-sm text-gray-500">Citas del día</p>
-          <p class="text-xl font-extrabold text-gray-900">{{ $citasDia ?? 0 }}</p>
-        </div>
+    {{-- Citas del día --}}
+    <div class="bb-glass-card p-5 flex items-center gap-4 transition-transform hover:-translate-y-1">
+      <div class="bb-icon-pill bg-white shadow-sm" style="width:48px;height:48px;">
+        <i class="fas fa-calendar-day text-2xl text-blue-500"></i>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Citas del día</p>
+        <p class="text-2xl font-black text-gray-900 dark:text-white">{{ $citasDia ?? 0 }}</p>
       </div>
     </div>
 
-    <div class="bb-glass-card p-4">
-      <div class="flex items-center gap-3">
-        <div class="bb-icon-pill" style="width:42px;height:42px;">
-          <i class="fas fa-circle-check text-xl bb-gold"></i>
-        </div>
-        <div>
-          <p class="text-sm text-gray-500">Confirmadas</p>
-          <p class="text-xl font-extrabold text-gray-900">{{ $confirmadas ?? 0 }}</p>
-        </div>
+    {{-- Confirmadas --}}
+    <div class="bb-glass-card p-5 flex items-center gap-4 transition-transform hover:-translate-y-1">
+      <div class="bb-icon-pill bg-white shadow-sm" style="width:48px;height:48px;">
+        <i class="fas fa-user-check text-2xl text-amber-500"></i>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Confirmadas</p>
+        <p class="text-2xl font-black text-gray-900 dark:text-white">{{ $confirmadas ?? 0 }}</p>
       </div>
     </div>
 
-    <div class="bb-glass-card p-4">
-      <div class="flex items-center gap-3">
-        <div class="bb-icon-pill" style="width:42px;height:42px;">
-          <i class="fas fa-flag-checkered text-xl bb-gold"></i>
-        </div>
-        <div>
-          <p class="text-sm text-gray-500">Completadas</p>
-          <p class="text-xl font-extrabold text-gray-900">{{ $completadas ?? 0 }}</p>
-        </div>
+    {{-- Completadas --}}
+    <div class="bb-glass-card p-5 flex items-center gap-4 transition-transform hover:-translate-y-1">
+      <div class="bb-icon-pill bg-white shadow-sm" style="width:48px;height:48px;">
+        <i class="fas fa-clipboard-check text-2xl text-green-500"></i>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Completadas</p>
+        <p class="text-2xl font-black text-gray-900 dark:text-white">{{ $completadas ?? 0 }}</p>
       </div>
     </div>
   </div>
@@ -83,54 +76,13 @@
   {{-- ✅ Host para módulos (SOLO dashboard) --}}
   <div id="bb-module-host" class="mt-2 hidden"></div>
 
-  {{-- ✅ Filtro por fecha (MEJORADO) --}}
-  <div class="bb-glass-card px-4 py-3 mb-6">
-    <form id="fechaForm" method="GET" action="{{ route('admin.dashboard') }}"
-          class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-
-      <div class="flex flex-wrap items-center gap-2">
-        <a href="{{ route('admin.dashboard', ['fecha' => $prevDate]) }}"
-           class="bb-action bb-action-ink" title="Anterior">
-          <i class="fas fa-chevron-left"></i>
-        </a>
-
-        <div class="flex items-center gap-2 bb-date-pill">
-          <i class="fas fa-calendar-alt bb-gold"></i>
-          <input type="date"
-                 name="fecha"
-                 class="bb-date-input"
-                 value="{{ $fecha->format('Y-m-d') }}"
-                 onchange="document.getElementById('fechaForm').submit()">
-        </div>
-
-        <a href="{{ route('admin.dashboard', ['fecha' => $nextDate]) }}"
-           class="bb-action bb-action-ink" title="Siguiente">
-          <i class="fas fa-chevron-right"></i>
-        </a>
-
-        <a href="{{ route('admin.dashboard', ['fecha' => $todayDate]) }}"
-           class="bb-action bb-action-gold" title="Ir a hoy">
-          <i class="fas fa-calendar-day"></i> Hoy
-        </a>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <span class="bb-pill bb-pill-soft">
-          <i class="fas fa-eye bb-gold"></i>
-          Mostrando: <span class="font-extrabold">{{ $fecha->format('d/m/Y') }}</span>
-        </span>
-      </div>
-
-    </form>
-  </div>
-
   @php
     $pillClass = function ($estado) {
       return match($estado) {
-        'confirmada'  => 'bb-pill bb-pill-gold',
-        'completada'  => 'bb-pill bb-pill-green',
-        'cancelada'   => 'bb-pill bb-pill-red',
-        default       => 'bb-pill',
+        'confirmada'  => 'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/30',
+        'completada'  => 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/30',
+        'cancelada'   => 'bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800/30',
+        default       => 'bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
       };
     };
 
@@ -148,140 +100,155 @@
   <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
     {{-- =========================
-         IZQUIERDA: TABLA + CARDS
+         IZQUIERDA: CONTROL DE FECHA Y TABLA
          ========================= --}}
-    <div class="xl:col-span-7">
+    <div class="xl:col-span-7 flex flex-col gap-6">
+
+      {{-- Control de Fecha Integrado --}}
+      <div class="bb-glass-card px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+            <i class="fas fa-calendar-day"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-gray-900 dark:text-white">Agenda Diaria</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Mostrando: <strong class="text-gray-800 dark:text-gray-200">{{ $fecha->translatedFormat('l, d M Y') }}</strong></p>
+          </div>
+        </div>
+
+        <form id="fechaForm" method="GET" action="{{ route('admin.dashboard') }}" class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700">
+          <a href="{{ route('admin.dashboard', ['fecha' => $prevDate]) }}" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-gray-800 transition-all text-gray-500" title="Día Anterior">
+            <i class="fas fa-chevron-left"></i>
+          </a>
+          
+          <input type="date" name="fecha" class="bg-transparent border-none text-sm font-bold text-gray-800 dark:text-gray-200 focus:ring-0 cursor-pointer text-center w-[130px]" value="{{ $fecha->format('Y-m-d') }}" onchange="document.getElementById('fechaForm').submit()">
+          
+          <a href="{{ route('admin.dashboard', ['fecha' => $nextDate]) }}" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-gray-800 transition-all text-gray-500" title="Día Siguiente">
+            <i class="fas fa-chevron-right"></i>
+          </a>
+
+          <div class="w-px h-5 bg-gray-300 dark:bg-gray-700 mx-1"></div>
+          
+          <a href="{{ route('admin.dashboard', ['fecha' => $todayDate]) }}" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-sm" title="Ir a hoy">
+            Hoy
+          </a>
+        </form>
+      </div>
 
       {{-- ✅ Tabla Desktop --}}
-      <div class="bb-glass-card overflow-hidden bb-hide-md">
+      <div class="bb-glass-card overflow-hidden bb-hide-md flex-1">
         <div class="overflow-x-auto">
-          <table class="min-w-full">
+          <table class="min-w-full text-left">
             <thead class="bb-thead">
               <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Hora</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cliente</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Servicio</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Empleado</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Venta</th>
-                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                <th class="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Hora</th>
+                <th class="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente / Servicio</th>
+                <th class="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
+                <th class="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Acciones</th>
               </tr>
             </thead>
 
-            <tbody>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800/50">
               @forelse($citas as $cita)
-                <tr class="bb-row {{ $rowStateClass($cita->estado_cita ?? null) }}">
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    <div class="text-sm font-semibold text-gray-900">
+                <tr class="bb-row {{ $rowStateClass($cita->estado_cita ?? null) }} group">
+                  <td class="px-5 py-4 whitespace-nowrap">
+                    <div class="inline-flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-gray-100 bg-white/60 dark:bg-gray-800/60 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                      <i class="far fa-clock text-gray-400 text-xs"></i>
                       {{ is_string($cita->hora_cita ?? null) ? substr($cita->hora_cita, 0, 5) : '—' }}
                     </div>
                   </td>
 
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    <div class="text-sm font-semibold text-gray-900">{{ $cita->cliente_nombre ?? '—' }}</div>
-                    <div class="text-xs text-gray-500">{{ $cita->cliente_email ?? '—' }}</div>
+                  <td class="px-5 py-4">
+                    <div class="flex flex-col gap-1">
+                      <div class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $cita->cliente_nombre ?? '—' }}</div>
+                      <div class="text-xs text-gray-500 flex items-center gap-1.5">
+                        <i class="fas fa-cut text-gray-400"></i> {{ $cita->servicios_label ?? '—' }}
+                      </div>
+                      <div class="text-[11px] text-gray-400 flex items-center gap-1.5 mt-0.5">
+                        <i class="fas fa-user-tie"></i> {{ $cita->empleado_nombre ?? '—' }}
+                      </div>
+                    </div>
                   </td>
 
-                  <td class="px-4 py-3">
-                    <div class="text-sm text-gray-900">{{ $cita->servicios_label ?? '—' }}</div>
-                    <div class="text-xs text-gray-500">${{ number_format((float)($cita->servicios_total ?? 0), 2) }}</div>
-                  </td>
-
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ $cita->empleado_nombre ?? '—' }}</div>
-                  </td>
-
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    <span class="{{ $pillClass($cita->estado_cita ?? null) }}">
-                      {{ strtoupper($cita->estado_cita ?? '—') }}
+                  <td class="px-5 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide {{ $pillClass($cita->estado_cita ?? null) }}">
+                      {{ $cita->estado_cita ?? '—' }}
                     </span>
-                  </td>
-
-                  <td class="px-4 py-3 whitespace-nowrap">
                     @if(($cita->venta_total ?? 0) > 0)
-                      <span class="bb-pill bb-pill-gold">${{ number_format((float)$cita->venta_total, 2) }}</span>
-                    @else
-                      <span class="text-xs text-gray-500">Sin venta</span>
+                      <div class="mt-2 inline-flex items-center gap-1 text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded border border-green-100 dark:border-green-800/30">
+                        <i class="fas fa-check"></i> Pagado: ${{ number_format((float)$cita->venta_total, 2) }}
+                      </div>
                     @endif
                   </td>
 
-                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                    <div class="flex items-center justify-end gap-2">
-                      <a class="bb-action bb-action-ink"
-                         href="{{ route('admin.citas.show', $cita->id_cita) }}"
-                         data-bb-modal="1"
-                         data-title="Cita #{{ $cita->id_cita }}"
-                         data-url="{{ route('admin.citas.show', $cita->id_cita) }}">
-                         <i class="fas fa-eye"></i> Ver
-                      </a>
-                    </div>
+                  <td class="px-5 py-4 whitespace-nowrap text-right">
+                    <a class="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors shadow-sm"
+                       href="{{ route('admin.citas.show', $cita->id_cita) }}"
+                       data-bb-modal="1"
+                       data-title="Cita #{{ $cita->id_cita }}"
+                       data-url="{{ route('admin.citas.show', $cita->id_cita) }}">
+                       <i class="far fa-eye text-blue-500"></i> Ver
+                    </a>
                   </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">
-                    No hay citas para esta fecha.
+                  <td colspan="4" class="px-5 py-12 text-center">
+                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800/50 text-gray-400 mb-4">
+                        <i class="fas fa-mug-hot text-2xl"></i>
+                     </div>
+                     <p class="font-bold text-gray-800 dark:text-gray-200">Día libre de citas</p>
+                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">No hay citas registradas para esta fecha.</p>
                   </td>
                 </tr>
               @endforelse
             </tbody>
-
           </table>
         </div>
       </div>
 
       {{-- ✅ Cards Mobile --}}
       @if(count($citas) > 0)
-      <div class="bb-show-md space-y-3">
+      <div class="bb-show-md space-y-4">
         @foreach($citas as $cita)
-          <div class="bb-glass-card p-4 {{ $rowStateClass($cita->estado_cita ?? null) }}">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <div class="text-xs text-gray-500">Hora</div>
-                <div class="text-lg font-extrabold text-gray-900">
+          <div class="bb-glass-card p-4 relative overflow-hidden {{ $rowStateClass($cita->estado_cita ?? null) }}">
+            <div class="flex items-start justify-between gap-3 border-b border-gray-100 dark:border-gray-700/50 pb-3 mb-3">
+              <div class="flex items-center gap-2">
+                <i class="far fa-clock text-blue-500"></i>
+                <span class="text-lg font-black text-gray-900 dark:text-white">
                   {{ is_string($cita->hora_cita ?? null) ? substr($cita->hora_cita, 0, 5) : '—' }}
-                </div>
+                </span>
               </div>
-              <span class="{{ $pillClass($cita->estado_cita ?? null) }}">
-                {{ strtoupper($cita->estado_cita ?? '—') }}
+              <span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider {{ $pillClass($cita->estado_cita ?? null) }}">
+                {{ $cita->estado_cita ?? '—' }}
               </span>
             </div>
 
-            <div class="mt-3 grid grid-cols-1 gap-2">
-              <div>
-                <div class="text-xs text-gray-500">Cliente</div>
-                <div class="text-sm font-semibold text-gray-900">{{ $cita->cliente_nombre ?? '—' }}</div>
-                <div class="text-xs text-gray-500">{{ $cita->cliente_email ?? '—' }}</div>
+            <div class="space-y-2">
+              <div class="flex items-start gap-2">
+                <i class="fas fa-user text-gray-400 mt-0.5 text-xs w-4"></i>
+                <div>
+                  <div class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $cita->cliente_nombre ?? '—' }}</div>
+                  <div class="text-xs text-gray-500">{{ $cita->cliente_email ?? '—' }}</div>
+                </div>
               </div>
 
-              <div>
-                <div class="text-xs text-gray-500">Servicio</div>
-                <div class="text-sm text-gray-900">{{ $cita->servicios_label ?? '—' }}</div>
-                <div class="text-xs text-gray-500">${{ number_format((float)($cita->servicios_total ?? 0), 2) }}</div>
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500">Empleado</div>
-                <div class="text-sm text-gray-900">{{ $cita->empleado_nombre ?? '—' }}</div>
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500">Venta</div>
-                @if(($cita->venta_total ?? 0) > 0)
-                  <div class="text-sm font-semibold bb-gold">${{ number_format((float)$cita->venta_total, 2) }}</div>
-                @else
-                  <div class="text-sm text-gray-500">Sin venta</div>
-                @endif
+              <div class="flex items-start gap-2">
+                <i class="fas fa-cut text-gray-400 mt-0.5 text-xs w-4"></i>
+                <div class="text-sm text-gray-700 dark:text-gray-300">{{ $cita->servicios_label ?? '—' }}</div>
               </div>
             </div>
 
-            <div class="mt-4 flex flex-wrap gap-2">
-              <a class="bb-action bb-action-ink"
-                 href="{{ route('admin.citas.show', $cita->id_cita) }}"
-                 data-bb-modal="1"
-                 data-title="Cita #{{ $cita->id_cita }}"
-                 data-url="{{ route('admin.citas.show', $cita->id_cita) }}">
-                 <i class="fas fa-eye"></i> Ver
+            <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50 flex items-center justify-between">
+              @if(($cita->venta_total ?? 0) > 0)
+                <div class="text-sm font-bold bb-gold flex items-center gap-1"><i class="fas fa-check-circle"></i> ${{ number_format((float)$cita->venta_total, 2) }}</div>
+              @else
+                <div class="text-xs text-gray-400 italic">Sin venta</div>
+              @endif
+              
+              <a class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 text-xs font-bold rounded-lg transition-colors"
+                 href="{{ route('admin.citas.show', $cita->id_cita) }}">
+                 <i class="far fa-eye text-blue-500"></i> Ver
               </a>
             </div>
           </div>
@@ -292,26 +259,17 @@
     </div>
 
     {{-- =========================
-         DERECHA: CALENDARIO
+         DERECHA: CALENDARIO MEJORADO
          ========================= --}}
     <div class="xl:col-span-5">
-      <div class="bb-glass-card p-2 md:p-4">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
-          <div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <i class="fas fa-calendar-days" style="color: rgba(201,162,74,.95)"></i>
-              Agenda del salón
-            </h2>
-            {{-- ❌ Quitado texto instructivo --}}
-          </div>
+      <div class="bb-glass-card p-4 h-full flex flex-col">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+          <i class="fas fa-calendar-alt text-blue-500"></i>
+          Vista Mensual
+        </h2>
 
-          {{-- ❌ Quitado botón Nueva cita en el calendario --}}
-        </div>
-
-        <div class="bb-glass-card overflow-hidden">
-          <div class="p-1 md:p-2">
-            <div id="citas-calendar" data-events='@json($calendarEvents ?? [])'></div>
-          </div>
+        <div class="flex-1 bg-white/50 dark:bg-gray-900/30 rounded-xl p-2 md:p-3 border border-gray-100 dark:border-gray-800/50">
+          <div id="citas-calendar" data-events='@json($calendarEvents ?? [])'></div>
         </div>
       </div>
     </div>
@@ -324,165 +282,130 @@
 @push('styles')
   <style>
     /* ===== Estados: colores pastel por fila ===== */
-    .bb-row-state-cancelada{
-      background: rgba(239,68,68,.10);
-    }
-    .bb-row-state-completada{
-      background: rgba(34,197,94,.10);
-    }
-    .bb-row-state-confirmada{
-      background: rgba(234,179,8,.12);
-    }
+    .bb-row-state-cancelada{ background: rgba(239,68,68,.05); }
+    .bb-row-state-completada{ background: rgba(34,197,94,.05); }
+    .bb-row-state-confirmada{ background: rgba(245,158,11,.05); }
 
-    /* hover conservando el tono */
-    .bb-row.bb-row-state-cancelada:hover{ background: rgba(239,68,68,.14) !important; }
-    .bb-row.bb-row-state-completada:hover{ background: rgba(34,197,94,.14) !important; }
-    .bb-row.bb-row-state-confirmada:hover{ background: rgba(234,179,8,.16) !important; }
+    .bb-row.bb-row-state-cancelada:hover{ background: rgba(239,68,68,.10) !important; }
+    .bb-row.bb-row-state-completada:hover{ background: rgba(34,197,94,.10) !important; }
+    .bb-row.bb-row-state-confirmada:hover{ background: rgba(245,158,11,.10) !important; }
 
-    /* Dark mode: que no queme */
-    .dark-mode .bb-row-state-cancelada{ background: rgba(239,68,68,.12); }
-    .dark-mode .bb-row-state-completada{ background: rgba(34,197,94,.12); }
-    .dark-mode .bb-row-state-confirmada{ background: rgba(234,179,8,.14); }
+    .dark-mode .bb-row-state-cancelada{ background: rgba(239,68,68,.10); }
+    .dark-mode .bb-row-state-completada{ background: rgba(34,197,94,.10); }
+    .dark-mode .bb-row-state-confirmada{ background: rgba(245,158,11,.10); }
 
-    /* Píldoras si no existían */
-    .bb-pill-green{
-      background: rgba(34,197,94,.14);
-      border: 1px solid rgba(34,197,94,.22);
-      color: rgba(17,24,39,.90);
+    /* ===== CALENDARIO FULLCALENDAR: REDISEÑO CLEAN & INTUITIVO ===== */
+    /* Botones de navegación y vistas */
+    .fc .fc-button-primary {
+      background: #ffffff !important;
+      border: 1px solid #e5e7eb !important;
+      color: #4b5563 !important;
+      border-radius: 0.5rem !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+      text-transform: capitalize;
+      font-weight: 600 !important;
+      padding: 0.4rem 0.75rem !important;
+      transition: all 0.2s ease;
     }
-    .bb-pill-red{
-      background: rgba(239,68,68,.14);
-      border: 1px solid rgba(239,68,68,.22);
-      color: rgba(17,24,39,.90);
+    .fc .fc-button-primary:hover {
+      background: #f9fafb !important;
+      color: #111827 !important;
+      border-color: #d1d5db !important;
     }
-
-    /* ===== Barra de fecha (más pro) ===== */
-    .bb-date-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:.5rem;
-      padding:.45rem .65rem;
-      border-radius: 1rem;
-      background: rgba(255,255,255,.60);
-      border: 1px solid rgba(255,255,255,.65);
-      box-shadow: 0 10px 22px rgba(17,24,39,.06);
-    }
-    .bb-date-input{
-      border: 0;
-      outline: none;
-      background: transparent;
-      font-weight: 800;
-      color: rgba(17,24,39,.88);
-      padding: .15rem .25rem;
-    }
-    .dark-mode .bb-date-pill{
-      background: rgba(17,24,39,.35);
-      border-color: rgba(255,255,255,.10);
-      box-shadow: 0 10px 22px rgba(0,0,0,.25);
-    }
-    .dark-mode .bb-date-input{ color: rgba(249,250,251,.92); }
-
-    .bb-pill-soft{
-      background: rgba(255,255,255,.60);
-      border: 1px solid rgba(255,255,255,.65);
-    }
-    .dark-mode .bb-pill-soft{
-      background: rgba(17,24,39,.35);
-      border-color: rgba(255,255,255,.10);
-    }
-
-    /* ===== FullCalendar custom styles (tuyo + más fino) ===== */
-    .fc .fc-button{
-      background: linear-gradient(135deg, rgba(201,162,74,.95), rgba(231,215,161,.95)) !important;
-      color:#111827 !important;
-      border: 1px solid rgba(201,162,74,.35) !important;
-      box-shadow: 0 10px 22px rgba(201,162,74,.12) !important;
-      font-weight: 800 !important;
-      border-radius: .95rem !important;
-
-      /* ✅ más pequeño y fino */
-      padding: .30rem .55rem !important;
-      font-size: .78rem !important;
-      line-height: 1 !important;
-    }
-    .fc .fc-button:hover{
-      background: linear-gradient(135deg, rgba(201,162,74,1), rgba(231,215,161,1)) !important;
-    }
-    .fc .fc-button:focus{
-      box-shadow: 0 0 0 3px rgba(201,162,74,.22) !important;
-      outline: none !important;
-    }
+    /* Estado activo del botón (El único que usa el dorado/azul) */
     .fc .fc-button-primary:not(:disabled).fc-button-active,
-    .fc .fc-button-primary:not(:disabled):active{
-      background: linear-gradient(135deg, rgba(201,162,74,.95), rgba(231,215,161,.95)) !important;
-      color:#111827 !important;
-      border-color: rgba(201,162,74,.35) !important;
-      box-shadow: 0 12px 28px rgba(201,162,74,.18) !important;
+    .fc .fc-button-primary:not(:disabled):active {
+      background: rgba(201,162,74,0.1) !important;
+      border-color: rgba(201,162,74,0.4) !important;
+      color: rgba(201,162,74,1) !important;
+      box-shadow: none !important;
     }
-    .fc .fc-button .fc-icon{ font-size: .95em !important; }
-    .fc .fc-button-group .fc-button{ margin: 0 .15rem !important; }
-
-    .fc .fc-toolbar{ gap: .5rem !important; }
-    .fc .fc-toolbar-title{
-      font-weight: 900 !important;
-      color: rgba(17,24,39,.88) !important;
-      letter-spacing: .2px;
-      font-size: 1rem !important;
+    .fc .fc-button-primary:focus {
+      box-shadow: 0 0 0 2px rgba(201,162,74,0.2) !important;
     }
 
-    .fc .fc-scrollgrid, .fc .fc-scrollgrid table{ border-color: rgba(17,24,39,.08) !important; }
-    .fc .fc-col-header-cell-cushion{
-      color: rgba(17,24,39,.70) !important;
+    /* Quitar bordes feos internos */
+    .fc .fc-scrollgrid { border: none !important; }
+    .fc .fc-scrollgrid td, .fc .fc-scrollgrid th { border-color: #f3f4f6 !important; }
+    
+    /* Cabecera del calendario (Mes/Año) */
+    .fc .fc-toolbar-title {
       font-weight: 800 !important;
-      text-decoration:none !important;
-      font-size: .80rem !important;
+      font-size: 1.15rem !important;
+      color: #1f2937 !important;
     }
-    .fc .fc-daygrid-day-number{
-      color: rgba(17,24,39,.70) !important;
-      text-decoration:none !important;
+    
+    /* Días de la semana (L, M, M, J...) */
+    .fc .fc-col-header-cell-cushion {
+      color: #6b7280 !important;
       font-weight: 700 !important;
-      font-size: .80rem !important;
+      text-transform: uppercase;
+      font-size: 0.75rem !important;
+      padding: 0.5rem 0 !important;
     }
-    .fc .fc-daygrid-event{
-      border-radius: .8rem !important;
-      border: 1px solid rgba(201,162,74,.20) !important;
-      background: rgba(201,162,74,.12) !important;
-      color: rgba(17,24,39,.88) !important;
-      padding: .15rem .35rem !important;
-      font-weight: 700 !important;
-    }
-    .fc .fc-day-today{ background: rgba(201,162,74,.10) !important; }
 
-    .dark-mode .fc .fc-button{
-      background: rgba(17,24,39,.35) !important;
-      border-color: rgba(255,255,255,.10) !important;
-      color: rgba(249,250,251,.92) !important;
-      box-shadow: 0 10px 22px rgba(0,0,0,.25) !important;
+    /* Número del día */
+    .fc .fc-daygrid-day-number {
+      color: #374151 !important;
+      font-weight: 600 !important;
+      font-size: 0.85rem !important;
+      margin: 2px;
     }
-    .dark-mode .fc .fc-button:hover{ background: rgba(17,24,39,.55) !important; }
-    .dark-mode .fc .fc-toolbar-title{ color: rgba(249,250,251,.95) !important; }
-    .dark-mode .fc .fc-scrollgrid, .dark-mode .fc .fc-scrollgrid table{ border-color: rgba(255,255,255,.10) !important; }
-    .dark-mode .fc .fc-col-header-cell-cushion,
-    .dark-mode .fc .fc-daygrid-day-number{ color: rgba(229,231,235,.85) !important; }
-    .dark-mode .fc .fc-daygrid-event{
-      background: rgba(201,162,74,.14) !important;
-      border-color: rgba(201,162,74,.22) !important;
-      color: rgba(249,250,251,.92) !important;
+
+    /* Highlight del Día de hoy */
+    .fc .fc-day-today {
+      background: rgba(59, 130, 246, 0.05) !important; /* Fondo sutil azul */
     }
-    .dark-mode .fc .fc-day-today{ background: rgba(201,162,74,.08) !important; }
+    .fc .fc-day-today .fc-daygrid-day-number {
+      background: #3b82f6 !important;
+      color: white !important;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Píldoras de Eventos (Citas en el calendario) */
+    .fc .fc-daygrid-event {
+      border-radius: 4px !important;
+      border: none !important;
+      background: rgba(201,162,74,0.15) !important;
+      color: #927429 !important; /* Dorado oscuro para buen contraste */
+      font-weight: 700 !important;
+      font-size: 0.75rem !important;
+      padding: 2px 4px !important;
+      margin-top: 1px !important;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .fc .fc-daygrid-event:hover {
+      transform: scale(1.02);
+      filter: brightness(0.95);
+    }
+
+    /* Dark Mode Calendar Adaptations */
+    .dark .fc .fc-button-primary {
+      background: rgba(31,41,55,1) !important;
+      border-color: rgba(75,85,99,1) !important;
+      color: #d1d5db !important;
+    }
+    .dark .fc .fc-button-primary:hover { background: rgba(55,65,81,1) !important; }
+    .dark .fc .fc-toolbar-title { color: #f9fafb !important; }
+    .dark .fc .fc-scrollgrid td, .dark .fc .fc-scrollgrid th { border-color: rgba(55,65,81,0.5) !important; }
+    .dark .fc .fc-col-header-cell-cushion { color: #9ca3af !important; }
+    .dark .fc .fc-daygrid-day-number { color: #e5e7eb !important; }
+    .dark .fc .fc-day-today { background: rgba(59, 130, 246, 0.1) !important; }
+    .dark .fc .fc-daygrid-event {
+      background: rgba(201,162,74,0.2) !important;
+      color: #e2c67b !important;
+    }
 
     /* Móvil: toolbar compacta */
     @media (max-width: 640px){
-      .fc .fc-toolbar{
-        flex-direction: column !important;
-        align-items: stretch !important;
-      }
-      .fc .fc-toolbar-chunk{
-        display:flex !important;
-        justify-content: center !important;
-        flex-wrap: wrap !important;
-        gap: .35rem !important;
-      }
+      .fc .fc-toolbar { flex-direction: column !important; gap: 0.5rem !important; }
+      .fc .fc-toolbar-chunk { display:flex !important; justify-content: center !important; flex-wrap: wrap !important; }
     }
   </style>
 @endpush
@@ -502,26 +425,28 @@
         height: 'auto',
         nowIndicator: true,
         selectable: true,
+        dayMaxEvents: 3, // Evita que se estire demasiado la celda, muestra "ver más"
         headerToolbar: {
-          left: 'prev,next today',
+          left: 'prev,next',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,listWeek'
+          right: 'dayGridMonth,timeGridWeek'
         },
         buttonText: {
           today: 'Hoy',
           month: 'Mes',
           week: 'Semana',
-          list: 'Agenda'
         },
         events,
 
         dateClick: (info) => {
+          // Redirigir al creador de citas seleccionando el día
           const url = new URL(`{{ route('admin.citas.create') }}`, window.location.origin);
           url.searchParams.set('date', info.dateStr);
           window.location.href = url.toString();
         },
 
         eventClick: (info) => {
+          // Redirigir al modo edición/vista de esa cita específica
           window.location.href = `{{ url('/admin/citas') }}/${info.event.id}/edit`;
         },
 
@@ -532,9 +457,8 @@
 
           const fecha = start.toLocaleDateString('es-MX', {
             weekday: 'short',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
+            day: 'numeric',
+            month: 'short'
           });
 
           const hora = start.toLocaleTimeString('es-MX', {
@@ -542,7 +466,8 @@
             minute: '2-digit'
           });
 
-          info.el.title = `${title} - ${fecha} ${hora}`;
+          // Un tooltip nativo limpio
+          info.el.title = `Cita: ${title}\nHorario: ${fecha} a las ${hora}`;
         },
       });
 
