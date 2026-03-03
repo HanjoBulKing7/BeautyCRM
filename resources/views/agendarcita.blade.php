@@ -12,7 +12,7 @@
 @endpush
 
 @section('content')
-  @include('beauty.partials.whatsApp-icon')
+  @include('beauty.partials.whatsapp-icon')
   @include('beauty.partials.header')
 
   @php

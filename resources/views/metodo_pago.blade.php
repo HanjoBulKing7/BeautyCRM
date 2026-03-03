@@ -1,7 +1,7 @@
 @extends('layouts.website')
 
 @section('content')
-    @include('beauty.partials.whatsApp-icon')
+    @include('beauty.partials.whatsapp-icon')
     @include('beauty.partials.header')
 <div class="min-h-[70vh] flex flex-col items-center justify-start pt-16">
 

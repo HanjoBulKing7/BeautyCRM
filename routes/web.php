@@ -1,4 +1,5 @@
 <?php
+
 use App\Http\Controllers\CitaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -25,7 +26,9 @@ Route::get('/', function () {
     return redirect()->route('cliente.home'); // /home
 })->name('root');
 
+// =============================
 // Rutas Públicas (Cliente)
+// =============================
 Route::get('/home', [HomeController::class, 'index'])
     ->name('cliente.home');
 
@@ -34,13 +37,14 @@ Route::view('/nosotros', 'nosotros')->name('nosotros');
 
 Route::get('/servicio', [ServiciosPublicController::class, 'index'])
     ->name('servicio.public');
-    
-    // routes/web.php
+
+// Productos públicos
 Route::get('/productos', [ProductosPublicController::class, 'index'])
     ->name('productos.public');
 
-
-// Agendar cita
+// =============================
+// Agendar cita (requiere auth)
+// =============================
 Route::middleware('auth')->group(function () {
     Route::get('/agendar-cita', [AgendarCitaPublicController::class, 'create'])
         ->name('agendarcita.create');
@@ -55,13 +59,16 @@ Route::middleware('auth')->group(function () {
         ->name('agendarcita.availabilityMonth');
 });
 
-//===========================================================
-//Webhook para manejar el evento checkout de Stripe ( producción & más seguro )
+// ===========================================================
+// Webhook Stripe (producción & más seguro)
+// ===========================================================
 Route::post('/stripe/webhook', [PagoController::class, 'webhook'])
     ->name('stripe.webhook')
     ->withoutMiddleware([ValidateCsrfToken::class]);
-//==================================================================== 
 
+// =============================
+// Vistas cliente
+// =============================
 Route::get('/anticipo', function () {
     return view('cliente.anticipo');
 })->name('cliente.anticipo');
@@ -74,7 +81,9 @@ Route::get('/sucursal', function () {
     return view('cliente.sucursal');
 })->name('cliente.sucursal');
 
-// Rutas de Autenticación
+// =============================
+// Autenticación
+// =============================
 Route::get('/login', function () {
     return view('login');
 })->name('login.form');
@@ -95,12 +104,10 @@ Route::get('/auth/google/login/callback', [AuthController::class, 'handleGoogleC
     ->name('google.callback')
     ->middleware('guest');
 
-
-// ✅ Invitación empleado (link firmado expirable)
+// ✅ Invitación empleado (link firmado expirable)  (DEJAR SOLO UNA VEZ)
 Route::get('/invitation/employee/{user}', [AuthController::class, 'acceptEmployeeInvitation'])
     ->name('invitation.employee')
-    ->middleware('signed'); // important: valida firma + expiración
-
+    ->middleware('signed');
 
 // ✅ Google OAuth para empleados (incluye Calendar + offline)
 Route::get('/auth/google/employee', [AuthController::class, 'redirectEmployeeToGoogle'])
@@ -111,23 +118,20 @@ Route::get('/auth/google/employee/callback', [AuthController::class, 'handleEmpl
     ->name('google.employee.callback')
     ->middleware('guest');
 
-
 // (Opcional) mantiene tu flujo existente de GoogleCalendarController si lo sigues usando
 Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'])
     ->name('google.calendar.callback');
 
-// ✅ Link de invitación (firmado + expira)
-Route::get('/invitation/employee/{user}', [AuthController::class, 'acceptEmployeeInvitation'])
-    ->name('invitation.employee')
-    ->middleware('signed');
+// =============================
 // Rutas de Administración
+// =============================
 Route::prefix('admin')->name('admin.')->group(function () {
-    
+
     Route::get('/home', [DashboardCitasController::class, 'index'])
         ->name('dashboard')
         ->middleware('auth');
 
-
+    // Empleados
     Route::prefix('empleados')->name('empleados.')->group(function () {
         Route::get('/', [EmpleadoController::class, 'index'])->name('index');
         Route::get('/create', [EmpleadoController::class, 'create'])->name('create');
@@ -137,16 +141,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{empleado}', [EmpleadoController::class, 'update'])->name('update');
         Route::delete('/{empleado}', [EmpleadoController::class, 'destroy'])->name('destroy');
     });
-    
-    // Rutas de Citas
+
+    // Citas
     Route::prefix('citas')->name('citas.')->group(function () {
-            // ✅ AJAX: empleados por servicio (ponla ARRIBA)
+
+        // ✅ AJAX: empleados por servicio (ponla ARRIBA)
         Route::get('/empleados-por-servicio', [CitaController::class, 'empleadosPorServicio'])
             ->name('empleadosPorServicio');
 
         // AJAX horas disponibles
         Route::get('/horas-disponibles', [CitaController::class, 'horasDisponibles'])
             ->name('horasDisponibles');
+
         Route::get('/', [CitaController::class, 'index'])->name('index');
         Route::get('/create', [CitaController::class, 'create'])->name('create');
         Route::post('/', [CitaController::class, 'store'])->name('store');
@@ -154,13 +160,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/{cita}/edit', [CitaController::class, 'edit'])->name('edit');
         Route::put('/{cita}', [CitaController::class, 'update'])->name('update');
         Route::delete('/{cita}', [CitaController::class, 'destroy'])->name('destroy');
-        
-        // Rutas de sincronización con Google Calendar
+
+        // Sincronización con Google Calendar
         Route::post('/{cita}/sync', [CitaController::class, 'syncWithGoogle'])->name('sync');
         Route::post('/sync-all', [CitaController::class, 'syncAllWithGoogle'])->name('sync-all');
     });
 
-    
+    // Clientes
     Route::prefix('clientes')->name('clientes.')->middleware(['auth'])->group(function () {
         Route::get('/', [ClienteController::class, 'index'])->name('index');
         Route::get('/create', [ClienteController::class, 'create'])->name('create');
@@ -171,15 +177,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{cliente}', [ClienteController::class, 'destroy'])->name('destroy');
     });
 
-    // Rutas de Google Calendar
+    // ✅ Google Calendar (DEJAR SOLO UN BLOQUE)
     Route::prefix('google')->name('google.')->group(function () {
         Route::get('/connect', [GoogleCalendarController::class, 'connect'])->name('connect');
-        Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');   
+
+        // si /auth era alias de connect, lo mantenemos
+        Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');
+
+        // ✅ mantener POST para desconectar (evita GET action insegura)
         Route::post('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+
         Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
     });
-    
-    // Rutas de Categoria Servicios
+
+    // Categorías Servicios
     Route::prefix('categoriaservicios')->name('categoriaservicios.')->middleware('auth')->group(function () {
         Route::get('/', [CategoriaServicioController::class, 'index'])->name('index');
         Route::get('/create', [CategoriaServicioController::class, 'create'])->name('create');
@@ -191,51 +202,48 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 
     Route::resource('productos', ProductoController::class)->middleware('auth');
-    
-    // SERVICIOS - CORREGIDO
+
+    // Servicios
     Route::resource('servicios', ServicioController::class);
 
-    // Rutas de Google Calendar (dentro de Route::prefix('admin')->name('admin.'))
-    Route::prefix('google')->name('google.')->group(function () {
-        Route::get('/auth', [GoogleCalendarController::class, 'connect'])->name('auth');
-        Route::get('/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
-        Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
-    });
-    
-
-    // Solo index y show - no hay create, store, edit, update, destroy
+    // Ventas (solo lectura)
     Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
     Route::get('/ventas/{id}', [VentaController::class, 'show'])->name('ventas.show');
-
 
     // Reportes
     Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
     Route::get('reportes/exportar/{tipo}', [ReporteController::class, 'exportarReporte'])->name('reportes.exportar');
 
     // Ruta adicional para reporte
-    Route::get('/ventas/reporte', [\App\Http\Controllers\VentaController::class, 'reporte'])
+    Route::get('/ventas/reporte', [VentaController::class, 'reporte'])
         ->name('ventas.reporte');
-    
-    // Ruta para completar cita con pago
-    Route::post('/citas/{id}/completar', [\App\Http\Controllers\CitaController::class, 'completarConPago'])
-        ->name('citas.completar.con-pago');
 
+    // Completar cita con pago
+    Route::post('/citas/{id}/completar', [CitaController::class, 'completarConPago'])
+        ->name('citas.completar.con-pago');
 });
 
-
+// =============================
+// Checkout
+// =============================
 Route::get('/checkout', [PagoController::class, 'checkout'])->name('checkout');
 Route::get('/success', [PagoController::class, 'success'])->name('success');
 Route::get('/cancel', [PagoController::class, 'cancel'])->name('cancel');
 
+// =============================
+// Mis reservas
+// =============================
 Route::middleware(['auth'])->group(function () {
     Route::get('/mis-reservas', [MisReservasController::class, 'index'])->name('misreservas');
 
-    // ✅ NUEVA: cancelar reserva
+    // ✅ cancelar reserva
     Route::post('/mis-reservas/{cita}/cancelar', [MisReservasController::class, 'cancel'])
         ->name('misreservas.cancel');
 });
 
+// =============================
 // Ruta de diagnóstico
+// =============================
 Route::get('/debug-auth', function () {
     return response()->json([
         'auth_check' => Auth::check(),
