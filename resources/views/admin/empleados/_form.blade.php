@@ -56,19 +56,10 @@
         @enderror
     </div>
 
-    {{-- Fecha contratación --}}
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-calendar mr-2" style="color: rgba(201,162,74,.92)"></i>
-            Fecha de Contratación
-        </label>
-        <input type="date" name="fecha_contratacion"
-               value="{{ old('fecha_contratacion', $empleado->fecha_contratacion) }}"
-               class="w-full border border-gray-300 rounded-lg p-3 transition
-                      focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]">
-    </div>
+    {{-- Fecha contratación (eliminado en modo crear) --}}
 
-    {{-- Estatus (solo activo/inactivo) --}}
+    {{-- Estatus (solo activo/inactivo, oculto en modo crear) --}}
+    @if(Route::currentRouteName() !== 'admin.empleados.create')
     <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <label class="block text-sm font-medium mb-2 text-gray-700">
             <i class="fas fa-toggle-on mr-2" style="color: rgba(201,162,74,.92)"></i>
@@ -84,6 +75,7 @@
           <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
         @enderror
     </div>
+    @endif
 
     @php
         $servicios = $servicios ?? \App\Models\Servicio::orderBy('nombre_servicio')->get();
