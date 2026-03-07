@@ -126,6 +126,8 @@ Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'
 // Rutas de Administración
 // =============================
 Route::prefix('admin')->name('admin.')->group(function () {
+    // AJAX para crear categoría desde el formulario de servicios
+    Route::post('/categoriaservicios/ajax', [CategoriaServicioController::class, 'storeAjax'])->name('categoriaservicios.ajax');
 
     Route::get('/home', [DashboardCitasController::class, 'index'])
         ->name('dashboard')

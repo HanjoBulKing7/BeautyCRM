@@ -39,6 +39,21 @@ class CategoriaServicioController extends Controller
             ->with('success', 'Categoría creada correctamente');
     }
 
+    // AJAX: crear categoría desde servicios
+    public function storeAjax(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:120|unique:categorias_servicios,nombre',
+            'estado' => 'required|in:activo,inactivo',
+        ]);
+
+        $categoria = CategoriaServicio::create($validated);
+        return response()->json([
+            'id_categoria' => $categoria->id_categoria,
+            'nombre' => $categoria->nombre,
+        ]);
+    }
+
     public function show(CategoriaServicio $categoria)
     {
         return view('admin.categoriaservicios.show', compact('categoria'));

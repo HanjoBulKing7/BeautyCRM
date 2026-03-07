@@ -65,7 +65,7 @@
                 @if($cita->venta)
                     <div class="flex items-center gap-2">
                         <span class="text-lg font-bold bb-gold">${{ number_format($cita->venta->total, 2) }}</span>
-                        <span class="text-[10px] px-2 py-0.5 rounded bg-gray-200  text-gray-600 dark:text-gray-300 font-semibold uppercase">
+                        <span class="text-[10px] px-2 py-0.5 rounded  text-gray-600 dark:text-gray-300 font-semibold uppercase">
                             {{ $cita->venta->forma_pago ?? 'Efectivo' }}
                         </span>
                     </div>
