@@ -33,7 +33,6 @@
             flex: 0 0 auto;
         }
 
-        /* ✅ Ajuste para iconos (evita que se “muevan”) */
         .bb-icon-pill svg{
             display: block;
         }
@@ -77,29 +76,9 @@
             box-shadow: 0 0 0 3px rgba(201,162,74,.15);
         }
 
-        /* ✅ Flatpickr altInput (el visible) */
         .flatpickr-input[readonly]{
             cursor: pointer;
         }
-
-        .bb-thead{
-            background: rgba(249,250,251,.80);
-            border-bottom: 1px solid rgba(17,24,39,.10);
-        }
-
-        .bb-row{
-            border-bottom: 1px solid rgba(17,24,39,.06);
-            transition: background .2s ease;
-        }
-
-        tr.bb-state-cancelada{ background: rgba(254, 226, 226, .50); }
-        tr.bb-state-completada{ background: rgba(220, 252, 231, .50); }
-        tr.bb-state-confirmada{ background: rgba(254, 249, 195, .50); }
-
-        tr.bb-state-cancelada:hover{ background: rgba(254, 226, 226, .80); }
-        tr.bb-state-completada:hover{ background: rgba(220, 252, 231, .80); }
-        tr.bb-state-confirmada:hover{ background: rgba(254, 249, 195, .80); }
-        tr.bb-row:hover{ background: rgba(249,250,251,.80); }
 
         .bb-pill-gold{
             display:inline-flex;
@@ -116,15 +95,17 @@
             display:inline-flex;
             align-items:center;
             gap:.3rem;
-            padding: .4rem .75rem;
+            padding: .5rem .75rem;
             border-radius: .5rem;
             background: #f3f4f6;
             color: rgba(17,24,39,.85);
             font-size: 0.875rem;
-            font-weight: 500;
+            font-weight: 600;
             transition: all .2s ease;
+            width: 100%;
+            justify-content: center;
         }
-        .bb-action-ink:hover{ background: #e5e7eb; color: #000; }
+        .bb-action-ink:hover{ background: #e5e7eb; color: #000; transform: translateY(-1px); }
 
         /* ✅ KPI strip (una sola fila) */
         .bb-kpi-strip{
@@ -194,13 +175,6 @@
             background: rgba(17,24,39,.50);
             border-color: rgba(201,162,74,.40);
         }
-        .dark .bb-thead{
-            background: rgba(17,24,39,.45);
-            border-bottom-color: rgba(255,255,255,.10);
-        }
-        .dark .bb-row{ border-bottom-color: rgba(255,255,255,.05); }
-        .dark tr.bb-row:hover{ background: rgba(255,255,255,.05); }
-
         .dark .bb-input{
             background: rgba(17,24,39,.50);
             border-color: rgba(255,255,255,.15);
@@ -233,12 +207,20 @@
             border-color: #c9a24a !important;
             color: #ffffff !important;
         }
+        
+        /* ✅ Alturas iguales para las cards */
+        .card-citas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-    {{-- ✅ Orden por fecha+hora --}}
+    {{-- ✅ Lógica y Agrupación en Blade --}}
     @php
+        // Ordenamiento original
         if (method_exists($citasCompletadas, 'setCollection') && method_exists($citasCompletadas, 'getCollection')) {
             $sorted = $citasCompletadas->getCollection()->sortBy(function($c) {
                 $f = $c->fecha_cita ? \Carbon\Carbon::parse($c->fecha_cita)->format('Y-m-d') : '9999-12-31';
@@ -248,22 +230,23 @@
             $citasCompletadas->setCollection($sorted);
         }
 
-        // ✅ Conteo de confirmadas
-        $confirmadasLocal = 0;
-        try {
-            $confirmadasLocal = method_exists($citasCompletadas, 'getCollection')
-                ? $citasCompletadas->getCollection()->where('estado_cita', 'confirmada')->count()
-                : 0;
-        } catch (\Throwable $e) {
-            $confirmadasLocal = 0;
-        }
-        $pendientesCountView = $pendientesCount ?? $confirmadasLocal;
+        // Agrupando la colección actual para separarlos por estados
+        $citasArray = method_exists($citasCompletadas, 'getCollection') ? $citasCompletadas->getCollection() : $citasCompletadas;
+        
+        $citasPorEstado = collect($citasArray)->groupBy(function($cita) {
+            return strtolower(trim((string)($cita->estado_cita ?? '')));
+        });
+
+        $confirmadas = $citasPorEstado->get('confirmada', collect([]));
+        $completadas = $citasPorEstado->get('completada', collect([]));
+        $canceladas = $citasPorEstado->get('cancelada', collect([]));
+
+        $pendientesCountView = $pendientesCount ?? $confirmadas->count();
     @endphp
 
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3 dark:text-gray-100">
             <span class="bb-icon-pill">
-                {{-- Icono Minimalista: Calendario --}}
                 <svg class="w-6 h-6 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
@@ -272,27 +255,22 @@
         </h1>
     </div>
 
+    {{-- Filtro --}}
     <div class="bb-glass-card p-4 sm:p-5 mb-6">
         <form id="filtroVentasForm" method="GET" action="{{ route('admin.ventas.index') }}" class="flex flex-col sm:flex-row gap-4 items-end">
-
             <div class="w-full relative">
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Rango de Fechas</label>
                 <div class="relative">
-                    {{-- Icono Minimalista: Reloj/Calendario en el input --}}
                     <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                     <input type="text" id="rango_fechas" class="bb-input w-full" placeholder="Seleccionar inicio y fin" readonly>
-
-                    {{-- Inputs ocultos --}}
                     <input type="hidden" name="fecha_inicio" id="fecha_inicio" value="{{ $fechaInicio ?? '' }}">
                     <input type="hidden" name="fecha_fin" id="fecha_fin" value="{{ $fechaFin ?? '' }}">
                 </div>
             </div>
-
             <div class="w-full sm:w-auto mt-2 sm:mt-0">
                 <a href="{{ route('admin.ventas.index') }}" class="bb-btn-ghost w-full justify-center sm:w-auto h-[42px]">
-                    {{-- Icono Minimalista: Refrescar/Limpiar --}}
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
@@ -302,12 +280,11 @@
         </form>
     </div>
 
-    {{-- ✅ KPI en UNA sola fila (3 columnas) --}}
-    <div class="bb-kpi-strip mb-6">
+    {{-- KPIs --}}
+    <div class="bb-kpi-strip mb-8">
         <div class="bb-glass-card bb-kpi">
             <div class="bb-kpi__left">
                 <div class="bb-kpi__emoji">
-                    {{-- Icono Minimalista: Billetera / Dinero --}}
                     <svg class="w-6 h-6 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -320,12 +297,10 @@
                 </div>
             </div>
         </div>
-
         <div class="bb-glass-card bb-kpi">
             <div class="bb-kpi__left">
                 <div class="bb-kpi__emoji">
-                    {{-- Icono Minimalista: Check --}}
-                    <svg class="w-6 h-6 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
@@ -337,12 +312,10 @@
                 </div>
             </div>
         </div>
-
         <div class="bb-glass-card bb-kpi">
             <div class="bb-kpi__left">
                 <div class="bb-kpi__emoji">
-                    {{-- Icono Minimalista: Reloj --}}
-                    <svg class="w-6 h-6 bb-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
@@ -356,129 +329,73 @@
         </div>
     </div>
 
-    <div class="bb-glass-card overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-left text-sm">
-                <thead class="bb-thead">
-                    <tr>
-                        <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Cita</th>
-                        <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Fecha</th>
-                        <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Cliente</th>
-                        <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Servicio</th>
-                        <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Empleado</th>
-                        <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Venta</th>
-                        <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 text-right">Acciones</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @forelse($citasCompletadas as $cita)
-                        @php
-                            $estado = strtolower(trim((string)($cita->estado_cita ?? '')));
-                            $rowStateClass = '';
-                            if ($estado === 'cancelada') $rowStateClass = 'bb-state-cancelada';
-                            elseif ($estado === 'completada') $rowStateClass = 'bb-state-completada';
-                            elseif ($estado === 'confirmada') $rowStateClass = 'bb-state-confirmada';
-
-                            $horaTxt = substr((string)($cita->hora_cita ?? ''), 0, 5);
-                        @endphp
-
-                        <tr class="bb-row {{ $rowStateClass }}">
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="font-semibold text-gray-900 dark:text-gray-100">#{{ $cita->id_cita }}</span>
-                            </td>
-
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="font-medium text-gray-900 dark:text-gray-100">{{ \Carbon\Carbon::parse($cita->fecha_cita)->format('d/m/Y') }}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center">
-                                    {{-- Icono Minimalista: Reloj pequeño --}}
-                                    <svg class="w-3.5 h-3.5 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    {{ $horaTxt }}
-                                </div>
-                            </td>
-
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="font-medium text-gray-900 dark:text-gray-100">{{ $cita->cliente->nombre ?? 'Cliente' }}</div>
-                                @if($cita->cliente->email ?? false)
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ $cita->cliente->email }}</div>
-                                @endif
-                            </td>
-
-                            <td class="px-4 py-3">
-                                <div class="space-y-1 min-w-[140px]">
-                                @forelse($cita->servicios as $s)
-                                    <div class="flex items-center justify-between gap-3">
-                                        <div class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
-                                            {{ $s->nombre_servicio }}
-                                        </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                            ${{ number_format($s->pivot->precio_snapshot ?? $s->precio ?? 0, 2) }}
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="text-xs text-gray-400">Sin servicios</div>
-                                @endforelse
-                                </div>
-                            </td>
-
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-gray-800 dark:text-gray-200">
-                                    {{ trim(($cita->empleado->nombre ?? '').' '.($cita->empleado->apellido ?? '')) ?: 'No asignado' }}
-                                </div>
-                            </td>
-
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                @if($cita->venta)
-                                    <span class="bb-pill-gold">
-                                        ${{ number_format($cita->venta->total, 2) }}
-                                    </span>
-                                    <div class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400 font-semibold mt-1.5">
-                                        {{ $cita->venta->forma_pago ?? 'Efectivo' }}
-                                    </div>
-                                @else
-                                    <span class="text-xs text-gray-400 italic">Sin venta</span>
-                                @endif
-                            </td>
-
-                            <td class="px-4 py-3 whitespace-nowrap text-right">
-                                <a href="{{ route('admin.citas.show', $cita->id_cita) }}" class="bb-action-ink" title="Ver Cita">
-                                    {{-- Icono Minimalista: Ojo --}}
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    <span>Ver Cita</span>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-12 text-center">
-                                <div class="text-gray-500 dark:text-gray-400">
-                                    <div class="mx-auto flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3 dark:bg-gray-800">
-                                        {{-- Icono Minimalista: Carpeta / Bandeja vacía --}}
-                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                                        </svg>
-                                    </div>
-                                    <p class="font-semibold text-gray-800 dark:text-gray-100 text-base">No hay citas registradas</p>
-                                    <p class="text-sm mt-1">Ajusta el rango de fechas para ver más resultados.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if($citasCompletadas->hasPages())
-            <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-                {{ $citasCompletadas->links() }}
+    {{-- ✅ CONTENEDOR DE CARDS POR ESTADO --}}
+    
+    @if(count($citasArray) === 0)
+        <div class="bb-glass-card p-12 text-center">
+            <div class="mx-auto flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3 mt-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
             </div>
+            <p class="font-semibold text-gray-800 dark:text-gray-100 text-base">No hay citas registradas</p>
+            <p class="text-sm mt-1 text-gray-500">Ajusta el rango de fechas para ver más resultados.</p>
+        </div>
+    @else
+
+        {{-- SECCIÓN: CONFIRMADAS --}}
+        @if($confirmadas->count() > 0)
+        <div class="mb-10">
+            <h2 class="text-lg font-bold text-yellow-600 dark:text-yellow-400 mb-4 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                Citas Confirmadas ({{ $confirmadas->count() }})
+            </h2>
+            <div class="card-citas-grid">
+                @foreach($confirmadas as $cita)
+                    @include('components.cita-card', ['cita' => $cita, 'colorText' => 'text-yellow-600 dark:text-yellow-400', 'estadoText' => 'Confirmada'])
+                @endforeach
+            </div>
+        </div>
         @endif
-    </div>
+
+        {{-- SECCIÓN: COMPLETADAS --}}
+        @if($completadas->count() > 0)
+        <div class="mb-10">
+            <h2 class="text-lg font-bold text-green-600 dark:text-green-400 mb-4 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                Citas Completadas ({{ $completadas->count() }})
+            </h2>
+            <div class="card-citas-grid">
+                @foreach($completadas as $cita)
+                    @include('components.cita-card', ['cita' => $cita, 'colorText' => 'text-green-600 dark:text-green-400', 'estadoText' => 'Completada'])
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- SECCIÓN: CANCELADAS --}}
+        @if($canceladas->count() > 0)
+        <div class="mb-10">
+            <h2 class="text-lg font-bold text-red-500 dark:text-red-400 mb-4 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                Citas Canceladas ({{ $canceladas->count() }})
+            </h2>
+            <div class="card-citas-grid">
+                @foreach($canceladas as $cita)
+                    @include('components.cita-card', ['cita' => $cita, 'colorText' => 'text-red-500 dark:text-red-400', 'estadoText' => 'Cancelada'])
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+    @endif
+
+    {{-- Paginación --}}
+    @if(method_exists($citasCompletadas, 'hasPages') && $citasCompletadas->hasPages())
+        <div class="mt-8">
+            {{ $citasCompletadas->links() }}
+        </div>
+    @endif
 
 </div>
 
