@@ -199,27 +199,29 @@ class CitaController extends Controller
     // ============================================================
 
     public function horasDisponibles(Request $request)
-    {
-        [$date, $servicios, $empleados] = $this->extractDateServiciosEmpleados($request);
+{
+    [$date, $servicios, $empleados] = $this->extractDateServiciosEmpleados($request);
 
-        if (!$date || empty($servicios)) {
-            return response()->json([
-                'horas' => [],
-                'slots' => [],
-            ]);
-        }
+    // ✅ Para EDIT (si el JS manda cita_id)
+    $excludeCitaId = $request->query('cita_id') ?? $request->input('cita_id');
+    $excludeCitaId = $excludeCitaId ? (int)$excludeCitaId : null;
 
-        $slots = $this->computeSlotsForDate((string)$date, (array)$servicios, (array)$empleados);
-
-        // ✅ para tu JS nuevo (grid): array de strings "HH:MM"
-        $horas = array_values(array_map(fn($s) => $s['value'], $slots));
-
-        // ✅ compat: dejo slots también
+    if (!$date || empty($servicios)) {
         return response()->json([
-            'horas' => $horas,
-            'slots' => $slots,
+            'horas' => [],
+            'slots' => [],
         ]);
     }
+
+    $slots = $this->computeSlotsForDate((string)$date, (array)$servicios, (array)$empleados, $excludeCitaId);
+
+    $horas = array_values(array_map(fn($s) => $s['value'], $slots));
+
+    return response()->json([
+        'horas' => $horas,
+        'slots' => $slots,
+    ]);
+}
 
     // ============================================================
     // ✅ AJAX: disponibilidad por mes (dots/disabled por día lleno)
@@ -277,55 +279,60 @@ class CitaController extends Controller
      * Si hay varios servicios => INTERSECCIÓN de ventanas.
      */
     private function buildAllowedWindowsForDateByServices(string $fecha, \Illuminate\Support\Collection $servicioIds): array
-    {
-        $date = \Carbon\Carbon::parse($fecha);
-        $dow = (int)$date->dayOfWeekIso; // 1=Lunes...7=Domingo
+{
+    $date = \Carbon\Carbon::parse($fecha);
 
-        $horarios = \App\Models\ServicioHorario::query()
-            ->whereIn('servicio_id', $servicioIds->all())
-            ->where('dia_semana', $dow)
-            ->get(['servicio_id','hora_inicio','hora_fin']);
+    // ❌ Antes (ISO): 1=Lunes...7=Domingo
+    // $dow = (int)$date->dayOfWeekIso;
 
-        $byService = $horarios->groupBy('servicio_id');
+    // ✅ Ahora: 0=Domingo...6=Sábado
+    $dow = (int)$date->dayOfWeek;
 
-        foreach ($servicioIds as $sid) {
-            if (empty($byService->get($sid)) || $byService->get($sid)->isEmpty()) {
-                return [];
-            }
+    $horarios = \App\Models\ServicioHorario::query()
+        ->whereIn('servicio_id', $servicioIds->all())
+        ->where('dia_semana', $dow)
+        ->get(['servicio_id','hora_inicio','hora_fin']);
+
+    $byService = $horarios->groupBy('servicio_id');
+
+    foreach ($servicioIds as $sid) {
+        if (empty($byService->get($sid)) || $byService->get($sid)->isEmpty()) {
+            return [];
         }
-
-        $serviceWindows = [];
-        foreach ($servicioIds as $sid) {
-            $windows = [];
-            foreach ($byService[$sid] as $h) {
-                $start = \Carbon\Carbon::parse($fecha.' '.$h->hora_inicio);
-                $end   = \Carbon\Carbon::parse($fecha.' '.$h->hora_fin);
-
-                if ($end->lte($start)) {
-                    $end->addDay();
-                }
-
-                $dayStart = \Carbon\Carbon::parse($fecha.' 00:00:00');
-                $dayEnd   = \Carbon\Carbon::parse($fecha.' 23:59:59');
-
-                $cutStart = $start->copy()->max($dayStart);
-                $cutEnd   = $end->copy()->min($dayEnd);
-
-                if ($cutEnd->gt($cutStart)) {
-                    $windows[] = [$cutStart, $cutEnd];
-                }
-            }
-            $serviceWindows[] = $windows;
-        }
-
-        $intersection = array_shift($serviceWindows);
-        foreach ($serviceWindows as $wins) {
-            $intersection = $this->intersectWindows($intersection, $wins);
-            if (empty($intersection)) return [];
-        }
-
-        return $intersection;
     }
+
+    $serviceWindows = [];
+    foreach ($servicioIds as $sid) {
+        $windows = [];
+        foreach ($byService[$sid] as $h) {
+            $start = \Carbon\Carbon::parse($fecha.' '.$h->hora_inicio);
+            $end   = \Carbon\Carbon::parse($fecha.' '.$h->hora_fin);
+
+            if ($end->lte($start)) {
+                $end->addDay();
+            }
+
+            $dayStart = \Carbon\Carbon::parse($fecha.' 00:00:00');
+            $dayEnd   = \Carbon\Carbon::parse($fecha.' 23:59:59');
+
+            $cutStart = $start->copy()->max($dayStart);
+            $cutEnd   = $end->copy()->min($dayEnd);
+
+            if ($cutEnd->gt($cutStart)) {
+                $windows[] = [$cutStart, $cutEnd];
+            }
+        }
+        $serviceWindows[] = $windows;
+    }
+
+    $intersection = array_shift($serviceWindows);
+    foreach ($serviceWindows as $wins) {
+        $intersection = $this->intersectWindows($intersection, $wins);
+        if (empty($intersection)) return [];
+    }
+
+    return $intersection;
+}
 
     private function intersectWindows(array $a, array $b): array
     {

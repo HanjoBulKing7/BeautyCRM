@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardCitasController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use App\Http\Controllers\MisReservasController;
+use App\Http\Controllers\CuponController;
 
 // ✅ ROOT: siempre manda a Home pública
 Route::get('/', function () {
@@ -223,6 +224,21 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Completar cita con pago
     Route::post('/citas/{id}/completar', [CitaController::class, 'completarConPago'])
         ->name('citas.completar.con-pago');
+
+    // Cupones y Promociones
+    Route::prefix('cupones')->name('cupones.')->middleware('auth')->group(function () {
+        Route::get('/', [CuponController::class, 'index'])->name('index');
+        Route::get('/create', [CuponController::class, 'create'])->name('create');
+        Route::post('/', [CuponController::class, 'store'])->name('store');
+        Route::get('/{cupon}', [CuponController::class, 'show'])->name('show');
+        Route::get('/{cupon}/edit', [CuponController::class, 'edit'])->name('edit');
+        Route::put('/{cupon}', [CuponController::class, 'update'])->name('update');
+        Route::delete('/{cupon}', [CuponController::class, 'destroy'])->name('destroy');
+
+        // Rutas AJAX para validación
+        Route::post('/validar', [CuponController::class, 'validar'])->name('validar');
+        Route::post('/descuento-cumpleaños', [CuponController::class, 'descuentoCumpleaños'])->name('descuentoCumpleaños');
+    });
 });
 
 // =============================

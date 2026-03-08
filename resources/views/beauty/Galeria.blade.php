@@ -27,12 +27,12 @@
                   reparación y nutrición profesional. Ideal para controlar frizz, 
                   mejorar textura y lograr un acabado suave y luminoso.
                 </p>
-                <a href="/agendarcita" class="horizontal-cta">Agendar cita</a>
+                <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="https://videos.pexels.com/video-files/10178127/10178127-uhd_2560_1440_30fps.mp4"
+                src="{{ asset('videos/pestañas.mp4') }}"
                 loading="lazy"
-                autoplay
+                autoplay  
                 muted
                 loop
                 class="horizontal-item_media"
@@ -47,10 +47,10 @@
                   volumen y curvatura con un resultado elegante y natural. 
                   Perfecto para verte increíble sin esfuerzo.
                 </p>
-                <a href="/agendarcita" class="horizontal-cta">Agendar cita</a>
+                <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="https://videos.pexels.com/video-files/15708463/15708463-uhd_2560_1440_24fps.mp4"
+                src="{{ asset('videos/pestañas.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted

@@ -173,8 +173,7 @@
                 focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]";
 
     $bbIconColor = "color: rgba(201,162,74,.92)";
-        $horaGuardada = substr((string) old('hora_cita', $cita->hora_cita ?? ''), 0, 5); // "HH:MM"
-
+    $horaGuardada = substr((string) old('hora_cita', $cita->hora_cita ?? ''), 0, 5); // "HH:MM"
 @endphp
 
 <form action="{{ $action }}" method="POST" class="space-y-6">
@@ -229,8 +228,8 @@
             'categorias' => $categorias,
             'bbField' => $bbField,
             'bbIconColor' => $bbIconColor,
-                'empleados' => $empleados,
-            ])
+            'empleados' => $empleados,
+        ])
 
         {{-- TOTAL DURACIÓN --}}
         <div class="mt-3">
@@ -268,14 +267,14 @@
 
         {{-- FECHA + HORA (Calendario izq / Horas der) --}}
         @php
- $fechaInit = old('fecha_cita',
-    !empty($cita?->fecha_cita)
-      ? \Carbon\Carbon::parse($cita->fecha_cita)->format('Y-m-d')
-      : ($fechaPrefill ?? '')
-  );
+          $fechaInit = old('fecha_cita',
+            !empty($cita?->fecha_cita)
+              ? \Carbon\Carbon::parse($cita->fecha_cita)->format('Y-m-d')
+              : ($fechaPrefill ?? '')
+          );
 
-  $horaInitRaw = old('hora_cita', $cita->hora_cita ?? '');
-  $horaInit = $horaInitRaw ? substr((string)$horaInitRaw, 0, 5) : '';
+          $horaInitRaw = old('hora_cita', $cita->hora_cita ?? '');
+          $horaInit = $horaInitRaw ? substr((string)$horaInitRaw, 0, 5) : '';
         @endphp
 
         <div class="md:col-span-2">
@@ -507,7 +506,97 @@ document.addEventListener('DOMContentLoaded', function () {
     selectedDate: (elDateInput?.value || '').trim() || null,
     selectedHour: (elHourInput?.value || '').trim() || null,
     locked: true,
+    // ✅ Solo para el primer render: que el mes se alinee a la fecha precargada (edit/old())
+    snapToSelectedMonth: true,
   };
+
+  // ===========================
+  // ✅ Disponibilidad por día (cache por mes + selección actual)
+  // ===========================
+  const availState = {
+    // key: `${itemsHash}|${YYYY-MM}` => Set(['YYYY-MM-DD', ...])
+    cache: new Map(),
+    loadingKey: null,
+  };
+
+  function monthKeyFromDate(d){
+    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+  }
+
+  function hashItems(items){
+    // hash estable por selección de servicio/empleado
+    return items
+      .map(it => `${it.id_servicio}:${it.id_empleado}:${it.orden}`)
+      .join('|');
+  }
+
+  async function preloadMonthAvailability() {
+    if (dtState.locked || !isReadyForAvailability()) return;
+
+    const items = getItemsFromRows();
+    const itemsHash = hashItems(items);
+
+    const mk = monthKeyFromDate(dtState.calendarMonth);
+    const key = `${itemsHash}|${mk}`;
+
+    if (availState.cache.has(key)) return; // ya cargado
+
+    availState.loadingKey = key;
+
+    const [yy, mm] = mk.split('-').map(n => parseInt(n, 10));
+    const daysInMonth = new Date(yy, mm, 0).getDate(); // mm ya viene 1-12
+    const todayYMD = toYMD(new Date());
+    const disablePast = (MODE === 'create');
+
+    const available = new Set();
+
+    // ✅ Guarda selección actual para no afectarla mientras se precarga el mes
+    const restoreDate = dtState.selectedDate;
+
+    // ⚠️ 31 requests máx. (rápido de implementar sin endpoint nuevo)
+    // Si luego quieres optimizar, lo cambiamos por un endpoint "fechasDisponibles".
+    const tasks = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const ymd = `${yy}-${pad2(mm)}-${pad2(day)}`;
+      const isPast = disablePast ? (ymd < todayYMD) : false;
+      if (isPast) continue;
+
+      const qs = new URLSearchParams();
+      dtState.selectedDate = ymd; // temporal para buildAvailabilityParams
+      buildAvailabilityParams(qs, items);
+      dtState.selectedDate = restoreDate; // restaura
+
+      const url = URL_HORAS + '?' + qs.toString();
+
+      tasks.push(
+        fetch(url, { headers: { 'Accept': 'application/json' }})
+          .then(r => r.json())
+          .then(data => {
+            let list = [];
+            if (Array.isArray(data)) list = data;
+            else if (Array.isArray(data?.horas)) list = data.horas;
+            else list = [];
+            if (list.length) available.add(ymd);
+          })
+          .catch(() => {})
+      );
+    }
+
+    await Promise.all(tasks);
+
+    // si mientras cargaba cambió la selección/mes, no guardes
+    if (availState.loadingKey !== key) return;
+
+    availState.cache.set(key, available);
+  }
+
+  function getAvailableSetForCurrentMonth(){
+    const items = getItemsFromRows();
+    const itemsHash = hashItems(items);
+    const mk = monthKeyFromDate(dtState.calendarMonth);
+    const key = `${itemsHash}|${mk}`;
+    return availState.cache.get(key) || null;
+  }
 
   function pad2(n){ return String(n).padStart(2,'0'); }
   function toYMD(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
@@ -570,9 +659,10 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderCalendar() {
     if (!elCalendar) return;
 
-    if (dtState.selectedDate) {
-      const d = ymdToDate(dtState.selectedDate);
-      if (d) dtState.calendarMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+    if (dtState.snapToSelectedMonth && dtState.selectedDate) {
+      const dSel = ymdToDate(dtState.selectedDate);
+      if (dSel) dtState.calendarMonth = new Date(dSel.getFullYear(), dSel.getMonth(), 1);
+      dtState.snapToSelectedMonth = false;
     }
 
     const d = dtState.calendarMonth;
@@ -612,8 +702,15 @@ document.addEventListener('DOMContentLoaded', function () {
           const isPast = disablePast ? (ymd < todayYMD) : false;
           const isSelected = dtState.selectedDate === ymd;
 
-          const disabled = dtState.locked || isPast;
-          const dotClass = dtState.locked ? 'is-muted' : 'is-gold';
+          const availSet = getAvailableSetForCurrentMonth();
+          const availabilityKnown = !!availSet;
+          const isAvailable = availabilityKnown ? availSet.has(ymd) : false;
+
+          // ✅ Mientras se precarga la disponibilidad del mes, deshabilita para evitar selección incorrecta
+          const disabled = dtState.locked || isPast || (!availabilityKnown ? true : !isAvailable);
+
+          // Punto dorado SOLO si está disponible (si no se conoce aún, queda muted)
+          const dotClass = (dtState.locked || !availabilityKnown || !isAvailable) ? 'is-muted' : 'is-gold';
 
           return `
             <button type="button"
@@ -629,10 +726,12 @@ document.addEventListener('DOMContentLoaded', function () {
     `;
 
     elCalendar.querySelectorAll('.bb-cal__nav').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const delta = Number(btn.getAttribute('data-nav'));
         dtState.calendarMonth = new Date(y, m + delta, 1);
-        renderCalendar();
+        // ✅ al navegar meses NO queremos volver a forzar el mes al seleccionado
+        dtState.snapToSelectedMonth = false;
+        await syncCalendarAvailability({ clearInvalidSelection: false });
       });
     });
 
@@ -640,15 +739,60 @@ document.addEventListener('DOMContentLoaded', function () {
       btn.addEventListener('click', async () => {
         const ymd = btn.getAttribute('data-date');
         dtState.selectedDate = ymd;
+        dtState.snapToSelectedMonth = false;
         if (elDateInput) elDateInput.value = ymd;
 
         dtState.selectedHour = null;
         if (elHourInput) elHourInput.value = '';
 
-        renderCalendar();
+        // Si por alguna razón aún no está precargada la disponibilidad, precárgala
+        if (!getAvailableSetForCurrentMonth()) {
+          await syncCalendarAvailability({ clearInvalidSelection: false });
+        } else {
+          renderCalendar();
+        }
         await refreshHorasDisponibles();
       });
     });
+  }
+
+  // ===========================
+  // ✅ Render + precarga disponibilidad del mes y bloquea días no disponibles
+  // ===========================
+  async function syncCalendarAvailability({ clearInvalidSelection = true } = {}) {
+    // Render inmediato (por UX)
+    renderCalendar();
+
+    if (dtState.locked) return;
+
+    try {
+      await preloadMonthAvailability();
+
+      const availSet = getAvailableSetForCurrentMonth();
+
+      // Si cambian servicios/empleados, la fecha seleccionada puede dejar de ser válida
+      if (
+        clearInvalidSelection &&
+        MODE === 'create' &&
+        dtState.selectedDate &&
+        availSet &&
+        !availSet.has(dtState.selectedDate)
+      ) {
+        dtState.selectedDate = null;
+        dtState.selectedHour = null;
+
+        if (elDateInput) elDateInput.value = '';
+        if (elHourInput) elHourInput.value = '';
+
+        if (elTimesGrid) elTimesGrid.innerHTML = '';
+        if (elTimesEmpty) elTimesEmpty.style.display = 'none';
+        if (elTimesTitle) elTimesTitle.textContent = 'Horas disponibles';
+        if (elTimesHint) elTimesHint.textContent = 'Selecciona una fecha para ver horarios.';
+      }
+    } finally {
+      // Render final con disponibilidad aplicada
+      renderCalendar();
+    }
   }
 
   function buildAvailabilityParams(qs, items) {
@@ -886,7 +1030,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
-    serviciosWrapper.addEventListener('click', (e) => {
+    serviciosWrapper.addEventListener('click', async (e) => {
       const btn = e.target.closest('.btn-remove-servicio');
       if (!btn) return;
 
@@ -901,11 +1045,11 @@ document.addEventListener('DOMContentLoaded', function () {
       recalcAll();
 
       setLockUI();
-      renderCalendar();
-      refreshHorasDisponibles();
+      await syncCalendarAvailability();
+      await refreshHorasDisponibles();
     });
 
-    function addRow() {
+    async function addRow() {
       const base = serviciosWrapper.querySelector('.servicio-row');
       if (!base) return;
 
@@ -913,7 +1057,6 @@ document.addEventListener('DOMContentLoaded', function () {
       // ✅ importante: evitar que el uid se copie al clonar
       clone.removeAttribute('data-bb-uid');
       if (clone.dataset) delete clone.dataset.bbUid;
-
 
       clone.querySelectorAll('input').forEach(inp => inp.value = '');
 
@@ -944,8 +1087,8 @@ document.addEventListener('DOMContentLoaded', function () {
       recalcAll();
 
       setLockUI();
-      renderCalendar();
-      refreshHorasDisponibles();
+      await syncCalendarAvailability();
+      await refreshHorasDisponibles();
     }
 
     if (btnAddServicio) btnAddServicio.addEventListener('click', addRow);
@@ -982,7 +1125,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (d) dtState.calendarMonth = new Date(d.getFullYear(), d.getMonth(), 1);
       }
 
-      renderCalendar();
+      await syncCalendarAvailability({ clearInvalidSelection: false });
       await refreshHorasDisponibles();
     })();
 
@@ -1011,8 +1154,8 @@ document.addEventListener('DOMContentLoaded', function () {
         recalcAll();
 
         setLockUI();
-        renderCalendar();
-        refreshHorasDisponibles();
+        await syncCalendarAvailability();
+        await refreshHorasDisponibles();
         return;
       }
 
@@ -1036,7 +1179,7 @@ document.addEventListener('DOMContentLoaded', function () {
         recalcAll();
 
         setLockUI();
-        renderCalendar();
+        await syncCalendarAvailability();
         await refreshHorasDisponibles();
         return;
       }
@@ -1044,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const empSel = e.target.closest('select[data-role="empleado"]');
       if (empSel) {
         setLockUI();
-        renderCalendar();
+        await syncCalendarAvailability();
         await refreshHorasDisponibles();
         return;
       }
