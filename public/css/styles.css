@@ -401,3 +401,65 @@ video {
     height: 100%;
     background-color: #b8860b;
 }
+/* ===========================
+   HERO LOGO - CENTRADO Y GRANDE
+   =========================== */
+.Normal-hero-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.hero-logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.hero-logo {
+    width: 100%;
+    max-width: 800px; /* Tamaño grande para desktop */
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15));
+}
+
+/* Ajustes responsivos */
+@media (max-width: 1400px) {
+    .hero-logo {
+        max-width: 700px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .hero-logo {
+        max-width: 600px;
+    }
+}
+
+@media (max-width: 992px) {
+    .hero-logo {
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-logo {
+        max-width: 400px;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-logo {
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 400px) {
+    .hero-logo {
+        max-width: 250px;
+    }
+}

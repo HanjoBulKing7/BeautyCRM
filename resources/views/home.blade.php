@@ -32,6 +32,7 @@
 
   <script src="{{ asset('js/beauty/people.js') }}"></script>
   <script src="{{ asset('js/beauty/homehero.js') }}"></script>
+  <script src="{{ asset('js/beauty/imagenes.js') }}"></script>
 
   {{-- AOS --}}
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>

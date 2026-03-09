@@ -50,8 +50,10 @@
           </div>
         </article>
       @empty
+    <div style="display: flex; justify-content: center; width: 100%;">
         <p class="bb-most__empty">Aún no hay servicios para mostrar.</p>
-      @endforelse
+    </div>
+@endforelse
     </div>
   </div>
 </section>

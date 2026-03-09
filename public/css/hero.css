@@ -649,3 +649,76 @@ video {
         justify-content: center;
     }
 }
+/* ===========================
+   ACTIVE STATE PARA MENÚ
+   =========================== */
+.Normal-menu-link.active {
+    color: var(--normal-gold) !important;
+    font-weight: 600;
+    position: relative;
+}
+
+/* Opcional: underline efecto en desktop */
+@media (min-width: 992px) {
+    .Normal-menu-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--normal-gold);
+        border-radius: 2px;
+    }
+}
+
+/* ===========================
+   LOGO EN MENÚ MÓVIL (ESQUINA SUPERIOR IZQUIERDA)
+   =========================== */
+@media (max-width: 991.98px) {
+    .Normal-menu-header {
+        position: relative;
+        height: 72px;
+        padding: 14px 18px;
+        justify-content: flex-end;
+        border-bottom: 1px solid rgba(184, 134, 11, 0.18);
+    }
+
+    /* Logo en esquina superior izquierda con separación */
+    .Normal-menu-header .Normal-brand {
+        position: absolute;
+        left: 18px; /* separación de la orilla izquierda */
+        top: 14px; /* separación de la orilla superior */
+        transform: none; /* quitamos el transform anterior */
+        margin: 0;
+        z-index: 10;
+    }
+    
+    .Normal-menu-header .Normal-brand img {
+        height: 44px;
+        width: auto;
+        display: block;
+    }
+
+    /* Tacha (close) arriba derecha */
+    .Normal-close-menu {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        margin: 0;
+        z-index: 10;
+    }
+
+    /* Ajustamos la posición de los links */
+    .Normal-menu-inner {
+        padding: 0 22px;
+        margin: 0;
+        width: 100%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 100px; /* reducimos un poco porque el logo ya no está centrado */
+        row-gap: 22px;
+    }
+}

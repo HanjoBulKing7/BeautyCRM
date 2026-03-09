@@ -39,16 +39,16 @@
 
                     <ul class="Normal-menu-inner">
                         <li class="Normal-menu-item">
-                            <a href="{{ url('/home') }}" class="Normal-menu-link">Inicio</a>
+                            <a href="{{ url('/home') }}" class="Normal-menu-link {{ request()->is('home') ? 'active' : '' }}">Inicio</a>
                         </li>
                         <li class="Normal-menu-item">
-                            <a href="{{ url('/servicio') }}" class="Normal-menu-link">Servicios</a>
+                            <a href="{{ url('/servicio') }}" class="Normal-menu-link {{ request()->is('servicio') ? 'active' : '' }}">Servicios</a>
                         </li>
                         <li class="Normal-menu-item">
-                            <a href="{{ url('/nosotros') }}" class="Normal-menu-link">Nosotros</a>
+                            <a href="{{ url('/nosotros') }}" class="Normal-menu-link {{ request()->is('nosotros') ? 'active' : '' }}">Nosotros</a>
                         </li>
                         <li class="Normal-menu-item">
-                            <a href="{{ url('/galeria') }}" class="Normal-menu-link">Galería</a>
+                            <a href="{{ url('/galeria') }}" class="Normal-menu-link {{ request()->is('galeria') ? 'active' : '' }}">Galería</a>
                         </li>
                     </ul>
 
@@ -68,7 +68,6 @@
                                 </button>
 
                                 <div id="NormalUserMenuMobile" class="Normal-user-menu" role="menu">
-                                    {{-- ✅ CAMBIA ESTA URL A TU RUTA REAL DE RESERVAS --}}
                                     <a href="{{ url('/mis-reservas') }}" class="Normal-user-item" role="menuitem">
                                         <i class="bx bx-calendar"></i>
                                         Ver reservas
@@ -84,7 +83,7 @@
                                 </div>
                             </div>
                         @else
-                            <a href="{{ route('login') }}" class="Normal-menu-footer-cta">
+                            <a href="{{ route('login') }}" class="Normal-menu-footer-cta {{ request()->is('login') ? 'active' : '' }}">
                                 <i class="bx bx-user-circle"></i>
                                 Login
                             </a>
@@ -108,7 +107,6 @@
                             </button>
 
                             <div id="NormalUserMenuDesktop" class="Normal-user-menu" role="menu">
-                                {{-- ✅ CAMBIA ESTA URL A TU RUTA REAL DE RESERVAS --}}
                                 <a href="{{ url('/mis-reservas') }}" class="Normal-user-item" role="menuitem">
                                     <i class="bx bx-calendar"></i>
                                     Ver reservas
@@ -124,7 +122,7 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="Normal-menu-block-link" data-scroll>
+                        <a href="{{ route('login') }}" class="Normal-menu-block-link {{ request()->is('login') ? 'active' : '' }}" data-scroll>
                             <i class="bx bx-user-circle"></i>
                             Login
                         </a>

@@ -13,10 +13,14 @@
                     <img src="{{ asset('images/edited-photo.png') }}" class="man-standing" alt="" />
                 </div>
                 <div class="Normal-hero-content">
-                    <h5 class="Normal-hero-subtitle"></h5>
+                    <h5 class="Normal-hero-subtitle">BEAUTY BONITA STUDIO</h5>
                     <h1 class="Normal-hero-title">
-                        <span></span> <br />
-                        <span></span>
+                        <span>
+                            <img src="{{ asset('iconos/logo.png') }}" alt="Beauty Bonita Logo" class="hero-logo">
+                        </span> <br />
+                        <span>
+                            
+                        </span>
                     </h1>
                     <a href="#section-01" class="Normal-hero-action">
                         
