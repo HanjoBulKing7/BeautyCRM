@@ -34,43 +34,48 @@
                                     <span class="counter">01</span>
                                     Promoción de Cumpleaños
                                 </h5>
-                                <h2 class="Normal-content-title">Celebra Tu Cumpleaños Con Descuento Especial</h2>
+                              <h2 class="Normal-content-title">Promociones</h2>
+                                <h5 class="Normal-content-subtitle" style="margin-top: -10px; margin-bottom: 15px;">
+                                    Descuento exclusivo por tu cumpleaños
+                                </h5>
                                 <p class="Normal-content-copy">
-                                    En tu mes más especial, merecés un regalo único. Por eso, queremos consentirte con un descuento exclusivo en cualquiera de nuestros servicios. Durante tu mes de cumpleaños, presentá tu identificación al momento de pagar y obtené un beneficio especial en tu tratamiento favorito. Aprovechá para regalarte esa experiencia de lujo que tanto deseás, desde un peinado espectacular hasta un facial revitalizante o un servicio completo de uñas.
+                                    ¡Queremos consentirte en tu mes! Celebra con nosotros y disfruta de un <strong>descuento especial en nuestro salón de belleza</strong>. Solo presenta tu identificación y obtén una tarifa preferencial en tu tratamiento favorito: desde peinados y faciales revitalizantes, hasta un servicio completo de uñas. Regálate la experiencia de lujo que mereces.
                                 </p>
                                 <a href="{{ url('/agendar-cita') }}" class="Normal-content-action">
-                                    Agendar servicio
+                                    Agendar mi cita
                                     <svg width="24" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M16 -6.99382e-07L14.59 1.41L20.17 7L-3.93402e-07 7L-3.0598e-07 9L20.17 9L14.58 14.58L16 16L24 8L16 -6.99382e-07Z" fill="#b8860b" />
                                     </svg>
                                 </a>
+
                             </div>
                         </div>
                     </div>
                     <div class="Normal-content-wrapper" id="section-02">
                         <div class="Normal-content-row">
                             <div class="Normal-content-image">
-                                <img src="{{ asset('images/servicios/facial.jpg') }}" alt="Peinados Profesionales" />
+                                <img src="{{ asset('images/eventos.jpg') }}" alt="Peinados Profesionales" />
                             </div>
-                            <div class="Normal-content-content">
-                                <h5 class="Normal-content-subtitle">
-                                    <span class="counter">02</span>
-                                    Facial Avanzado
-                                </h5>
-                                <h2 class="Normal-content-title">
-                                    <span>Piel Renovada,</span>
-                                    <span>Mirada Radiante</span>
-                                </h2>
-                                <p class="Normal-content-copy">
-                                    Nuestros tratamientos faciales están diseñados para devolverle a tu piel la frescura y vitalidad que merece. Aplicamos técnicas profesionales de limpieza profunda, exfoliación controlada, hidratación intensiva y activación celular para combatir los signos del cansancio y la edad. Utilizamos productos de alta calidad que respetan el equilibrio natural de tu piel, logrando resultados visibles desde la primera sesión. Perfecto para quienes buscan prevenir, corregir y mantener una piel saludable y luminosa en un ambiente de lujo y relax.
-                                </p>
-                                <a href="{{ url('/agendar-cita') }}" class="Normal-content-action">
-                                    Agendar servicio
-                                    <svg width="24" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M16 -6.99382e-07L14.59 1.41L20.17 7L-3.93402e-07 7L-3.0598e-07 9L20.17 9L14.58 14.58L16 16L24 8L16 -6.99382e-07Z" fill="#b8860b" />
-                                    </svg>
-                                </a>
-                            </div>
+                           <div class="Normal-content-content">
+                            <h5 class="Normal-content-subtitle">
+                                <span class="counter">02</span>
+                                Academia y Formación
+                            </h5>
+                            <h2 class="Normal-content-title">
+                                <span>Domina el Arte</span>
+                                <span>del Peinado</span>
+                            </h2>
+                            <p class="Normal-content-copy">
+                                Lleva tu pasión al siguiente nivel con nuestro <strong>Curso de Peinado Profesional</strong>. Aprende técnicas modernas, las últimas tendencias y los secretos del estilismo directamente de la mano del experto <strong>Pako Rodríguez</strong>. Perfecciona tus habilidades y prepárate para destacar en el competitivo mundo de la belleza. <br><br>
+                                <em>¡Espéralo! Próximas fechas por anunciarse.</em>
+                            </p>
+                            <a href="{{ url('/contacto') }}" class="Normal-content-action">
+                                Solicitar información
+                                <svg width="24" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M16 -6.99382e-07L14.59 1.41L20.17 7L-3.93402e-07 7L-3.0598e-07 9L20.17 9L14.58 14.58L16 16L24 8L16 -6.99382e-07Z" fill="#b8860b" />
+                                </svg>
+                            </a>
+                        </div>
                         </div>
                     </div>
                     <div class="Normal-content-wrapper" id="section-03">

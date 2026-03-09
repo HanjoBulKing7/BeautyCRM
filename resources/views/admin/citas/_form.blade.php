@@ -1,227 +1,117 @@
 @push('styles')
 <style>
-  /* Scope para NO afectar otras vistas */
-  .bb-admin-datetime .bb-calendar{ margin-top: 10px; }
+  /* ====== CALENDARIO MINIMALISTA ====== */
+  .bb-admin-datetime .bb-calendar{ margin-top: 8px; }
 
   .bb-admin-datetime .bb-cal__header{
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:12px 14px;
-    border:1px solid rgba(0,0,0,0.08);
-    border-radius:16px;
-    background: linear-gradient(180deg, rgba(244,235,221,0.85), rgba(255,255,255,0.95));
-    box-shadow: 0 12px 26px rgba(0,0,0,0.05);
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:8px 12px;
+    border:1px solid rgba(0,0,0,0.06);
+    border-radius:12px;
+    background: #fafafa;
   }
   .bb-admin-datetime .bb-cal__title{
-    font-weight: 800;
-    text-transform: capitalize;
-    letter-spacing: .02em;
-    color: rgba(26,26,26,0.86);
+    font-weight: 700; font-size: 14px;
+    text-transform: capitalize; color: #333;
   }
   .bb-admin-datetime .bb-cal__nav{
-    border: 1px solid rgba(201,162,74,0.35);
-    background:#fff;
-    color: rgba(201,162,74,0.95);
-    width:38px; height:38px;
-    border-radius:999px;
-    cursor:pointer;
-    font-size:20px;
-    line-height:1;
-    display:grid;
-    place-items:center;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border: 1px solid rgba(201,162,74,0.3);
+    background:#fff; color: rgba(201,162,74,0.95);
+    width:30px; height:30px; border-radius:8px;
+    cursor:pointer; font-size:16px;
+    display:grid; place-items:center;
+    transition: all 0.2s;
   }
-  .bb-admin-datetime .bb-cal__nav:active{ transform: translateY(1px); }
+  .bb-admin-datetime .bb-cal__nav:hover{ background: rgba(201,162,74,0.1); }
 
   .bb-admin-datetime .bb-cal__dow{
-    display:grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    margin-top: 12px;
-    padding: 0 4px;
-    font-weight: 800;
-    font-size: 12px;
-    color: rgba(26,26,26,0.55);
-    text-align:center;
+    display:grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; margin-top: 8px; font-weight: 700;
+    font-size: 11px; color: #888; text-align:center;
   }
 
   .bb-admin-datetime .bb-cal__grid{
-    display:grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-    margin-top: 10px;
+    display:grid; grid-template-columns: repeat(7, 1fr);
+    gap: 6px; margin-top: 6px;
   }
 
   .bb-admin-datetime .bb-cal__cell{
-    position:relative;
-    width: 100%;
-    height: 64px;            /* compacto */
-    border-radius: 16px;
-    border: 1px solid rgba(0,0,0,0.08);
-    background: #fff;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.04);
-    cursor:pointer;
-    display:flex;
-    align-items:flex-start;
-    justify-content:flex-start;
-    padding: 10px;
+    position:relative; width: 100%; height: 40px; /* Reducido de 64px a 40px */
+    border-radius: 8px; border: 1px solid rgba(0,0,0,0.06);
+    background: #fff; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 13px; transition: all 0.2s;
   }
 
-  .bb-admin-datetime .bb-cal__cell.is-empty{
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    cursor: default;
+  .bb-admin-datetime .bb-cal__cell:hover:not(.is-disabled):not(.is-empty) {
+    border-color: rgba(201,162,74,0.4);
   }
 
-  .bb-admin-datetime .bb-cal__cell.is-disabled{
-    opacity: .45;
-    cursor: not-allowed;
-    filter: grayscale(0.2);
-  }
-
+  .bb-admin-datetime .bb-cal__cell.is-empty{ border: 0; background: transparent; cursor: default; }
+  .bb-admin-datetime .bb-cal__cell.is-disabled{ opacity: .4; cursor: not-allowed; background: #f9f9f9; }
+  
   .bb-admin-datetime .bb-cal__cell.is-selected{
-    border-color: rgba(201,162,74,0.60);
-    box-shadow: 0 12px 26px rgba(201,162,74,0.18);
-    background: linear-gradient(180deg, rgba(244,235,221,0.95), rgba(255,255,255,0.95));
+    border-color: rgba(201,162,74,0.8);
+    background: rgba(201,162,74,0.1);
+    font-weight: bold; color: #000;
   }
 
-  .bb-admin-datetime .bb-cal__day{
-    font-weight: 900;
-    color: rgba(26,26,26,0.86);
-    font-size: 13px;
-  }
-
+  /* Puntos indicadores más pequeños */
   .bb-admin-datetime .bb-cal__dot{
-    position:absolute;
-    right: 10px;
-    top: 10px;
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
+    position:absolute; right: 4px; top: 4px;
+    width: 6px; height: 6px; border-radius: 50%;
   }
-  .bb-admin-datetime .bb-cal__dot.is-gold{
-    background: rgba(201,162,74,0.95);
-    box-shadow: 0 0 0 4px rgba(201,162,74,0.16);
-  }
-  .bb-admin-datetime .bb-cal__dot.is-muted{
-    background: rgba(0,0,0,0.18);
-    box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
-  }
+  .bb-admin-datetime .bb-cal__dot.is-gold{ background: rgba(201,162,74,0.95); }
+  .bb-admin-datetime .bb-cal__dot.is-muted{ background: #ccc; }
 
+  /* Panel de horas compacto */
   .bb-admin-datetime .bb-timesPanel{
-    border-radius: 18px;
-    border: 1px solid rgba(0,0,0,0.08);
-    background: linear-gradient(180deg, rgba(244,235,221,0.60), rgba(255,255,255,0.95));
-    padding: 14px 14px 16px;
-    box-shadow: 0 14px 30px rgba(0,0,0,0.05);
+    border-radius: 12px; border: 1px solid rgba(0,0,0,0.06);
+    background: #fafafa; padding: 12px;
   }
-
   .bb-admin-datetime .bb-timesGrid{
-    margin-top: 12px;
-    display:grid;
-    grid-template-columns: repeat(6, minmax(0,1fr));
-    gap: 10px;
+    margin-top: 8px; display:grid; gap: 6px;
+    grid-template-columns: repeat(4, minmax(0,1fr));
   }
-  @media (max-width: 1024px){
-    .bb-admin-datetime .bb-timesGrid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
-  }
-  @media (max-width: 640px){
-    .bb-admin-datetime .bb-timesGrid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
-  }
+  @media (max-width: 640px){ .bb-admin-datetime .bb-timesGrid{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
 
   .bb-admin-datetime .bb-timeBtn{
-    border-radius: 16px;
-    border: 1px solid rgba(0,0,0,0.08);
-    background:#fff;
-    padding: 12px 10px;
-    font-weight: 900;
-    letter-spacing: .02em;
-    cursor:pointer;
-    transition: transform 140ms ease, filter 140ms ease;
-    box-shadow: 0 12px 22px rgba(0,0,0,0.04);
+    border-radius: 8px; border: 1px solid rgba(0,0,0,0.08);
+    background:#fff; padding: 6px 4px; font-weight: 600; font-size: 12px;
+    cursor:pointer; transition: all 0.2s; text-align:center;
   }
-  .bb-admin-datetime .bb-timeBtn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
-
+  .bb-admin-datetime .bb-timeBtn:hover{ border-color: rgba(201,162,74,0.4); }
   .bb-admin-datetime .bb-timeBtn.is-selected{
-    border-color: rgba(201,162,74,0.60);
-    background: rgba(201,162,74,0.12);
-    box-shadow: 0 16px 30px rgba(201,162,74,0.12);
+    border-color: rgba(201,162,74,0.8); background: rgba(201,162,74,0.1); color: #000;
   }
 </style>
 @endpush
 
 @php
-    // Modo: 'create' | 'edit'
     $mode = $mode ?? 'create';
-
-    // Defaults
     $cita = $cita ?? null;
 
-    // Prefill cliente seleccionado (para el input visible)
     $selectedClienteId = old('cliente_id', $cita->cliente_id ?? '');
-    $selectedCliente   = $selectedClienteId
-        ? ($clientes->firstWhere('id', (int) $selectedClienteId) ?? null)
-        : null;
+    $selectedCliente   = $selectedClienteId ? ($clientes->firstWhere('id', (int) $selectedClienteId) ?? null) : null;
+    $clienteLabel = trim(($selectedCliente->nombre ?? '') . (($selectedCliente && !empty($selectedCliente->email)) ? ' - ' . $selectedCliente->email : ''));
 
-    $clienteLabel = trim(
-        ($selectedCliente->nombre ?? '') .
-        (($selectedCliente && !empty($selectedCliente->email)) ? ' - ' . $selectedCliente->email : '')
-    );
-
-    // ✅ UI: field + icon (dorado dashboard)
-    $bbField = "w-full border border-gray-300 rounded-lg px-4 py-3 transition
-                focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,.28)] focus:border-[rgba(201,162,74,.55)]";
-
+    // UI Minimalista: Inputs más pequeños (py-2 en lugar de py-3, text-sm)
+    $bbField = "w-full border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-800 bg-white transition focus:outline-none focus:ring-1 focus:ring-[rgba(201,162,74,.5)] focus:border-[rgba(201,162,74,.5)]";
     $bbIconColor = "color: rgba(201,162,74,.92)";
-    $horaGuardada = substr((string) old('hora_cita', $cita->hora_cita ?? ''), 0, 5); // "HH:MM"
+    $horaGuardada = substr((string) old('hora_cita', $cita->hora_cita ?? ''), 0, 5); 
 @endphp
 
-<form action="{{ $action }}" method="POST" class="space-y-6">
+<form action="{{ $action }}" method="POST" class="space-y-5">
     @csrf
-    @if($mode === 'edit')
-        @method('PUT')
-    @endif
+    @if($mode === 'edit') @method('PUT') @endif
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {{-- CLIENTE (buscador) --}}
-        <div class="relative">
-            <label for="cliente_search" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-user mr-1" style="{{ $bbIconColor }}"></i>
-                Cliente <span class="text-red-500">*</span>
-            </label>
-
-            <input type="hidden" name="cliente_id" id="cliente_id" value="{{ $selectedClienteId }}" required>
-
-            <div class="relative">
-                <input
-                    type="text"
-                    id="cliente_search"
-                    autocomplete="off"
-                    placeholder="Escribe para buscar… (ej. Juan)"
-                    value="{{ old('cliente_label', $clienteLabel) }}"
-                    class="{{ $bbField }} pr-10"
-                />
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-                    <i class="fas fa-search"></i>
-                </div>
-            </div>
-
-            <div
-                id="cliente_dropdown"
-                class="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden hidden"
-            >
-                <div id="cliente_results" class="max-h-60 overflow-auto"></div>
-            </div>
-
-            @error('cliente_id')
-                <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
-                </p>
-            @enderror
-        </div>
-
-        {{-- SERVICIOS (partial con UI chips/cards + rows ocultos) --}}
+    {{-- PASO 1: SERVICIOS Y STAFF (Ahora es el protagonista) --}}
+    <div class="bg-gray-50/50 border border-gray-100 rounded-xl p-4">
+        <h2 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 uppercase tracking-wide">
+            <span class="w-6 h-6 rounded-full bg-[rgba(201,162,74,0.2)] text-[rgba(201,162,74,1)] flex items-center justify-center text-xs">1</span>
+            Servicios y Empleado
+        </h2>
+        
         @include('admin.citas.partials._servicios_rows', [
             'mode' => $mode,
             'cita' => $cita,
@@ -231,228 +121,123 @@
             'empleados' => $empleados,
         ])
 
-        {{-- TOTAL DURACIÓN --}}
-        <div class="mt-3">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-                Duración total (min)
-            </label>
-            <input
-                id="duracion_total"
-                type="number"
-                class="{{ $bbField }} bg-gray-50"
-                readonly
-                value="0"
-            >
-        </div>
+        {{-- Contenedor dinámico donde se mostrarán los chips de servicios seleccionados --}}
+        <div id="resumen_servicios_seleccionados" class="mt-3 flex flex-wrap gap-2 empty:hidden">
+            </div>
+    </div>
 
-        {{-- TOTAL PRECIO --}}
-        <div class="mt-3">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-                Total servicios (MXN)
+    {{-- PASO 2: CLIENTE Y TOTALES (Agrupados en una sola fila compacta) --}}
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        
+        {{-- Cliente (Toma más espacio) --}}
+        <div class="md:col-span-8 relative">
+            <label for="cliente_search" class="block text-xs font-bold text-gray-600 mb-1 uppercase">
+                <i class="fas fa-user mr-1" style="{{ $bbIconColor }}"></i> Cliente <span class="text-red-500">*</span>
             </label>
-
+            <input type="hidden" name="cliente_id" id="cliente_id" value="{{ $selectedClienteId }}" required>
             <div class="relative">
-                <span class="absolute left-3 top-0 bottom-0 flex items-center text-gray-500">$</span>
-                <input
-                    id="total_servicios"
-                    name="total_servicios"
-                    type="number"
-                    step="0.01"
-                    class="{{ $bbField }} pl-9 bg-gray-50"
-                    readonly
-                    value="0"
-                >
+                <input type="text" id="cliente_search" autocomplete="off" placeholder="Buscar cliente..." value="{{ old('cliente_label', $clienteLabel) }}" class="{{ $bbField }} pr-8" />
+                <div class="absolute inset-y-0 right-0 flex items-center pr-2 text-gray-400"><i class="fas fa-search text-xs"></i></div>
             </div>
+            <div id="cliente_dropdown" class="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden hidden">
+                <div id="cliente_results" class="max-h-48 overflow-auto text-sm"></div>
+            </div>
+            @error('cliente_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
-        {{-- FECHA + HORA (Calendario izq / Horas der) --}}
-        @php
-          $fechaInit = old('fecha_cita',
-            !empty($cita?->fecha_cita)
-              ? \Carbon\Carbon::parse($cita->fecha_cita)->format('Y-m-d')
-              : ($fechaPrefill ?? '')
-          );
-
-          $horaInitRaw = old('hora_cita', $cita->hora_cita ?? '');
-          $horaInit = $horaInitRaw ? substr((string)$horaInitRaw, 0, 5) : '';
-        @endphp
-
-        <div class="md:col-span-2">
-          <div class="bb-admin-datetime rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_18px_40px_rgba(0,0,0,0.06)]">
-            <div class="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <h3 class="text-sm font-bold tracking-wider uppercase text-gray-800">
-                  <i class="fas fa-calendar-alt mr-2" style="{{ $bbIconColor }}"></i>
-                  Fecha y hora
-                </h3>
-                <p class="text-xs text-gray-500 mt-1">
-                  Selecciona la fecha en el calendario y luego el horario disponible.
-                </p>
-              </div>
-
-              <div id="bbDatetimeLock"
-                   class="text-xs px-3 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800"
-                   style="display:none;">
-                Primero selecciona servicio(s) y empleado(s) para ver disponibilidad.
-              </div>
+        {{-- Totales (Minimalistas, tipo badge) --}}
+        <div class="md:col-span-4 flex gap-3">
+            <div class="flex-1 bg-gray-50 border border-gray-100 rounded-md p-2 flex flex-col justify-center items-center">
+                <span class="text-[10px] uppercase font-bold text-gray-500">Duración</span>
+                <input id="duracion_total" type="text" class="bg-transparent border-none text-center font-bold text-sm w-full p-0 focus:ring-0" readonly value="0 min">
             </div>
+            <div class="flex-1 bg-green-50 border border-green-100 rounded-md p-2 flex flex-col justify-center items-center">
+                <span class="text-[10px] uppercase font-bold text-green-700">Total</span>
+                <input id="total_servicios" name="total_servicios" type="text" class="bg-transparent border-none text-center font-bold text-green-700 text-sm w-full p-0 focus:ring-0" readonly value="$0.00">
+            </div>
+        </div>
+    </div>
 
+    {{-- PASO 3: FECHA Y HORA (Más compacto) --}}
+    @php
+        $fechaInit = old('fecha_cita', !empty($cita?->fecha_cita) ? \Carbon\Carbon::parse($cita->fecha_cita)->format('Y-m-d') : ($fechaPrefill ?? ''));
+        $horaInitRaw = old('hora_cita', $cita->hora_cita ?? '');
+        $horaInit = $horaInitRaw ? substr((string)$horaInitRaw, 0, 5) : '';
+    @endphp
+
+    <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1 uppercase">
+            <i class="fas fa-calendar-alt mr-1" style="{{ $bbIconColor }}"></i> Fecha y Hora <span class="text-red-500">*</span>
+        </label>
+        
+        <div class="bb-admin-datetime rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
             <input type="hidden" name="fecha_cita" id="bbDateInput" value="{{ $fechaInit }}">
             <input type="hidden" name="hora_cita"  id="bbHourInput" value="{{ $horaInit }}">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div id="bbAdminCalendar" class="bb-calendar"></div>
-
-                @error('fecha_cita')
-                  <p class="text-red-500 text-sm mt-2">
-                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
-                  </p>
-                @enderror
-              </div>
-
-              <div>
-                <div class="bb-timesPanel">
-                  <div class="flex items-start justify-between gap-3">
-                    <div>
-                      <div class="bb-label" id="bbTimesTitle">Horas disponibles</div>
-                      <p class="bb-hint" id="bbTimesHint" style="margin-top:.25rem;">
-                        Selecciona una fecha para ver horarios.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div id="bbTimesGrid" class="bb-timesGrid"></div>
-
-                  <p id="bbTimesEmpty" class="bb-hint" style="display:none; margin-top:.75rem;">
-                    No hay horas disponibles para ese día.
-                  </p>
-
-                  @error('hora_cita')
-                    <p class="text-red-500 text-sm mt-2">
-                      <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
-                    </p>
-                  @enderror
-                </div>
-              </div>
+            <div id="bbDatetimeLock" class="text-xs px-3 py-2 rounded-md bg-amber-50 text-amber-800 border border-amber-100 mb-3" style="display:none;">
+                Selecciona los servicios primero para ver disponibilidad.
             </div>
-          </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                <div>
+                    <div id="bbAdminCalendar" class="bb-calendar"></div>
+                    @error('fecha_cita') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <div class="bb-timesPanel">
+                        <div class="text-xs font-bold text-gray-700 mb-1" id="bbTimesTitle">Horas disponibles</div>
+                        <div id="bbTimesGrid" class="bb-timesGrid"></div>
+                        <p id="bbTimesEmpty" class="text-xs text-gray-400 mt-2" style="display:none;">Sin horarios para esta fecha.</p>
+                        @error('hora_cita') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        {{-- ESTADO --}}
+    {{-- PASO 4: DETALLES EXTRA (Estado, Pago, Descuento en la misma fila) --}}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        
         <div>
-            <label for="estado_cita" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-clipboard-check mr-1" style="{{ $bbIconColor }}"></i>
-                Estado <span class="text-red-500">*</span>
-            </label>
-
+            <label for="estado_cita" class="block text-xs font-bold text-gray-600 mb-1 uppercase">Estado <span class="text-red-500">*</span></label>
             @php $estadoSelected = old('estado_cita', $cita->estado_cita ?? 'pendiente'); @endphp
-
-            <select
-                id="estado_cita"
-                name="estado_cita"
-                class="{{ $bbField }}"
-                required
-            >
+            <select id="estado_cita" name="estado_cita" class="{{ $bbField }}" required>
                 <option value="confirmada" @selected($estadoSelected === 'confirmada')>Confirmada</option>
                 <option value="cancelada"  @selected($estadoSelected === 'cancelada')>Cancelada</option>
                 <option value="completada" @selected($estadoSelected === 'completada')>Completada</option>
             </select>
-
-            @error('estado_cita')
-                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-            @enderror
         </div>
 
-        {{-- MÉTODO DE PAGO (solo si está COMPLETADA) --}}
         <div id="metodo_pago_wrap" style="display:none;">
-            <label for="metodo_pago" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-credit-card mr-1" style="{{ $bbIconColor }}"></i>
-                Método de pago <span class="text-red-500">*</span>
-            </label>
-
+            <label for="metodo_pago" class="block text-xs font-bold text-gray-600 mb-1 uppercase">Método Pago <span class="text-red-500">*</span></label>
             @php $metodoPagoSelected = old('metodo_pago', $cita->metodo_pago ?? ''); @endphp
-
             <select id="metodo_pago" name="metodo_pago" class="{{ $bbField }}">
-                <option value="">Seleccionar método</option>
+                <option value="">Seleccionar...</option>
                 <option value="efectivo" @selected($metodoPagoSelected === 'efectivo')>Efectivo</option>
-                <option value="tarjeta_credito" @selected($metodoPagoSelected === 'tarjeta_credito')>Tarjeta (crédito)</option>
-                <option value="tarjeta_debito" @selected($metodoPagoSelected === 'tarjeta_debito')>Tarjeta (débito)</option>
+                <option value="tarjeta_credito" @selected($metodoPagoSelected === 'tarjeta_credito')>Tarjeta (Crédito)</option>
+                <option value="tarjeta_debito" @selected($metodoPagoSelected === 'tarjeta_debito')>Tarjeta (Débito)</option>
                 <option value="transferencia" @selected($metodoPagoSelected === 'transferencia')>Transferencia</option>
             </select>
-
-            @error('metodo_pago')
-                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-            @enderror
         </div>
 
-        {{-- OBSERVACIONES --}}
-        <div class="md:col-span-2">
-            <label for="observaciones" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-sticky-note mr-1" style="{{ $bbIconColor }}"></i>
-                Observaciones
-            </label>
-
-            <textarea
-                id="observaciones"
-                name="observaciones"
-                rows="3"
-                class="{{ $bbField }}"
-            >{{ old('observaciones', $cita->observaciones ?? '') }}</textarea>
-
-            @error('observaciones')
-                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-            @enderror
-        </div>
-
-        {{-- DESCUENTO --}}
-        <div class="md:col-span-2">
-            <label for="descuento" class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fas fa-tag mr-1" style="{{ $bbIconColor }}"></i>
-                Descuento
-            </label>
-
-            <input
-                type="number"
-                step="0.01"
-                min="0"
-                name="descuento"
-                id="descuento"
-                value="{{ old('descuento', $cita->descuento ?? 0) }}"
-                class="{{ $bbField }}"
-                placeholder="Monto en pesos (ej. 50.00). Si no aplica, deja en 0."
-            />
-
-            @error('descuento')
-                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
-            @enderror
+        <div>
+            <label for="descuento" class="block text-xs font-bold text-gray-600 mb-1 uppercase">Descuento ($)</label>
+            <input type="number" step="0.01" min="0" name="descuento" id="descuento" value="{{ old('descuento', $cita->descuento ?? 0) }}" class="{{ $bbField }}" placeholder="0.00" />
         </div>
     </div>
 
-    {{-- BOTONES --}}
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
-        <a
-            href="{{ route('admin.citas.index') }}"
-            class="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold
-                   flex items-center justify-center gap-2 transition"
-        >
-            <i class="fas fa-arrow-left" style="color: rgba(17,24,39,.70)"></i>
-            Volver a Citas
-        </a>
+    {{-- OBSERVACIONES --}}
+    <div>
+        <label for="observaciones" class="block text-xs font-bold text-gray-600 mb-1 uppercase">Observaciones</label>
+        <textarea id="observaciones" name="observaciones" rows="2" class="{{ $bbField }} resize-none">{{ old('observaciones', $cita->observaciones ?? '') }}</textarea>
+    </div>
 
-        <button
-            type="submit"
-            class="px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition focus:outline-none"
-            style="
-                background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
-                border: 1px solid rgba(201,162,74,.35);
-                box-shadow: 0 10px 22px rgba(201,162,74,.18);
-                color: #111827;
-            "
-            onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
-            onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
-        >
-            <i class="fas fa-save" style="color: rgba(17,24,39,.90)"></i>
+    {{-- BOTONES --}}
+    <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-3 border-t border-gray-100">
+        <a href="{{ route('admin.citas.index') }}" class="px-5 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition">
+            Cancelar
+        </a>
+        <button type="submit" class="px-5 py-2 text-sm rounded-md font-bold transition shadow-sm bg-[rgba(201,162,74,1)] text-white hover:bg-[rgba(180,140,60,1)]">
             {{ $mode === 'edit' ? 'Actualizar Cita' : 'Crear Cita' }}
         </button>
     </div>
