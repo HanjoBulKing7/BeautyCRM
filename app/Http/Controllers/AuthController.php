@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Cliente; // ✅ Importamos Cliente en lugar de Empleado
 use App\Models\Empleado;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
@@ -40,47 +41,35 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
+    // ✅ REGISTRO MANUAL: Siempre como Cliente (ID 1)
     public function register(Request $request)
     {
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|confirmed|min:6',
-            'telefono' => 'required|string|max:25',
+            'telefono' => 'nullable|string|max:25', // Lo dejamos nullable por si acaso
         ]);
 
         $user = User::create([
-            'name'     => $request->name,
+            'name'     => $request->name,       
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role_id'  => 2, // ✅ SIEMPRE EMPLEADO
+            'role_id'  => 1, // ✅ SIEMPRE CLIENTE (ID 1)
         ]);
 
-        // Crear empleado con teléfono (y lo demás en defaults)
-        $fullName = trim($request->name);
-        $parts = preg_split('/\s+/', $fullName);
-        $nombre = $parts[0] ?? $fullName;
-        $apellido = count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '';
-
-        Empleado::create([
-            'user_id'  => $user->id,
-            'nombre'   => $nombre,
-            'apellido' => $apellido,
-            'email'    => $user->email,
-            'telefono' => $request->telefono,
-
-            // Defaults (ajusta si tu schema pide otros)
-            'puesto'             => 'Sin asignar',
-            'departamento'       => 'Sin asignar',
-            'fecha_contratacion' => now()->toDateString(),
-            'estatus'            => 'activo',
-            'informacion_legal'  => null,
+        // Crear registro asociado en la tabla clientes
+        Cliente::create([
+            'user_id'   => $user->id,
+            'nombre'    => $request->name,
+            'email'     => $user->email,
+            'telefono'  => $request->telefono ?? null,
+            'direccion' => null,
         ]);
 
         return redirect()->route('login.form')
             ->with('success', 'Cuenta creada correctamente. Ingresa con tus datos.');
     }
-
 
     // Logout
     public function logout(Request $request)
@@ -101,6 +90,7 @@ class AuthController extends Controller
             ->redirect();
     }
 
+    // ✅ GOOGLE GENERAL: Siempre como Cliente (ID 1)
     public function handleGoogleCallback(Request $request)
     {
         try {
@@ -122,7 +112,7 @@ class AuthController extends Controller
             $user->name = $googleUser->getName() ?? 'Usuario';
             $user->email = $email;
             $user->password = Hash::make(Str::random(32));
-            $user->role_id = 2; // 👈 cliente por defecto (tu regla actual)
+            $user->role_id = 1; // ✅ SIEMPRE CLIENTE (ID 1)
             $user->google_id = $googleUser->getId();
             $user->email_verified_at = now();
             $user->save();
@@ -137,13 +127,13 @@ class AuthController extends Controller
             $user->save();
         }
 
-        // Si es nuevo usuario y es cliente, crea también el registro en clientes
-        if ($isNewUser && $user->role_id == 2) {
-            \App\Models\Cliente::create([
-                'user_id' => $user->id,
-                'nombre' => $user->name,
-                'email' => $user->email,
-                'telefono' => null,
+        // Si es nuevo usuario y es cliente (1), crea también el registro en clientes
+        if ($isNewUser && $user->role_id == 1) {
+            Cliente::create([
+                'user_id'   => $user->id,
+                'nombre'    => $user->name,
+                'email'     => $user->email,
+                'telefono'  => null,
                 'direccion' => null,
             ]);
         }
@@ -157,6 +147,8 @@ class AuthController extends Controller
     // =========================
     // Google OAuth EMPLEADOS (registro/login)
     // =========================
+    // NOTA: Dejé este intacto por si tienes una URL secreta/específica solo para que 
+    // tus empleados se registren. Si quieres que TAMBIÉN sean clientes, avísame.
     public function redirectEmployeeToGoogle()
     {
         return Socialite::driver('google')
@@ -188,12 +180,12 @@ class AuthController extends Controller
             ->first();
 
         if (!$user) {
-            // ✅ Crear nuevo usuario como EMPLEADO
+            // Crear nuevo usuario como EMPLEADO
             $user = new User();
             $user->name = $googleUser->getName() ?? 'Empleado';
             $user->email = $email;
             $user->password = Hash::make(Str::random(32));
-            $user->role_id = 2; // ✅ EMPLEADO
+            $user->role_id = 2; // EMPLEADO
             $user->google_id = $googleUser->getId();
             $user->email_verified_at = now();
             $user->save();
@@ -208,11 +200,9 @@ class AuthController extends Controller
                 $user->name = $googleUser->getName();
             }
 
-            // ⚠️ Si ya existía con otro rol, no lo cambiamos aquí (tu decisión final)
             $user->save();
         }
 
-        // ✅ Asegurar registro en EMPLEADOS (teléfono queda NULL y lo llenan en su form de empleados)
         $empleado = $user->empleado;
 
         if (!$empleado) {
@@ -226,9 +216,8 @@ class AuthController extends Controller
                 'nombre' => $nombre,
                 'apellido' => $apellido,
                 'email' => $user->email,
-                'telefono' => null, // ✅ pendiente (lo agrega en editar empleado)
+                'telefono' => null, 
 
-                // Defaults por si tu tabla los requiere (ajusta a tu schema real)
                 'puesto' => 'Sin asignar',
                 'departamento' => 'Sin asignar',
                 'fecha_contratacion' => now()->toDateString(),
@@ -240,15 +229,12 @@ class AuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        // ✅ Mandarlo directo al form de empleados para agregar teléfono
-        // Ajusta el nombre de la ruta si en tu proyecto es diferente.
         return redirect()->intended('/admin/home')
             ->with('success', 'Cuenta creada con Google. Bienvenido al CRM.');
-
     }
 
     // =========================
-    // Invitación empleado -> conectar Google Calendar (tu flujo actual)
+    // Invitación empleado -> conectar Google Calendar
     // =========================
     public function acceptEmployeeInvitation(User $user, Request $request)
     {
@@ -267,14 +253,13 @@ class AuthController extends Controller
     private function redirectByRole(User $user)
     {
         switch ($user->role_id) {
-            case 3: return redirect()->intended('/admin/home');  // admin
-            case 2: return redirect()->intended('/admin/home');  // ✅ empleado
-            case 1: return redirect()->intended('/home');        // cliente
+            case 3: return redirect()->intended('/admin/home');  // Admin
+            case 2: return redirect()->intended('/admin/home');  // Empleado
+            case 1: return redirect()->intended('/home');        // ✅ Cliente
             default:
                 Auth::logout();
                 return redirect()->route('login.form')
                     ->with('error', 'Rol no válido. Contacta al administrador.');
         }
     }
-
 }
