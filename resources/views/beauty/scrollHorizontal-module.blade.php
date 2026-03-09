@@ -18,76 +18,87 @@
           <div role="list" class="horizontal-list">
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
-                <h2 class="horizontal-item_number">1</h2>
-                <h2>Tratamientos para el Cabello: Nutre, Repara y Realza tu Belleza</h2>
+                <h2>Cejas Perfectas</h2>
                 <p class="horizontal-item_p">
-                  Descubre tratamientos profesionales diseñados para revitalizar, fortalecer
-                  y devolverle el brillo natural a tu cabello, dejándolo suave, saludable
-                  y lleno de vida.
+                  Diseño y perfilado de cejas personalizado según la forma de tu rostro. 
+                  Técnicas de depilación profesional con hilo, cera o pinza, y opciones 
+                  de micropigmentación para un acabado natural y armonioso que realza 
+                  la expresión de tus ojos.
                 </p>
+                <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="https://videos.pexels.com/video-files/3214448/3214448-uhd_2560_1440_25fps.mp4"
+                src="{{ asset('videos/cejas.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted
                 loop
+                playsinline
                 class="horizontal-item_media"
               ></video>
             </div>
+            
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
-                <h2 class="horizontal-item_number">2</h2>
-                <h2>Color de Cabello: Transforma tu Estilo con Tonos Perfectos</h2>
+                <h2>Uñas</h2>
                 <p class="horizontal-item_p">
-                  Renueva tu look con técnicas de coloración profesional que aportan
-                  brillo, dimensión y personalidad. Somos especialistas en crear tonos
-                  que realzan tu belleza y te hacen sentir completamente renovada.
+                  Manicura y pedicura de lujo con las últimas tendencias en diseños y colores. 
+                  Servicio de uñas esculpidas en gel o acrílico, kapping, y esmaltado semipermanente 
+                  de larga duración. Cuidado profesional para manos y pies impecables.
                 </p>
+                <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="https://videos.pexels.com/video-files/3214448/3214448-uhd_2560_1440_25fps.mp4"
+                src="{{ asset('videos/uñas.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted
                 loop
+                playsinline
                 class="horizontal-item_media"
               ></video>
             </div>
+            
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
-                <h2 class="horizontal-item_number">3</h2>
-                <h2>Maquillajes Profesionales: Resalta tu Belleza Natural</h2>
+                <h2>Extensiones de Cabello</h2>
                 <p class="horizontal-item_p">
-                  Nuestros especialistas crean looks que realzan tus rasgos con armonía,
-                  desde acabados naturales hasta estilos sofisticados para tus eventos
-                  formales, haciéndote lucir impecable en cada ocasión.
+                  Transformá tu look con extensiones de cabello natural de alta calidad. 
+                  Técnicas de aplicación invisible que aportan largo, volumen y densidad 
+                  sin dañar tu cabello. Asesoramiento personalizado para que luzcas 
+                  el estilo que siempre soñaste.
+                </p>
+                <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="https://videos.pexels.com/video-files/4328514/4328514-uhd_2560_1440_30fps.mp4"
+                src="{{ asset('videos/extensiones.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted
                 loop
+                playsinline
                 class="horizontal-item_media"
               ></video>
             </div>
+            
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
-                <h2 class="horizontal-item_number">4</h2>
-                <h2>Peinados Profesionales: Estilo que Enmarca tu Belleza</h2>
+                <h2>Pestañas</h2>
                 <p class="horizontal-item_p">
-                  Descubre peinados creados con técnica y precisión, diseñados para resaltar
-                  tu estilo y hacerte lucir espectacular en cada evento, ocasión especial o
-                  momento inolvidable.
+                  Realzá tu mirada con nuestras técnicas de pestañas pelo a pelo, 
+                  volumen ruso o lifting de pestañas. Logramos un efecto natural 
+                  o dramático según tu preferencia, con productos de alta calidad 
+                  que cuidan tus pestañas naturales.
                 </p>
+                <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="https://videos.pexels.com/video-files/2871916/2871916-hd_1920_1080_30fps.mp4"
+                src="{{ asset('videos/pestañas.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted
                 loop
+                playsinline
                 class="horizontal-item_media"
               ></video>
             </div>
@@ -95,7 +106,7 @@
         </div>
       </div>
 
-     
+    </section>
 
     
 @push('scripts')

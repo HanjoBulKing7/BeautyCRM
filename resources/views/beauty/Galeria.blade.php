@@ -20,83 +20,89 @@
           <div role="list" class="horizontal-list">
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
-                <h2 class="horizontal-item_number">1</h2>
-                <h2>Tratamientos Capilares: Brillo, Fuerza y Reparación</h2>
+                <h2>Peinados Profesionales</h2>
                 <p class="horizontal-item_p">
-                  Devuélvele vida a tu cabello con hidrataciones profundas, 
-                  reparación y nutrición profesional. Ideal para controlar frizz, 
-                  mejorar textura y lograr un acabado suave y luminoso.
+                  Creaciones únicas para cada ocasión: desde recogidos elegantes para eventos formales 
+                  hasta looks sueltos con ondas perfectas para el día a día. Nuestros estilistas 
+                  diseñan peinados que resaltan tu personalidad y te hacen brillar en cada momento 
+                  especial.
                 </p>
                 <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="{{ asset('videos/pestañas.mp4') }}"
+                src="{{ asset('videos/peinado.mp4') }}"
                 loading="lazy"
                 autoplay  
                 muted
                 loop
+                playsinline
                 class="horizontal-item_media"
               ></video>
             </div>
+            
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
-                <h2 class="horizontal-item_number">2</h2>
-                <h2>Pestañas: Mirada Definida Todo el Día</h2>
+                <h2>Masajes Relajantes</h2>
                 <p class="horizontal-item_p">
-                  Realza tu mirada con técnicas que aportan longitud, 
-                  volumen y curvatura con un resultado elegante y natural. 
-                  Perfecto para verte increíble sin esfuerzo.
+                  Liberá tensiones y renová tu energía con nuestros masajes corporales. 
+                  Técnicas de relajación profunda, descontracturantes y drenaje linfático 
+                  que alivian el estrés, mejoran la circulación y restauran el equilibrio 
+                  de tu cuerpo en un ambiente de calma y tranquilidad.
                 </p>
                 <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="{{ asset('videos/pestañas.mp4') }}"
+                src="{{ asset('videos/masajes.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted
                 loop
+                playsinline
                 class="horizontal-item_media"
               ></video>
             </div>
+            
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
-                <h2 class="horizontal-item_number">3</h2>
-                <h2>
-                  Pedicura: Pies Suaves y Presentables
-                </h2>
+                <h2>Perforaciones</h2>
                 <p class="horizontal-item_p">
-                  Relájate con un cuidado completo: limpieza, exfoliación 
-                  e hidratación para unos pies suaves y lindos. 
-                  Un toque perfecto para sentirte fresca y segura.
+                  Expresá tu estilo con perforaciones realizadas por profesionales 
+                  con los más altos estándares de higiene y seguridad. Ofrecemos una amplia 
+                  variedad de opciones para orejas, nariz y más, utilizando materiales 
+                  hipoalergénicos de primera calidad para cuidar tu piel.
                 </p>
-                <a href="/agendarcita" class="horizontal-cta">Agendar cita</a>
+                <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="https://videos.pexels.com/video-files/15708462/15708462-uhd_2560_1440_24fps.mp4"
+                src="{{ asset('videos/perforaciones.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted
                 loop
+                playsinline
                 class="horizontal-item_media"
               ></video>
             </div>
+            
             <div role="listitem" class="horizontal-item">
               <div class="horizontal-item_content">
-                <h2 class="horizontal-item_number">4</h2>
-                <h2>Faciales: Piel Radiante y Renovada</h2>
+                <h2>Masajes Corporales Avanzados</h2>
                 <p class="horizontal-item_p">
-                  Rituales faciales que limpian, hidratan y revitalizan tu piel. 
-                  Logra un glow natural, textura más uniforme y 
-                  una sensación de frescura desde la primera sesión.
+                  Experimentá una nueva dimensión del relax con nuestros masajes 
+                  que combinan técnicas manuales con avanzada tecnología. Ideal para 
+                  tratar contracturas profundas, mejorar la circulación y lograr 
+                  una renovación completa de tu cuerpo. Resultados visibles desde 
+                  la primera sesión.
                 </p>
-                <a href="/agendarcita" class="horizontal-cta">Agendar cita</a>
+                <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="https://videos.pexels.com/video-files/5788966/5788966-hd_1920_1080_25fps.mp4"
+                src="{{ asset('videos/masaje2.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted
                 loop
+                playsinline
                 class="horizontal-item_media"
               ></video>
             </div>
