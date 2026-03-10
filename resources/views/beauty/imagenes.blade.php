@@ -1,29 +1,34 @@
 <section class="gallery-section">
-    <!-- Texto "Lo más solicitado" (estilo homehero) -->
     <div class="gallery__most-requested">
         <span class="gallery__kicker">DESCUBRE</span>
         <h2 class="gallery__big-title">Lo más solicitado</h2>
     </div>
 
     <div class="gallery-wrapper">
-        <div class="gallery-card">
-            <img src="{{ asset('images/peinado2.png') }}" alt="">
-        </div>
+        <a href="{{ url('/servicio') }}" class="gallery-card block">
+            <img src="{{ asset('images/Peinado2.png') }}" alt="Peinados de moda">
+        </a>
 
-        <div class="gallery-card">
-            <img src="{{ asset('images/download-2025-12-16T00_07_16.jpg') }}" alt="">
-        </div>
+        <a href="{{ url('/servicio') }}" class="gallery-card block">
+            <img src="{{ asset('images/download-2025-12-16T00_07_16.jpg') }}" alt="Tendencias en maquillaje">
+        </a>
 
-        <div class="gallery-card">
-            <img src="{{ asset('images/servicios/cejas.jpg') }}" alt="">
-        </div>
+        <a href="{{ url('/servicio') }}" class="gallery-card block">
+            <img src="{{ asset('images/servicios/cejas.jpg') }}" alt="Diseño de cejas">
+        </a>
 
-        <div class="gallery-card">
-            <img src="{{ asset('images/servicios/faciales.jpg') }}" alt="">
-        </div>
+        <a href="{{ url('/servicio') }}" class="gallery-card block">
+            <img src="{{ asset('images/servicios/faciales.jpg') }}" alt="Tratamientos faciales">
+        </a>
 
-        <div class="gallery-card">
-            <img src="{{ asset('images/servicios/peinado.jpg') }}" alt="">
-        </div>
+        <a href="{{ url('/servicio') }}" class="gallery-card block">
+            <img src="{{ asset('images/servicios/peinado.jpg') }}" alt="Cortes y peinados">
+        </a>
+    </div>
+
+    <div class="flex justify-center mt-12 mb-8">
+        <a href="{{ url('/servicio') }}" class="gallery-link">
+            VER TODOS LOS SERVICIOS
+        </a>
     </div>
 </section>

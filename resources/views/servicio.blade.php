@@ -14,7 +14,7 @@
 @section('content')
     @include('beauty.partials.whatsapp-icon')
     @include('beauty.partials.header')
-    @include('beauty.homehero')
+    @include('beauty.heroservicios')
 
     @include('beauty.servicios.menu-servicios')
     @include('beauty.servicios.mas-solicitados')
@@ -28,6 +28,7 @@
 @push('scripts')
   {{-- GSAP + ScrollTrigger (si no lo tienes ya en tu layout) --}}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
   <script src="{{ asset('js/beauty/homehero.js') }}"></script>

@@ -3,7 +3,7 @@
         {{-- Usamos <img> para poder animar scale con GSAP --}}
         <img
             class="bb-homehero__bg"
-            src="{{ asset('images/sucursal/16.jpg') }}"
+            src="{{ asset('images/sucursal/16.JPG') }}"
             alt="Beauty Bonita Hero"
             loading="eager"
         >

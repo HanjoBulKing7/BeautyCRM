@@ -4,7 +4,7 @@
         {{-- Izquierda: imagen + texto centrado sin fondo --}}
         <div class="find-us__media">
             <img
-                src="{{ asset('images/sucursal/6.jpg') }}"
+                src="{{ asset('images/sucursal/22.JPG') }}"
                 alt="Sucursal Beauty Bonita Studio"
                 class="find-us__img"
                 loading="lazy"
