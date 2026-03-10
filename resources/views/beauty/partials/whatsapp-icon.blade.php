@@ -1,7 +1,7 @@
 {{-- Floating WhatsApp button (Bottom-Right) --}}
 @php
-    $phone = $phone ?? '5215512345678';
-    $msg = $msg ?? 'Hola, quiero agendar una cita por WhatsApp.';
+    $phone = $phone ?? '4494049194';
+    $msg = $msg ?? 'Hola, quiero agendar una cita. ';
 
     // ✅ Dorado elegante (para el logo)
     $gold = '#C8A24A';
