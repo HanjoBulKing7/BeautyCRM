@@ -83,25 +83,25 @@
                             <div class="Normal-content-image">
                                 <img src="{{ asset('images/servicios/masaje.jpg') }}" alt="Tratamientos Capilares" />
                             </div>
-                            <div class="Normal-content-content">
-                                <h5 class="Normal-content-subtitle">
-                                    <span class="counter">03</span>
-                                    Masajes de Alta Tecnología
-                                </h5>
-                                <h2 class="Normal-content-title">
-                                    <span>Reactivá tu Cuerpo,</span>
-                                    <span>Renová tu Energía</span>
-                                </h2>
-                                <p class="Normal-content-copy">
-                                    Descubrí una nueva dimensión del bienestar con nuestros masajes corporales de lujo. Utilizamos tecnología de vanguardia como el exclusivo sistema Rollaction, un innovador método de masaje fisio-activo que imita los movimientos profesionales de las manos del terapeuta para actuar en profundidad sobre el tejido muscular, vascular y dérmico. Ideal para tratamientos de abdomen, este sistema reactiva las funciones naturales del organismo, mejorando la circulación, reduciendo la retención de líquidos y remodelando la silueta. Combinamos esta avanzada aparatología con masajes tradicionales personalizados para ofrecerte una experiencia única que equilibra cuerpo y mente, liberando tensiones y devolviéndole la vitalidad a tu piel.
-                                </p>
-                                <a href="{{ url('/agendar-cita') }}" class="Normal-content-action">
-                                    Agendar servicio
-                                    <svg width="24" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M16 -6.99382e-07L14.59 1.41L20.17 7L-3.93402e-07 7L-3.0598e-07 9L20.17 9L14.58 14.58L16 16L24 8L16 -6.99382e-07Z" fill="#b8860b" />
-                                    </svg>
-                                </a>
-                            </div>
+                         <div class="Normal-content-content">
+                            <h5 class="Normal-content-subtitle">
+                                <span class="counter">03</span>
+                                Masajes de Alta Tecnología
+                            </h5>
+                            <h2 class="Normal-content-title">
+                                <span>Reactiva tu Cuerpo,</span>
+                                <span>Renueva tu Energía</span>
+                            </h2>
+                            <p class="Normal-content-copy">
+                                Transforma tu figura y despídete del estrés. Con nuestro exclusivo sistema <strong>Rollaction</strong>, disfrutarás de un masaje profundo que mejora la circulación, elimina líquidos retenidos y <strong>remodela tu silueta</strong> de forma natural. Vive una experiencia de lujo que equilibra tu cuerpo, libera tensiones y te hace sentir increíble desde la primera sesión.
+                            </p>
+                            <a href="{{ url('/agendar-cita') }}" class="Normal-content-action">
+                                Agendar mi masaje
+                                <svg width="24" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M16 -6.99382e-07L14.59 1.41L20.17 7L-3.93402e-07 7L-3.0598e-07 9L20.17 9L14.58 14.58L16 16L24 8L16 -6.99382e-07Z" fill="#b8860b" />
+                                </svg>
+                            </a>
+                        </div>
                         </div>
                     </div>
                 </div>
