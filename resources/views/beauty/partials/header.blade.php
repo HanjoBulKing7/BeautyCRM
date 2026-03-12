@@ -85,7 +85,7 @@
                         @else
                             <a href="{{ route('login') }}" class="Normal-menu-footer-cta {{ request()->is('login') ? 'active' : '' }}">
                                 <i class="bx bx-user-circle"></i>
-                                Login
+                                Agendar cita
                             </a>
                         @endauth
                     </div>
@@ -124,7 +124,7 @@
                     @else
                         <a href="{{ route('login') }}" class="Normal-menu-block-link {{ request()->is('login') ? 'active' : '' }}" data-scroll>
                             <i class="bx bx-user-circle"></i>
-                            Login
+                            Agendar cita
                         </a>
                     @endauth
                 </div>

@@ -49,7 +49,7 @@
                 <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="{{ asset('videos/uñas.mp4') }}"
+                src="{{ asset('videos/unas.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted
@@ -93,7 +93,7 @@
                 <a href="/agendar-cita" class="horizontal-cta">Agendar cita</a>
               </div>
               <video
-                src="{{ asset('videos/pestañas.mp4') }}"
+                src="{{ asset('videos/pestanas.mp4') }}"
                 loading="lazy"
                 autoplay
                 muted

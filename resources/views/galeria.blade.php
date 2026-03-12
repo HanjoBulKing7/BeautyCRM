@@ -12,7 +12,7 @@
     @include('beauty.partials.header')
     @include('beauty.homehero')
     @include('beauty.scrollHorizontal-module')
-    @include('beauty.galeria')
+    @include('beauty.Galeria')
 
     
     @include('beauty.partials.footer')
