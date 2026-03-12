@@ -15,7 +15,7 @@
                         <div class="Normal-footer-copy">
                             Descubre tu belleza única & transforma <br>tu estilo con nuestros servicios profesionales!
                         </div>
-                        <div class="Normal-footer-copy-rights">© 2024 Beauty Bonita. Todos los derechos reservados.</div>
+                        <div class="Normal-footer-copy-rights">© 2026 Beauty Bonita. Todos los derechos reservados.</div>
                     </div>
                     <div class="Normal-footer-column Normal-footer-column-link">
                         <h4 class="Normal-footer-heading">Nuestros Servicios</h4>

@@ -15,7 +15,7 @@
           Descubre un espacio donde la <strong>belleza y la exclusividad</strong> se unen. Diseñamos cada detalle para ofrecerte una experiencia de lujo, confort y relajación desde el primer momento en que cruzas nuestras puertas.
         </p>
 
-        <p class="bb-people__desc">
+        <p class="bb-people__lead">
           Somos expertos en resaltar tu mejor versión. Ofrecemos <strong>peinados de alta costura, maquillaje profesional, faciales revitalizantes</strong>, cortes vanguardistas y servicios de uñas con las últimas tendencias internacionales. Déjate consentir por nuestros especialistas, porque mereces lo mejor.
         </p>
       </div>

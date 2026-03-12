@@ -4,7 +4,7 @@
         {{-- Cambia 'images/sucursal/15.jpg' por la imagen que desees --}}
         <img
             class="bb-homehero__bg"
-            src="{{ asset('images/sucursal/8.JPG') }}"
+            src="{{ asset('images/sucursal/servicios.webp') }}"
             alt="Nuestros Servicios Hero"
             loading="eager"
         >

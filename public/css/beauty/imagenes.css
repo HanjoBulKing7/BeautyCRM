@@ -58,6 +58,15 @@
     text-transform: uppercase;
 }
 
+/* 🔥 NUEVA CLASE: Tamaño Intermedio */
+.gallery__medium-title {
+    margin: 0 0 10px 0;
+    color: #334155;
+    font-weight: 500;
+    font-size: clamp(24px, 4vw, 42px); /* Crece hasta 42px en PC, baja en móvil */
+    line-height: 1.2;
+}
+
 .gallery__big-title {
     margin: 0;
     color: #0f172a;
@@ -74,6 +83,10 @@
         margin-bottom: 30px;
     }
     
+    .gallery__medium-title {
+        font-size: clamp(22px, 5vw, 32px); /* Ajuste intermedio para tablet */
+    }
+
     .gallery__big-title {
         font-size: clamp(36px, 8vw, 60px);
     }
@@ -83,6 +96,10 @@
     .gallery__big-title {
         font-size: clamp(32px, 10vw, 48px);
         letter-spacing: .08em;
+    }
+    
+    .gallery__medium-title {
+        font-size: clamp(20px, 6vw, 26px); /* Ajuste intermedio para móvil */
     }
     
     .gallery__kicker {
@@ -97,6 +114,7 @@
         margin-bottom: 25px;
     }
 }
+
 /* ===== RESPONSIVE ===== */
 
 /* Pantallas extra grandes */

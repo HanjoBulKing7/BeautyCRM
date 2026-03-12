@@ -19,8 +19,8 @@
   @include('beauty.people')
   @include('beauty.app-metrics')
   @include('beauty.imagenes')
-  @include('beauty.donde-encontrarnos')
   @include('beauty.resenas')
+  @include('beauty.donde-encontrarnos')
 
   @include('beauty.partials.footer')
 @endsection
