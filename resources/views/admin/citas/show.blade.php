@@ -299,6 +299,35 @@
             </div>
         @endif
 
+        {{-- SECCIÓN TEMPORAL: Resumen de Pago (siempre visible) --}}
+        @if(true)
+            <hr class="border-gray-200 my-8">
+            <div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Resumen de Pago
+                </h3>
+                <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Total de la Cita:</span>
+                        <span class="font-bold text-lg text-gray-900">${{ number_format($totalServicios, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Anticipo Pagado (Online):</span>
+                        <span class="font-semibold text-green-700">${{ number_format($cita->venta->total ?? 0, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-blue-200 pt-3 mt-3">
+                        <span class="text-sm font-bold text-gray-800">Monto Restante:</span>
+                        @php
+                            $anticipo = $cita->venta->total ?? 0;
+                            $restante = $totalServicios - $anticipo;
+                        @endphp
+                        <span class="font-black text-xl text-blue-800">${{ number_format($restante, 2) }}</span>
+                    </div>
+                </div>
+            </div>
+        @endif
+        
     </div>
 
     {{-- Acciones Finales (CORREGIDAS) --}}

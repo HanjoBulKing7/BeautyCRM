@@ -31,14 +31,7 @@
         <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-3">Catálogo</span>
     </li>
 
-    <li>
-        <a href="{{ url('/admin/categoriaservicios') }}"
-           class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
-                  {{ request()->is('admin/categoriaservicios*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
-            <i class="fas fa-tags mr-3 text-lg"></i>
-            <span>Categorías</span>
-        </a>
-    </li>
+   
 
     <li>
         <a href="{{ url('/admin/servicios') }}"
@@ -57,7 +50,14 @@
             <span>Productos</span>
         </a>
     </li>
-
+    <li>
+            <a href="{{ url('/admin/categoriaservicios') }}"
+            class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+                    {{ request()->is('admin/categoriaservicios*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+                <i class="fas fa-tags mr-3 text-lg"></i>
+                <span>Categorías</span>
+            </a>
+        </li>
     {{-- SEPARADOR DE ADMINISTRACIÓN --}}
     <li class="pt-4 pb-1">
         <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-3">Administración</span>

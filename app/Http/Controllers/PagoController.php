@@ -35,7 +35,7 @@ class PagoController extends Controller
             ->where('id_cita', $idCita)
             ->sum('precio_snapshot');
 
-        $anticipo = 100; //Anticipo de todos los servicios
+        $anticipo = 10; //Anticipo de todos los servicios
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
