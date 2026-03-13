@@ -38,9 +38,11 @@
                     </div>
 
                     <ul class="Normal-menu-inner">
-                        <li class="Normal-menu-item">
-                            <a href="{{ url('/home') }}" class="Normal-menu-link {{ request()->is('home') ? 'active' : '' }}">Inicio</a>
-                        </li>
+                        @unless(request()->is('home'))
+                            <li class="Normal-menu-item">
+                                <a href="{{ url('/home') }}" class="Normal-menu-link">Inicio</a>
+                            </li>
+                        @endunless
                         <li class="Normal-menu-item">
                             <a href="{{ url('/servicio') }}" class="Normal-menu-link {{ request()->is('servicio') ? 'active' : '' }}">Servicios</a>
                         </li>
@@ -68,6 +70,13 @@
                                 </button>
 
                                 <div id="NormalUserMenuMobile" class="Normal-user-menu" role="menu">
+                                    @if((int) Auth::user()->role_id === 3)
+                                        <a href="{{ url('/admin/home') }}" class="Normal-user-item" role="menuitem">
+                                            <i class="bx bx-shield-quarter"></i>
+                                            Ir a panel de administrador
+                                        </a>
+                                    @endif
+
                                     <a href="{{ url('/mis-reservas') }}" class="Normal-user-item" role="menuitem">
                                         <i class="bx bx-calendar"></i>
                                         Ver reservas
@@ -83,10 +92,19 @@
                                 </div>
                             </div>
                         @else
-                            <a href="{{ route('login') }}" class="Normal-menu-footer-cta {{ request()->is('login') ? 'active' : '' }}">
-                                <i class="bx bx-user-circle"></i>
-                                Agendar cita
-                            </a>
+                            <div class="Normal-guest-actions Normal-guest-actions--mobile">
+                                <a href="{{ route('login.form') }}" class="Normal-guest-link {{ request()->is('login') ? 'active' : '' }}">
+                                    <i class="bx bx-log-in"></i>
+                                    Login
+                                </a>
+
+                                <span aria-hidden="true" class="Normal-guest-divider"></span>
+
+                                <a href="{{ route('agendarcita.create') }}" class="Normal-guest-link {{ request()->is('agendar-cita') ? 'active' : '' }}">
+                                    <i class="bx bx-calendar"></i>
+                                    Agendar cita
+                                </a>
+                            </div>
                         @endauth
                     </div>
                 </div>
@@ -107,9 +125,16 @@
                             </button>
 
                             <div id="NormalUserMenuDesktop" class="Normal-user-menu" role="menu">
+                                @if((int) Auth::user()->role_id === 3)
+                                    <a href="{{ url('/admin/home') }}" class="Normal-user-item" role="menuitem">
+                                        <i class="bx bx-shield-quarter"></i>
+                                        Ir a panel de administrador
+                                    </a>
+                                @endif
+
                                 <a href="{{ url('/mis-reservas') }}" class="Normal-user-item" role="menuitem">
                                     <i class="bx bx-calendar"></i>
-                                    Ver reservas
+                                    Mis reservas
                                 </a>
 
                                 <form method="POST" action="{{ route('logout') }}" class="Normal-user-form">
@@ -122,10 +147,19 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="Normal-menu-block-link {{ request()->is('login') ? 'active' : '' }}" data-scroll>
-                            <i class="bx bx-user-circle"></i>
-                            Agendar cita
-                        </a>
+                        <div class="Normal-guest-actions Normal-guest-actions--desktop">
+                            <a href="{{ route('login.form') }}" class="Normal-guest-link {{ request()->is('login') ? 'active' : '' }}">
+                                <i class="bx bx-log-in"></i>
+                                Login
+                            </a>
+
+                            <span aria-hidden="true" class="Normal-guest-divider"></span>
+
+                            <a href="{{ route('agendarcita.create') }}" class="Normal-guest-link {{ request()->is('agendar-cita') ? 'active' : '' }}" data-scroll>
+                                <i class="bx bx-calendar"></i>
+                                Agendar cita
+                            </a>
+                        </div>
                     @endauth
                 </div>
             </div>

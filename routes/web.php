@@ -44,21 +44,20 @@ Route::get('/productos', [ProductosPublicController::class, 'index'])
     ->name('productos.public');
 
 // =============================
-// Agendar cita (requiere auth)
+// Agendar cita (vista pública)
 // =============================
-Route::middleware('auth')->group(function () {
-    Route::get('/agendar-cita', [AgendarCitaPublicController::class, 'create'])
-        ->name('agendarcita.create');
+Route::get('/agendar-cita', [AgendarCitaPublicController::class, 'create'])
+    ->name('agendarcita.create');
 
-    Route::post('/agendar-cita', [AgendarCitaPublicController::class, 'store'])
-        ->name('agendarcita.store');
+Route::post('/agendar-cita', [AgendarCitaPublicController::class, 'store'])
+    ->middleware('auth')
+    ->name('agendarcita.store');
 
-    Route::get('/agendar-cita/horas-disponibles', [AgendarCitaPublicController::class, 'horasDisponibles'])
-        ->name('agendarcita.horasDisponibles');
+Route::get('/agendar-cita/horas-disponibles', [AgendarCitaPublicController::class, 'horasDisponibles'])
+    ->name('agendarcita.horasDisponibles');
 
-    Route::get('/agendar-cita/availability-month', [AgendarCitaPublicController::class, 'availabilityMonth'])
-        ->name('agendarcita.availabilityMonth');
-});
+Route::get('/agendar-cita/availability-month', [AgendarCitaPublicController::class, 'availabilityMonth'])
+    ->name('agendarcita.availabilityMonth');
 
 // ===========================================================
 // Webhook Stripe (producción & más seguro)
@@ -128,7 +127,9 @@ Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'
 // =============================
 Route::prefix('admin')->name('admin.')->group(function () {
     // AJAX para crear categoría desde el formulario de servicios
-    Route::post('/categoriaservicios/ajax', [CategoriaServicioController::class, 'storeAjax'])->name('categoriaservicios.ajax');
+    Route::post('/categoriaservicios/ajax', [CategoriaServicioController::class, 'storeAjax'])
+        ->middleware('auth')
+        ->name('categoriaservicios.ajax');
 
     Route::get('/home', [DashboardCitasController::class, 'index'])
         ->name('dashboard')
@@ -198,10 +199,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [CategoriaServicioController::class, 'index'])->name('index');
         Route::get('/create', [CategoriaServicioController::class, 'create'])->name('create');
         Route::post('/', [CategoriaServicioController::class, 'store'])->name('store');
-        Route::get('/{categoria}', [CategoriaServicioController::class, 'show'])->name('show');
-        Route::get('/{categoria}/edit', [CategoriaServicioController::class, 'edit'])->name('edit');
-        Route::put('/{categoria}', [CategoriaServicioController::class, 'update'])->name('update');
-        Route::delete('/{categoria}', [CategoriaServicioController::class, 'destroy'])->name('destroy');
+        // Evita colisiones con rutas literales como /ajax
+        Route::get('/{categoria}', [CategoriaServicioController::class, 'show'])->whereNumber('categoria')->name('show');
+        Route::get('/{categoria}/edit', [CategoriaServicioController::class, 'edit'])->whereNumber('categoria')->name('edit');
+        Route::put('/{categoria}', [CategoriaServicioController::class, 'update'])->whereNumber('categoria')->name('update');
+        Route::delete('/{categoria}', [CategoriaServicioController::class, 'destroy'])->whereNumber('categoria')->name('destroy');
     });
 
     Route::resource('productos', ProductoController::class)->middleware('auth');

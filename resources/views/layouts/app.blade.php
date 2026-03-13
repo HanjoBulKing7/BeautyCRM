@@ -419,8 +419,11 @@
   <!-- ✅ Sidebar -->
   <nav id="sidebar" class="sidebar w-64 flex-shrink-0 flex flex-col justify-between fixed left-0 top-0 h-screen overflow-y-auto z-40">
     <div>
-      <div class="p-4 flex items-center justify-center">
+      <div class="p-4 flex flex-col items-center justify-center gap-1">
         <img src="{{ asset('iconos/logo.png') }}" alt="Logo" class="h-12">
+        <a href="{{ url('/home') }}" class="text-[10px] font-light text-gray-500 hover:text-[rgba(201,162,74,1)] transition-colors">
+          ver pagina web
+        </a>
       </div>
 
       <div class="p-4">

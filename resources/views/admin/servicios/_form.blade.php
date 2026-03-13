@@ -317,7 +317,7 @@ async function guardarCategoria() {
     btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...';
 
     try {
-        const response = await fetch("{{ url('/admin/categoriaservicios/ajax') }}", {
+        const response = await fetch("{{ route('admin.categoriaservicios.ajax') }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

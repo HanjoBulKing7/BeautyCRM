@@ -221,7 +221,7 @@ async function guardarCategoriaProd() {
 
     try {
         // NOTA: Verifica si esta URL es la correcta para productos o si comparten la misma tabla.
-        const response = await fetch("{{ url('/admin/categoriaservicios/ajax') }}", {
+        const response = await fetch("{{ route('admin.categoriaservicios.ajax') }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

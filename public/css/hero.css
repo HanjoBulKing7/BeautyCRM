@@ -335,6 +335,43 @@ video {
 }
 
 /* ===========================
+   GUEST ACTIONS (Login / Agendar)
+   =========================== */
+.Normal-guest-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.Normal-guest-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--normal-gray);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.Normal-guest-link:hover {
+    color: var(--normal-gold);
+}
+
+.Normal-guest-link.active {
+    color: var(--normal-gold);
+    font-weight: 600;
+}
+
+.Normal-guest-link .bx {
+    font-size: 20px;
+}
+
+.Normal-guest-divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(107, 114, 128, 0.45);
+}
+
+/* ===========================
    DESKTOP (>= 992px)
    - oculta burger
    - menú inline
@@ -476,6 +513,22 @@ video {
     .Normal-menu-footer-cta:hover {
         color: var(--normal-gold);
         border-color: rgba(184, 134, 11, 0.4);
+    }
+
+    .Normal-guest-actions--mobile {
+        display: inline-flex;
+        width: auto;
+        min-width: 220px;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(184, 134, 11, 0.28);
+        background: rgba(255, 255, 255, 0.92);
+    }
+
+    .Normal-guest-actions--mobile .Normal-guest-divider {
+        background: rgba(55, 65, 81, 0.35);
     }
 
     /* En móvil ocultamos el CTA desktop (el de arriba derecha) */
@@ -661,7 +714,7 @@ video {
 /* Opcional: underline efecto en desktop */
 @media (min-width: 992px) {
     .Normal-menu-link.active::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: -4px;
         left: 0;
@@ -693,7 +746,7 @@ video {
         margin: 0;
         z-index: 10;
     }
-    
+
     .Normal-menu-header .Normal-brand img {
         height: 44px;
         width: auto;
