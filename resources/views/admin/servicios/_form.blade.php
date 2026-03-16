@@ -90,7 +90,7 @@
                 <div class="flex items-center gap-4">
                     <input type="file" name="imagen" id="imagenInput" accept="image/*" class="bb-input text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[rgba(201,162,74,.1)] file:text-[rgba(201,162,74,1)] hover:file:bg-[rgba(201,162,74,.2)] flex-1 h-[88px]">
                     
-                    <img id="imagenPreview" src="{{ isset($servicio) && $servicio->imagen ? asset('storage/' . ltrim($servicio->imagen, '/')) : '' }}" class="{{ isset($servicio) && $servicio->imagen ? '' : 'hidden' }} w-16 h-16 rounded-full border-2 border-[rgba(201,162,74,.5)] shadow-md object-cover flex-shrink-0">
+                    <img id="imagenPreview" src="{{ !empty($servicio->imagen_url) ? $servicio->imagen_url : '' }}" class="{{ !empty($servicio->imagen_url) ? '' : 'hidden' }} w-16 h-16 rounded-full border-2 border-[rgba(201,162,74,.5)] shadow-md object-cover flex-shrink-0">
                 </div>
             </div>
 

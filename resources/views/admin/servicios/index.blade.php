@@ -64,8 +64,8 @@
                         <tr class="hover:bg-white/40 transition-colors group">
                             <td class="py-4 px-4">
                                 <div class="flex items-center gap-4">
-                                    @if(!empty($servicio->imagen))
-                                        <img src="{{ asset('storage/' . $servicio->imagen) }}" alt="Foto" class="w-14 h-14 rounded-2xl object-cover shadow-sm border border-gray-100">
+                                    @if(!empty($servicio->imagen_url))
+                                        <img src="{{ $servicio->imagen_url }}" alt="Foto" class="w-14 h-14 rounded-2xl object-cover shadow-sm border border-gray-100">
                                     @else
                                         <div class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,8 +134,8 @@
             @php $sid = $servicio->id_servicio ?? $servicio->id; @endphp
             <div class="bb-glass-card rounded-[2rem] p-5">
                 <div class="flex items-start gap-4">
-                    @if(!empty($servicio->imagen))
-                        <img src="{{ asset('storage/' . $servicio->imagen) }}" alt="Foto" class="w-16 h-16 rounded-2xl object-cover shadow-sm border border-white">
+                    @if(!empty($servicio->imagen_url))
+                        <img src="{{ $servicio->imagen_url }}" alt="Foto" class="w-16 h-16 rounded-2xl object-cover shadow-sm border border-white">
                     @else
                         <div class="w-16 h-16 rounded-2xl bg-gray-100 flex shrink-0 items-center justify-center text-gray-400 border border-white shadow-sm">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

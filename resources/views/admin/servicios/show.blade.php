@@ -33,11 +33,11 @@
     <div class="p-6 space-y-6">
 
         {{-- Imagen del servicio --}}
-        @if(!empty($servicio->imagen))
+        @if(!empty($servicio->imagen_url))
             <div class="flex justify-center">
                 <div class="w-[320px] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white">
                     <img
-                        src="{{ asset('storage/' . $servicio->imagen) }}"
+                        src="{{ $servicio->imagen_url }}"
                         alt="Foto del servicio {{ $servicio->nombre_servicio }}"
                         class="w-full h-[180px] object-cover"
                         loading="lazy"

@@ -21,6 +21,7 @@ use App\Http\Controllers\DashboardCitasController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use App\Http\Controllers\MisReservasController;
 use App\Http\Controllers\CuponController;
+use App\Http\Controllers\PublicMediaController;
 
 // ✅ ROOT: siempre manda a Home pública
 Route::get('/', function () {
@@ -32,6 +33,10 @@ Route::get('/', function () {
 // =============================
 Route::get('/home', [HomeController::class, 'index'])
     ->name('cliente.home');
+
+Route::get('/media/public/{path}', [PublicMediaController::class, 'show'])
+    ->where('path', '.*')
+    ->name('media.public');
 
 Route::view('/galeria', 'galeria')->name('galeria');
 Route::view('/nosotros', 'nosotros')->name('nosotros');

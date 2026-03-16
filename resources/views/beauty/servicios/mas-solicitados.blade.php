@@ -9,15 +9,35 @@
         @php
           $precioFinal = max(0, (float)($item->precio ?? 0) - (float)($item->descuento ?? 0));
 
-          $img = $item->imagen ?? null;
-          if ($img) {
-              if (\Illuminate\Support\Str::startsWith($img, ['images/', '/images/'])) {
-                  $imgSrc = asset(ltrim($img, '/'));
+          $imgSrc = asset('images/Beige Blogger Moderna Personal Sitio web.png');
+          $imgCandidate = $item->imagen_url ?? null;
+
+          if (!$imgCandidate) {
+            $img = (string)($item->imagen ?? '');
+
+            if ($img !== '') {
+              if (\Illuminate\Support\Str::startsWith($img, ['http://', 'https://'])) {
+                $imgCandidate = $img;
+              } elseif (\Illuminate\Support\Str::startsWith($img, ['images/', '/images/'])) {
+                $imgCandidate = asset(ltrim($img, '/'));
               } else {
-                  $imgSrc = asset('storage/' . ltrim($img, '/'));
+                $path = ltrim($img, '/');
+                if (\Illuminate\Support\Str::startsWith($path, 'storage/')) {
+                  $path = substr($path, 8);
+                }
+
+                $publicStoragePath = public_path('storage');
+                if (is_link($publicStoragePath) || is_dir($publicStoragePath)) {
+                  $imgCandidate = asset('storage/' . $path);
+                } else {
+                  $imgCandidate = route('media.public', ['path' => $path]);
+                }
               }
-          } else {
-              $imgSrc = asset('images/Beige Blogger Moderna Personal Sitio web.png');
+            }
+          }
+
+          if (!empty($imgCandidate)) {
+            $imgSrc = $imgCandidate;
           }
         @endphp
 

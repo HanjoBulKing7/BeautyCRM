@@ -22,13 +22,8 @@
     $fallbackImg = asset('images/Beige Blogger Moderna Personal Sitio web.png');
 
     $imgSrc = $fallbackImg;
-    if ($principal && $principal->imagen) {
-        $img = $principal->imagen;
-        if (\Illuminate\Support\Str::startsWith($img, ['images/', '/images/'])) {
-            $imgSrc = asset(ltrim($img, '/'));
-        } else {
-            $imgSrc = asset('storage/' . ltrim($img, '/'));
-        }
+    if ($principal && $principal->imagen_url) {
+      $imgSrc = $principal->imagen_url;
     }
 
     $features = [];
