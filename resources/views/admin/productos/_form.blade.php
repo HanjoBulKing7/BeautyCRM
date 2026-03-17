@@ -94,8 +94,8 @@
                     </div>
                     
                     <div class="relative flex-shrink-0">
-                        <img id="productoImagenPreview" src="{{ !empty($producto->imagen) ? asset('storage/' . $producto->imagen) : '' }}" class="{{ !empty($producto->imagen) ? '' : 'hidden' }} w-20 h-20 rounded-2xl border-2 border-[rgba(201,162,74,.5)] shadow-md object-cover">
-                        <div id="productoImagenPlaceholder" class="{{ !empty($producto->imagen) ? 'hidden' : 'flex' }} w-20 h-20 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 items-center justify-center text-gray-400">
+                        <img id="productoImagenPreview" src="{{ !empty($producto->imagen_url) ? $producto->imagen_url : '' }}" class="{{ !empty($producto->imagen_url) ? '' : 'hidden' }} w-20 h-20 rounded-2xl border-2 border-[rgba(201,162,74,.5)] shadow-md object-cover">
+                        <div id="productoImagenPlaceholder" class="{{ !empty($producto->imagen_url) ? 'hidden' : 'flex' }} w-20 h-20 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 items-center justify-center text-gray-400">
                             <i class="fas fa-image text-xl"></i>
                         </div>
                     </div>
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Mostrar el botón de limpiar si ya hay imagen cargada desde el backend
-    @if(!empty($producto->imagen))
+    @if(!empty($producto->imagen_url))
         clearBtn.classList.remove('hidden');
     @endif
 
@@ -181,8 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
             input.value = '';
-            @if(!empty($producto->imagen))
-                showPreview("{{ asset('storage/' . $producto->imagen) }}");
+            @if(!empty($producto->imagen_url))
+                showPreview("{{ $producto->imagen_url }}");
                 clearBtn.classList.add('hidden'); // Ocultar porque volvió a la original
             @else
                 showPlaceholder();

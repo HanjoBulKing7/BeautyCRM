@@ -25,11 +25,11 @@
     <div class="p-6 space-y-6">
 
         {{-- ✅ Imagen (idéntico a Categorías) --}}
-        @if(!empty($producto->imagen))
+        @if(!empty($producto->imagen_url))
             <div class="flex justify-center">
                 <div class="w-[320px] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white">
                     <img
-                        src="{{ asset('storage/' . $producto->imagen) }}"
+                        src="{{ $producto->imagen_url }}"
                         alt="Foto del producto {{ $producto->nombre }}"
                         class="w-full h-[180px] object-cover"
                         loading="lazy"

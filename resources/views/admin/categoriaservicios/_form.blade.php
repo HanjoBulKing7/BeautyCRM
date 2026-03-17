@@ -74,9 +74,9 @@
                     </div>
 
                     <div class="relative flex-shrink-0">
-                        @php $tieneImagen = isset($categoria) && $categoria->imagen; @endphp
+                        @php $tieneImagen = !empty($categoria->imagen_url ?? null); @endphp
                         
-                        <img id="catImagenPreview" src="{{ $tieneImagen ? asset('storage/' . ltrim($categoria->imagen, '/')) : '' }}" class="{{ $tieneImagen ? '' : 'hidden' }} w-28 md:w-32 aspect-video rounded-xl border-2 border-[rgba(201,162,74,.5)] shadow-sm object-cover">
+                        <img id="catImagenPreview" src="{{ $tieneImagen ? $categoria->imagen_url : '' }}" class="{{ $tieneImagen ? '' : 'hidden' }} w-28 md:w-32 aspect-video rounded-xl border-2 border-[rgba(201,162,74,.5)] shadow-sm object-cover">
                         
                         <div id="catImagenPlaceholder" class="{{ $tieneImagen ? 'hidden' : 'flex' }} w-28 md:w-32 aspect-video rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 items-center justify-center text-gray-400">
                             <i class="fas fa-image text-xl"></i>
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
         clearBtn.addEventListener('click', () => {
             input.value = '';
             @if($tieneImagen)
-                showPreview("{{ asset('storage/' . ltrim($categoria->imagen, '/')) }}");
+                showPreview("{{ $categoria->imagen_url }}");
                 clearBtn.classList.add('hidden');
             @else
                 showPlaceholder();

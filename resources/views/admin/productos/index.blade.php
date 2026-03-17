@@ -78,8 +78,8 @@
                         <tr class="hover:bg-white/40 transition-colors group">
                             <td class="py-4 px-4">
                                 <div class="flex items-center gap-4">
-                                    @if(!empty($p->imagen))
-                                        <img src="{{ asset('storage/' . $p->imagen) }}" alt="Foto" class="w-14 h-14 rounded-2xl object-cover shadow-sm border border-gray-100 shrink-0">
+                                    @if(!empty($p->imagen_url))
+                                        <img src="{{ $p->imagen_url }}" alt="Foto" class="w-14 h-14 rounded-2xl object-cover shadow-sm border border-gray-100 shrink-0">
                                     @else
                                         <div class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-[rgba(201,162,74,0.8)] border border-gray-200 shrink-0">
                                             <i class="fas fa-box text-xl"></i>
@@ -160,8 +160,8 @@
         @forelse($productos as $p)
             <div class="bb-glass-card rounded-[2rem] p-5">
                 <div class="flex items-start gap-4">
-                    @if(!empty($p->imagen))
-                        <img src="{{ asset('storage/' . $p->imagen) }}" alt="Foto" class="w-20 h-20 rounded-2xl object-cover shadow-sm border border-white shrink-0">
+                    @if(!empty($p->imagen_url))
+                        <img src="{{ $p->imagen_url }}" alt="Foto" class="w-20 h-20 rounded-2xl object-cover shadow-sm border border-white shrink-0">
                     @else
                         <div class="w-20 h-20 rounded-2xl bg-gray-100 flex shrink-0 items-center justify-center text-[rgba(201,162,74,0.8)] border border-white shadow-sm">
                             <i class="fas fa-box text-2xl"></i>

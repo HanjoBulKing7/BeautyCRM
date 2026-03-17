@@ -78,8 +78,8 @@
                         <tr class="hover:bg-white/40 transition-colors group">
                             <td class="py-4 px-4">
                                 <div class="flex items-center gap-4">
-                                    @if(!empty($categoria->imagen))
-                                        <img src="{{ asset('storage/' . $categoria->imagen) }}" alt="Foto" class="w-20 aspect-video rounded-xl object-cover shadow-sm border border-gray-100">
+                                    @if(!empty($categoria->imagen_url))
+                                        <img src="{{ $categoria->imagen_url }}" alt="Foto" class="w-20 aspect-video rounded-xl object-cover shadow-sm border border-gray-100">
                                     @else
                                         <div class="w-20 aspect-video rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,8 +147,8 @@
         @forelse($categorias as $categoria)
             <div class="bb-glass-card rounded-[2rem] p-5">
                 <div class="flex items-start gap-4">
-                    @if(!empty($categoria->imagen))
-                        <img src="{{ asset('storage/' . $categoria->imagen) }}" alt="Foto" class="w-24 aspect-video rounded-xl object-cover shadow-sm border border-white shrink-0">
+                    @if(!empty($categoria->imagen_url))
+                        <img src="{{ $categoria->imagen_url }}" alt="Foto" class="w-24 aspect-video rounded-xl object-cover shadow-sm border border-white shrink-0">
                     @else
                         <div class="w-24 aspect-video rounded-xl bg-gray-100 flex shrink-0 items-center justify-center text-gray-400 border border-white shadow-sm">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -33,11 +33,11 @@
     <div class="p-6 space-y-6">
 
         {{-- Imagen --}}
-        @if(!empty($categoria->imagen))
+        @if(!empty($categoria->imagen_url))
             <div class="flex justify-center">
                 <div class="w-[320px] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white">
                     <img
-                        src="{{ asset('storage/' . $categoria->imagen) }}"
+                        src="{{ $categoria->imagen_url }}"
                         alt="Foto de la categoría {{ $categoria->nombre }}"
                         class="w-full h-[180px] object-cover"
                         loading="lazy"

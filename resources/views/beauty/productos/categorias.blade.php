@@ -13,8 +13,8 @@
 
                                 <div class="bb-svcCard__img">
                                     <img
-                                        src="{{ $producto->imagen
-                                            ? asset('storage/'.$producto->imagen)
+                                        src="{{ $producto->imagen_url
+                                            ? $producto->imagen_url
                                             : asset('images/Beige Blogger Moderna Personal Sitio web.png') }}"
                                         alt="{{ $producto->nombre }}"
                                     >
