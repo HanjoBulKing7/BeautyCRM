@@ -1,7 +1,13 @@
 @csrf
 
 <style>
-    /* Efecto Glass Premium y utilidades (Mismo de servicios/productos) */
+    /* Efecto Glass Premium y utili            <div>
+                <label class="block text-sm font-medium mb-2 text-gray-700 ml-1">Teléfono</label>
+                <input type="tel" name="telefono" value="{{ old('telefono', $cliente->telefono ?? '') }}" inputmode="tel" autocomplete="tel" class="bb-input" placeholder="Número de contacto">
+                @error('telefono') <p class="text-red-500 text-xs ml-1 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+        </div>de servicios/productos) */
     .bb-glass-card {
         background: rgba(255, 255, 255, 0.65);
         backdrop-filter: blur(16px);
@@ -54,97 +60,9 @@
                 @error('telefono') <p class="text-red-500 text-xs ml-1 mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium mb-2 text-gray-700 ml-1">Dirección</label>
-                <textarea name="direccion" rows="2" class="bb-input resize-none h-[88px]" placeholder="Dirección completa del cliente (Opcional)">{{ old('direccion', $cliente->direccion ?? '') }}</textarea>
-                @error('direccion') <p class="text-red-500 text-xs ml-1 mt-1">{{ $message }}</p> @enderror
-            </div>
+          
 
         </div>
-    </div>
-
-    <!-- Fecha de Nacimiento (para descuento de cumpleaños) -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-birthday-cake mr-2" style="color: rgba(201,162,74,.92)"></i>Fecha de Nacimiento
-        </label>
-
-        <input
-            type="date"
-            name="fecha_nacimiento"
-            value="{{ old('fecha_nacimiento', $cliente->fecha_nacimiento ?? '') }}"
-            class="w-full border border-gray-300 rounded-lg p-3 bg-white
-                   focus:outline-none focus:ring-2 focus:ring-[#C9A24D]/30 focus:border-[#C9A24D]
-                   transition"
-            required
-            placeholder="ejemplo@correo.com"
-        >
-
-        @error('email')
-            <p class="text-red-600 text-sm mt-2"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
-        @enderror
-    </div>
-
-    <!-- Teléfono -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-phone mr-2" style="color: rgba(201,162,74,.92)"></i>Teléfono
-        </label>
-
-        <input
-        type="tel"
-        name="telefono"
-        value="{{ old('telefono', $cliente->telefono ?? '') }}"
-        inputmode="tel"
-        autocomplete="tel"
-        class="..."
-        placeholder="Número de teléfono"
-        >
-
-        @error('telefono')
-            <p class="text-red-600 text-sm mt-2"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
-        @enderror
-    </div>
-
-    <!-- Dirección -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-map-marker-alt mr-2" style="color: rgba(201,162,74,.92)"></i>Dirección
-        </label>
-
-        <textarea
-            name="direccion"
-            rows="3"
-            class="w-full border border-gray-300 rounded-lg p-3 bg-white
-                   focus:outline-none focus:ring-2 focus:ring-[#C9A24D]/30 focus:border-[#C9A24D]
-                   transition"
-            placeholder="Dirección completa del cliente"
-        >{{ old('direccion', $cliente->direccion ?? '') }}</textarea>
-
-        @error('direccion')
-            <p class="text-red-600 text-sm mt-2"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
-        @enderror
-    </div>
-
-    <!-- Fecha de Nacimiento (para descuento de cumpleaños) -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <label class="block text-sm font-medium mb-2 text-gray-700">
-            <i class="fas fa-birthday-cake mr-2" style="color: rgba(201,162,74,.92)"></i>Fecha de Nacimiento
-        </label>
-
-        <input
-            type="date"
-            name="fecha_nacimiento"
-            value="{{ old('fecha_nacimiento', $cliente->fecha_nacimiento ?? '') }}"
-            class="w-full border border-gray-300 rounded-lg p-3 bg-white
-                   focus:outline-none focus:ring-2 focus:ring-[#C9A24D]/30 focus:border-[#C9A24D]
-                   transition"
-            placeholder="Fecha de nacimiento"
-        >
-
-        @error('fecha_nacimiento')
-            <p class="text-red-600 text-sm mt-2"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
-        @enderror
     </div>
 
 </div>

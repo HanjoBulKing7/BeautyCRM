@@ -185,3 +185,10 @@ body {
         padding: 14px 0;
     }
 }
+
+.Normal-guest-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--normal-menu-block-link-color, #e5e7eb);
+  opacity: 0.5;
+}

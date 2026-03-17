@@ -34,8 +34,6 @@ class ClienteController extends Controller
             'nombre'    => 'required|string|max:255',
             'email'     => 'required|email|unique:users,email',
             'telefono'  => 'nullable|string|max:255',
-            'direccion' => 'nullable|string',
-            'fecha_nacimiento' => 'nullable|date',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -51,8 +49,6 @@ class ClienteController extends Controller
                 'nombre'    => $request->nombre,
                 'email'     => $request->email,
                 'telefono'  => $request->telefono,
-                'direccion' => $request->direccion,
-                'fecha_nacimiento' => $request->fecha_nacimiento,
             ]);
         });
 

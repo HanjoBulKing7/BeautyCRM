@@ -107,11 +107,7 @@
 
     {{-- PASO 1: SERVICIOS Y STAFF (Ahora es el protagonista) --}}
     <div class="bg-gray-50/50 border border-gray-100 rounded-xl p-4">
-        <h2 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 uppercase tracking-wide">
-            <span class="w-6 h-6 rounded-full bg-[rgba(201,162,74,0.2)] text-[rgba(201,162,74,1)] flex items-center justify-center text-xs">1</span>
-            Servicios y Empleado
-        </h2>
-        
+  
         @include('admin.citas.partials._servicios_rows', [
             'mode' => $mode,
             'cita' => $cita,
@@ -237,9 +233,20 @@
         <a href="{{ route('admin.citas.index') }}" class="px-5 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition">
             Cancelar
         </a>
-        <button type="submit" class="px-5 py-2 text-sm rounded-md font-bold transition shadow-sm bg-[rgba(201,162,74,1)] text-white hover:bg-[rgba(180,140,60,1)]">
-            {{ $mode === 'edit' ? 'Actualizar Cita' : 'Crear Cita' }}
-        </button>
+<button type="submit"
+        class="px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+        style="
+            background: linear-gradient(135deg, var(--bb-gold), var(--bb-gold-2));
+            border: 1px solid rgba(201,162,74,.35);
+            box-shadow: 0 10px 22px rgba(201,162,74,.18);
+            color: #111827;
+        "
+        onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
+        onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
+>
+    <i class="fas fa-save" style="color: rgba(17,24,39,.90)"></i>
+    {{ $mode === 'edit' ? 'Actualizar Cita' : 'Crear Cita' }}
+</button>
     </div>
 </form>
 
