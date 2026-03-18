@@ -14,7 +14,7 @@
 @section('content')
     @include('beauty.partials.whatsapp-icon')
     @include('beauty.partials.header')
-    @include('beauty.heroservicios')
+    @include('beauty.servicios.heroservicios')
 
     @include('beauty.servicios.menu-servicios')
     @include('beauty.servicios.mas-solicitados')

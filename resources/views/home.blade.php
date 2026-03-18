@@ -15,12 +15,12 @@
   @include('beauty.partials.whatsapp-icon')
   @include('beauty.partials.header')
 
-  @include('beauty.homehero')
-  @include('beauty.people')
-  @include('beauty.app-metrics')
-  @include('beauty.imagenes')
-  @include('beauty.resenas')
-  @include('beauty.donde-encontrarnos')
+  @include('beauty.home.homehero')
+  @include('beauty.home.people')
+  @include('beauty.home.app-metrics')
+  @include('beauty.home.servicioshome')
+  @include('beauty.home.resenas')
+  @include('beauty.home.donde-encontrarnos')
 
   @include('beauty.partials.footer')
 @endsection

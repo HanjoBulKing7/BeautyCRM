@@ -7,8 +7,8 @@
 
     @include('beauty.partials.whatsapp-icon')
     @include('beauty.partials.header')
-    @include('beauty.scrollNormal-module')
-    @include('beauty.principal')
+    @include('beauty.nosotros.scrollNormal-module')
+    @include('beauty.nosotros.principal')
     @include('beauty.partials.footer')
     
 

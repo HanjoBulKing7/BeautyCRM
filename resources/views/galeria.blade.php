@@ -10,9 +10,9 @@
 @section('content')
     @include('beauty.partials.whatsapp-icon')
     @include('beauty.partials.header')
-    @include('beauty.homehero')
-    @include('beauty.scrollHorizontal-module')
-    @include('beauty.Galeria')
+    @include('beauty.home.homehero')
+    @include('beauty.galeria.scrollHorizontal-module')
+    @include('beauty.galeria.Galeria')
 
     
     @include('beauty.partials.footer')
