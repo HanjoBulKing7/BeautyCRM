@@ -19,25 +19,30 @@
         </p>
       </div>
 
-      <div class="bb-people__hero js-reveal"
+      <div class="bb-people__top-promoted js-reveal"
            data-aos="fade-left"
            data-aos-duration="1000"
            data-aos-offset="200"
            data-aos-once="true">
-        <img
-          src="{{ asset('images/download-2025-12-16T00_07_16.jpg') }}"
-          alt="Experiencia en Beauty Bonita Studio"
-          loading="lazy"
-        >
+           
+        <a href="{{ url('/agendar-cita') }}" class="bb-people__nav-card bb-card--promoted js-card">
+          <div class="bb-people__img-wrap">
+            <img src="{{ asset('images/agendar.webp') }}" alt="Agendar Cita" loading="lazy">
+          </div>
+          <div class="bb-people__card-info">
+            <span class="bb-people__card-title">Agendar Cita</span>
+            <span class="bb-people__card-arrow">&rarr;</span>
+          </div>
+        </a>
       </div>
     </div>
 
     <div class="bb-people__bottom">
       
-      <a href="{{ url('/nosotros') }}" class="bb-people__nav-card js-card"
+      <a href="{{ url('/nosotros') }}" class="bb-people__nav-card bb-item--nosotros js-card"
          data-aos="fade-up" data-aos-duration="800" data-aos-offset="150" data-aos-once="true">
         <div class="bb-people__img-wrap">
-          <img src="{{ asset('images/Peinado.png') }}" alt="Conócenos" loading="lazy">
+          <img src="{{ asset('images/nosotros.webp') }}" alt="Conócenos" loading="lazy">
         </div>
         <div class="bb-people__card-info">
           <span class="bb-people__card-title">Nosotros</span>
@@ -45,10 +50,10 @@
         </div>
       </a>
 
-      <a href="{{ url('/servicio') }}" class="bb-people__nav-card js-card"
+      <a href="{{ url('/servicio') }}" class="bb-people__nav-card bb-item--servicios js-card"
          data-aos="fade-up" data-aos-duration="800" data-aos-delay="100" data-aos-offset="150" data-aos-once="true">
         <div class="bb-people__img-wrap">
-          <img src="{{ asset('images/Uñas2.jpg') }}" alt="Nuestros Servicios" loading="lazy">
+          <img src="{{ asset('images/servicios.webp') }}" alt="Nuestros Servicios" loading="lazy">
         </div>
         <div class="bb-people__card-info">
           <span class="bb-people__card-title">Servicios</span>
@@ -56,24 +61,13 @@
         </div>
       </a>
 
-      <a href="{{ url('/galeria') }}" class="bb-people__nav-card js-card"
+      <a href="{{ url('/galeria') }}" class="bb-people__nav-card bb-item--galeria js-card"
          data-aos="fade-up" data-aos-duration="800" data-aos-delay="200" data-aos-offset="150" data-aos-once="true">
         <div class="bb-people__img-wrap">
-          <img src="{{ asset('images/servicios/faciales.jpg') }}" alt="Galería de trabajos" loading="lazy">
+          <img src="{{ asset('images/galeria.webp') }}" alt="Galería de trabajos" loading="lazy">
         </div>
         <div class="bb-people__card-info">
           <span class="bb-people__card-title">Galería</span>
-          <span class="bb-people__card-arrow">&rarr;</span>
-        </div>
-      </a>
-
-      <a href="{{ url('/agendarcita') }}" class="bb-people__nav-card js-card"
-         data-aos="fade-up" data-aos-duration="800" data-aos-delay="300" data-aos-offset="150" data-aos-once="true">
-        <div class="bb-people__img-wrap">
-          <img src="{{ asset('images/Peinado2.png') }}" alt="Agendar Cita" loading="lazy">
-        </div>
-        <div class="bb-people__card-info">
-          <span class="bb-people__card-title">Agendar Cita</span>
           <span class="bb-people__card-arrow">&rarr;</span>
         </div>
       </a>
@@ -95,7 +89,7 @@
     margin: 0 auto;
   }
 
-  /* --- PARTE SUPERIOR --- */
+  /* --- PARTE SUPERIOR (Flex) --- */
   .bb-people__top {
     display: flex;
     flex-wrap: wrap;
@@ -129,44 +123,61 @@
     font-weight: 600;
   }
 
-  .bb-people__hero {
+  .bb-people__top-promoted {
     flex: 1 1 400px;
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+    background: #fff;
   }
 
-  .bb-people__hero img {
-    width: 100%;
-    height: auto;
-    display: block;
-    object-fit: cover;
+  .bb-card--promoted.bb-people__nav-card {
+    height: 100%;
+    margin-bottom: 0;
   }
 
-  /* --- PARTE INFERIOR --- */
+  .bb-card--promoted .bb-people__img-wrap {
+    margin-bottom: 0;
+    border-radius: 0;
+    aspect-ratio: 16 / 10;
+  }
+  
+  .bb-card--promoted .bb-people__card-info {
+    padding: 20px;
+  }
+
+  /* --- PARTE INFERIOR (Grid 3 columnas Escritorio) --- */
   .bb-people__bottom {
     display: grid;
-    /* En escritorio forzamos 4 columnas en 1 sola fila */
-    grid-template-columns: repeat(4, 1fr);
-    gap: 25px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
   }
 
+  /* --- ESTILOS BASE DE TARJETAS --- */
   .bb-people__nav-card {
     display: flex;
     flex-direction: column;
     text-decoration: none;
+    background: #fff;
+    transition: transform 0.3s ease;
+    height: 100%; /* Forzamos a que llene la celda */
   }
 
   .bb-people__img-wrap {
     width: 100%;
-    aspect-ratio: 4 / 5;
+    flex: 1 1 auto; /* Permite que el contenedor crezca y ocupe el espacio */
+    aspect-ratio: 4 / 3;
     border-radius: 16px;
     overflow: hidden;
     margin-bottom: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    position: relative;
   }
 
   .bb-people__img-wrap img {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -178,6 +189,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 5px;
+    flex-shrink: 0; /* Evita que el texto se apachurre */
   }
 
   .bb-people__card-title {
@@ -197,46 +209,64 @@
   }
 
   /* --- EFECTOS HOVER --- */
-  .bb-people__nav-card:hover .bb-people__img-wrap img {
-    transform: scale(1.08);
-  }
-
-  .bb-people__nav-card:hover .bb-people__card-title {
-    color: #8e6708;
-  }
-
-  .bb-people__nav-card:hover .bb-people__card-arrow {
-    transform: translateX(8px);
-  }
+  .bb-people__nav-card:hover .bb-people__img-wrap img { transform: scale(1.08); }
+  .bb-people__nav-card:hover .bb-people__card-title { color: #8e6708; }
+  .bb-people__nav-card:hover .bb-people__card-arrow { transform: translateX(8px); }
 
   /* --- RESPONSIVO --- */
-  @media (max-width: 900px) {
+  @media (max-width: 992px) {
+    .bb-people__bottom { gap: 20px; }
+  }
+
+  @media (max-width: 768px) {
     .bb-people { padding: 50px 15px; }
-    .bb-people__title { font-size: 2rem; }
-    
-    /* Cambiamos el comportamiento a un carrusel deslizable en lugar de apilar hacia abajo */
+    .bb-people__title { font-size: 2.2rem; }
+    .bb-people__top { gap: 30px; margin-bottom: 40px; }
+
+    /* En móvil, la de Cita arriba es más cuadradita */
+    .bb-card--promoted .bb-people__img-wrap { aspect-ratio: 4 / 3; }
+
+    /* COLLAGE PARA CELULARES (Las 3 de abajo) */
     .bb-people__bottom {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding-bottom: 15px;
+      grid-template-columns: repeat(2, 1fr); /* 2 Columnas */
+      grid-auto-rows: 150px; /* Altura de la celda */
       gap: 15px;
     }
 
-    .bb-people__nav-card {
-      flex: 0 0 45%; /* En tablet ocupa casi la mitad */
-      scroll-snap-align: start;
+    .bb-item--nosotros {
+      grid-column: 1 / 2;
+      grid-row: 1 / 3; /* Ocupa el lado izquierdo completo (alta) */
+    }
+
+    .bb-item--servicios {
+      grid-column: 2 / 3;
+      grid-row: 1 / 2; /* Ocupa arriba a la derecha */
+    }
+
+    .bb-item--galeria {
+      grid-column: 2 / 3;
+      grid-row: 2 / 3; /* Ocupa abajo a la derecha */
+    }
+
+    /* FIX DE LAS IMÁGENES: Quitamos el aspect ratio pero obligamos a llenar el 100% */
+    .bb-people__bottom .bb-people__img-wrap {
+      aspect-ratio: unset; /* En lugar de auto, lo anulamos */
+      height: 100%; /* Toma todo el espacio sobrante de la celda */
+      margin-bottom: 8px;
     }
   }
 
-  @media (max-width: 600px) {
-    .bb-people__nav-card {
-      flex: 0 0 70%; /* En celular se ve una entera y un pedazo de la siguiente para invitar al scroll */
+  @media (max-width: 480px) {
+    .bb-people__title { font-size: 1.8rem; letter-spacing: 3px; }
+    
+    /* Hacemos el collage un poco más compacto en pantallas muy chicas */
+    .bb-people__bottom {
+      grid-auto-rows: 130px;
+      gap: 10px;
     }
     
-    .bb-people__card-title {
-      font-size: 0.85rem;
-    }
+    /* Reducimos la letra en el collage para que quepa bien */
+    .bb-people__card-title { font-size: 0.75rem; letter-spacing: 1px; }
+    .bb-people__card-arrow { font-size: 1.2rem; }
   }
 </style>

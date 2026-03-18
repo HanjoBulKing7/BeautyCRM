@@ -85,7 +85,8 @@
 
     .salon-popular__grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        /* Modificado aquí: 250px permite que quepan 4 tarjetas en los 1200px del contenedor */
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 30px;
     }
 
