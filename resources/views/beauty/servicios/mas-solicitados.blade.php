@@ -1,83 +1,48 @@
 <section class="salon-popular" id="mas-solicitados">
+    @if(isset($destacados) && $destacados['servicios']->isNotEmpty())
     <div class="salon-popular__container">
         
         <header class="salon-popular__header">
             <span class="salon-popular__eyebrow">Favoritos</span>
-            <h2 class="salon-popular__title">Lo Más Solicitado</h2>
+            <h2 class="salon-popular__title">{{ $destacados['titulo'] }}</h2>
         </header>
 
         <div class="salon-popular__grid">
-            @forelse(($topServicios ?? collect()) as $item)
-                @php
-                    $precioFinal = max(0, (float)($item->precio ?? 0) - (float)($item->descuento ?? 0));
+            @foreach($destacados['servicios'] as $servicio)
+                <article class="salon-popular__card">
+                    <div class="salon-popular__img-wrapper">
+                        @if($servicio->imagen_principal)
+                            <img src="{{ asset('storage/' . $servicio->imagen_principal) }}" alt="{{ $servicio->nombre_servicio }}" loading="lazy">
+                        @else
+                            <img src="https://source.unsplash.com/random/400x300?beauty-salon" alt="Servicio de belleza" loading="lazy">
+                        @endif
+                    </div>
 
-                    $imgSrc = asset('images/Beige Blogger Moderna Personal Sitio web.png');
-                    $imgCandidate = $item->imagen_url ?? null;
+                    <div class="salon-popular__body">
+                        <h4 class="salon-popular__name">{{ $servicio->nombre_servicio }}</h4>
 
-                    if (!$imgCandidate) {
-                        $img = (string)($item->imagen ?? '');
+                        <p class="salon-popular__desc">
+                            {{ \Illuminate\Support\Str::limit($servicio->descripcion ?? 'Servicio profesional de belleza y cuidado personal.', 80) }}
+                        </p>
 
-                        if ($img !== '') {
-                            if (\Illuminate\Support\Str::startsWith($img, ['http://', 'https://'])) {
-                                $imgCandidate = $img;
-                            } elseif (\Illuminate\Support\Str::startsWith($img, ['images/', '/images/'])) {
-                                $imgCandidate = asset(ltrim($img, '/'));
-                            } else {
-                                $path = ltrim($img, '/');
-                                if (\Illuminate\Support\Str::startsWith($path, 'storage/')) {
-                                    $path = substr($path, 8);
-                                }
-
-                                $publicStoragePath = public_path('storage');
-                                if (is_link($publicStoragePath) || is_dir($publicStoragePath)) {
-                                    $imgCandidate = asset('storage/' . $path);
-                                } else {
-                                    $imgCandidate = route('media.public', ['path' => $path]);
-                                }
-                            }
-                        }
-                    }
-
-                    if (!empty($imgCandidate)) {
-                        $imgSrc = $imgCandidate;
-                    }
-                @endphp
-
-                @for ($i = 0; $i < 3; $i++)
-                    <article class="salon-popular__card">
-                        <div class="salon-popular__img-wrapper">
-                            <img src="{{ $imgSrc }}" alt="{{ $item->nombre_servicio }}" loading="lazy">
+                        <div class="salon-popular__meta">
+                            <span class="salon-popular__duration">
+                                ⏱ {{ (int)($servicio->duracion_minutos ?? 0) }} min
+                            </span>
+                            <span class="salon-popular__price">
+                                ${{ number_format($servicio->precio, 2) }}
+                            </span>
                         </div>
 
-                        <div class="salon-popular__body">
-                            <h4 class="salon-popular__name">{{ $item->nombre_servicio }}</h4>
-
-                            <p class="salon-popular__desc">
-                                {{ \Illuminate\Support\Str::limit($item->descripcion ?? 'Servicio profesional de belleza y cuidado personal.', 80) }}
-                            </p>
-
-                            <div class="salon-popular__meta">
-                                <span class="salon-popular__duration">
-                                    ⏱ {{ (int)($item->duracion_minutos ?? 0) }} min
-                                </span>
-                                <span class="salon-popular__price">
-                                    ${{ number_format($precioFinal, 2) }}
-                                </span>
-                            </div>
-
-                            <a class="salon-popular__btn" href="{{ route('agendarcita.create', ['servicio' => $item->id_servicio]) }}">
-                                Agendar Cita
-                            </a>
-                        </div>
-                    </article>
-                @endfor
-                @empty
-                <div class="salon-popular__empty">
-                    <p>Aún no hay servicios para mostrar.</p>
-                </div>
-            @endforelse
+                        <a class="salon-popular__btn" href="{{ route('agendarcita.create', ['servicio' => $servicio->id_servicio]) }}">
+                            Agendar Cita
+                        </a>
+                    </div>
+                </article>
+            @endforeach
         </div>
     </div>
+    @endif
 </section>
 
 <style>

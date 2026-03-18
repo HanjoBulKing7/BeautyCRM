@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="{{ asset('css/beauty/people.css') }}">
   <link rel="stylesheet" href="{{ asset('css/beauty/homehero.css') }}">
   <link rel="stylesheet" href="{{ asset('css/beauty/imagenes.css') }}">
-  <link rel="stylesheet" href="{{ asset('css/beauty/reseñas.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/beauty/resenas.css') }}">
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
 @endpush
 

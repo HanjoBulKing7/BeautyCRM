@@ -1,0 +1,285 @@
+/* resources/css/beauty/reseñas.css */
+
+.reviews-section {
+    padding: 80px 0;
+    overflow: hidden;
+    width: 100%;
+    background-color: #ffffff;
+    font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ===== TÍTULOS (Estilo Homehero) ===== */
+.gallery__most-requested {
+    text-align: center;
+    margin-bottom: clamp(40px, 6vw, 60px);
+    padding: 0 20px;
+}
+
+.gallery__kicker {
+    color: #8e6708; /* Se mantiene tu dorado original para los textos pequeños */
+    letter-spacing: .35em;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 14px;
+    display: block;
+    text-transform: uppercase;
+}
+
+.gallery__big-title {
+    margin: 0;
+    color: #0f172a; /* Azul oscuro casi negro */
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-size: clamp(44px, 7vw, 96px);
+    line-height: 1.02;
+}
+
+/* ===== RESUMEN DE CALIFICACIÓN ===== */
+.reviews-rating-summary {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.rating-number {
+    font-size: clamp(48px, 6vw, 64px);
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.stars-summary {
+    font-size: 1.8rem;
+    color: #C8A64A; /* <-- Nuevo amarillo para las estrellas */
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+}
+
+.half-star {
+    position: relative;
+    display: inline-block;
+    color: #C8A64A; /* <-- Nuevo amarillo para las estrellas */
+}
+
+.reviews-count {
+    color: #64748b;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ===== WRAPPER Y TARJETAS INCLINADAS ===== */
+.reviews-wrapper {
+    display: flex;
+    gap: 40px; 
+    padding: 20px 40px; 
+    align-items: stretch; 
+    justify-content: center;
+    flex-wrap: nowrap;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.review-card {
+    flex: 0 0 320px; 
+    background: #ffffff;
+    border-radius: 25px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    transform: rotate(-1deg);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f8f8f8;
+}
+
+.review-card:nth-child(even) {
+    transform: rotate(1deg);
+}
+
+.review-card:hover {
+    transform: rotate(0deg) scale(1.02); 
+    box-shadow: 0 25px 35px -8px rgba(142, 103, 8, 0.15); 
+    border-color: #8e6708;
+}
+
+/* Contenido de la tarjeta */
+.review-stars {
+    color: #C8A64A; /* <-- Nuevo amarillo para las estrellas */
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+}
+
+.review-text {
+    color: #334155;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    font-style: italic;
+    margin: 0 0 25px 0;
+    flex-grow: 1;
+}
+
+.review-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 15px;
+    margin-top: auto;
+}
+
+.review-author {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.review-time {
+    color: #94a3b8;
+    font-size: 0.8rem;
+}
+
+/* ===== BOTÓN INFERIOR ===== */
+.reviews-action {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.google-btn {
+    display: inline-block;
+    padding: 14px 36px;
+    background-color: transparent;
+    border: 1px solid #0f172a;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 999px;
+}
+
+.google-btn:hover {
+    background-color: #0f172a;
+    color: #ffffff;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .gallery__most-requested {
+        margin-bottom: 30px;
+    }
+    
+    .gallery__big-title {
+        font-size: clamp(36px, 8vw, 60px);
+    }
+
+    .reviews-wrapper {
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        gap: 25px; 
+        padding: 20px;
+        
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+    
+    .reviews-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .reviews-wrapper::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    
+    .reviews-wrapper::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    
+    .review-card {
+        flex: 0 0 300px; 
+        scroll-snap-align: center;
+    }
+    
+    .review-card,
+    .review-card:nth-child(even) {
+        transform: rotate(-1deg); 
+    }
+    
+    .review-card:nth-child(even) {
+        transform: rotate(1deg); 
+    }
+}
+
+@media (max-width: 768px) {
+    .gallery__big-title {
+        font-size: clamp(32px, 10vw, 48px);
+        letter-spacing: .08em;
+    }
+    
+    .gallery__kicker {
+        font-size: 12px;
+        letter-spacing: .25em;
+        margin-bottom: 8px;
+    }
+
+    .reviews-wrapper {
+        gap: 20px; 
+        padding: 15px;
+    }
+    
+    .review-card {
+        flex: 0 0 280px; 
+        padding: 25px 20px;
+    }
+    
+    .review-card,
+    .review-card:nth-child(even) {
+        transform: rotate(0deg);
+    }
+    
+    .review-card:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Indicadores */
+.gallery-dots {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .gallery-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+    }
+    
+    .gallery-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .gallery-dot.active {
+        width: 24px;
+        border-radius: 12px;
+        background: #0f172a;
+    }
+}

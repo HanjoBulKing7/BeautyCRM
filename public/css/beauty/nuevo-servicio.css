@@ -1,113 +1,202 @@
-/* ===== Nuevo servicio: Maquillaje (split 50/50) ===== */
-.bb-new {
-  padding: clamp(40px, 6vw, 90px) 16px;
-  background: #ffffff;
+/* =========================================
+   SECCIÓN: NUEVO SERVICIO (LANZAMIENTO)
+========================================= */
+
+.bb-new-section {
+    padding: 80px 0;
+    background-color: #ffffff;
+    font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+    width: 100%;
+}
+
+.bb-new-section .gallery__most-requested {
+    text-align: center;
+    margin-bottom: clamp(40px, 6vw, 60px);
+    padding: 0 20px;
 }
 
 .bb-new__container {
-  max-width: 1120px;
-  margin: 0 auto;
-
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(16px, 3vw, 32px);
-  align-items: stretch;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: stretch; /* Estira ambos lados para que midan lo mismo */
 }
 
-/* Lado izquierdo */
-.bb-new__text {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  text-decoration: none;
-  text-align: center;
-
-  border-radius: 22px;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.06);
-  background: rgba(255,255,255,0.85);
-
-  min-height: 420px;
-
-  transform: none;
-  transform-origin: center;
-
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+/* --- LADO IZQUIERDO: CONTENIDO --- */
+.bb-new__content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px;
+    border-radius: 24px;
+    border: 1px solid #f5f5f5; /* Borde muy sutil para dar forma */
+    background: #ffffff;
+    min-height: 420px;
+    transition: all 0.4s ease;
 }
 
-.bb-new__text:hover {
-  transform: translateY(-2px);
-  border-color: rgba(184,134,11,0.35);
-  box-shadow: 0 26px 55px rgba(0,0,0,0.10);
+.bb-new__content:hover {
+    border-color: #e8e8e8;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03);
 }
 
-/* Palabras */
-.bb-new__word {
-  font-family: "Playfair Display", serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-
-  font-size: clamp(24px, 3.2vw, 54px);
-  line-height: 1.05;
-
-  color: #b8860b;
-
-  /* glow sutil */
-  text-shadow:
-    0 10px 22px rgba(184,134,11,0.18),
-    0 2px 0 rgba(0,0,0,0.06);
-
-  transition: transform 180ms ease, filter 180ms ease;
-  display: inline-block;           /* ✅ necesario para transformar */
-  transform: rotate(-7deg);        /* ✅ solo el texto inclinado */
-  transform-origin: center;
+.bb-new__text-group {
+    margin-bottom: 40px;
 }
 
-/* Efecto al pasar */
-.bb-new__text:hover .bb-new__word {
-  transform: rotate(-7deg) translateY(-1px);
-  filter: brightness(1.05);
+.bb-new__subtitle {
+    display: block;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #11141c;
+    font-weight: 500;
+    margin-bottom: 10px;
 }
 
-/* Lado derecho: imagen */
+.bb-new__title {
+    font-family: "Playfair Display", "Montserrat", serif;
+    font-weight: 400;
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    color: #8e6708; /* Tu dorado original */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    line-height: 1.1;
+    margin: 0 0 20px 0;
+}
+
+.bb-new__description {
+    color: #555555;
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 90%;
+}
+
+/* --- BLOQUE DE INFORMACIÓN (PRECIO, DURACIÓN) --- */
+.bb-new__service-info {
+    width: 100%;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.bb-new__meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.bb-new__meta-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.bb-new__meta-label {
+    font-size: 0.75rem;
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+}
+
+.bb-new__meta-value {
+    font-size: 1.2rem;
+    color: #11141c;
+    font-weight: 600;
+}
+
+.bb-new__meta-divider {
+    width: 1px;
+    height: 30px;
+    background-color: #e0e0e0;
+}
+
+/* --- BOTÓN AGENDAR --- */
+.bb-new__btn {
+    display: inline-block;
+    padding: 14px 40px;
+    background-color: transparent;
+    border: 1px solid #8e6708; /* Borde con tu dorado original */
+    color: #8e6708; /* Texto con tu dorado original */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    border-radius: 999px;
+    transition: all 0.3s ease;
+    align-self: flex-start;
+}
+
+.bb-new__btn:hover {
+    background-color: #8e6708; /* Fondo dorado al pasar el cursor */
+    color: #ffffff;
+}
+
+/* --- LADO DERECHO: IMAGEN --- */
 .bb-new__media {
-  border-radius: 22px;
-  overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.06);
-  min-height: 420px;
-  background: #f4ebdd;
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative; /* Clave para que la imagen se adapte exacto */
+    min-height: 420px; /* Asegura que no se colapse en pantallas pequeñas */
+    /* Eliminamos bordes y fondos extra para que sea pura imagen */
 }
 
 .bb-new__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transform: scale(1.02);
-  transition: transform 700ms ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Recorta la imagen para llenar todo el div perfectamente */
+    display: block;
+    transition: transform 0.8s ease;
 }
 
 .bb-new__media:hover .bb-new__img {
-  transform: scale(1.07);
+    transform: scale(1.05); /* Efecto zoom elegante */
 }
 
-/* Responsive */
+/* --- RESPONSIVO --- */
 @media (max-width: 900px) {
-  .bb-new__container {
-    grid-template-columns: 1fr;
-  }
+    .bb-new-section {
+        padding: 50px 0;
+    }
+    
+    .bb-new__container {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
 
-  .bb-new__text {
-    min-height: 300px;
-    transform: rotate(-4deg);
-  }
+    .bb-new__content {
+        padding: 30px 20px;
+        min-height: auto;
+        align-items: center;
+        text-align: center;
+    }
 
-  .bb-new__media {
-    min-height: 300px;
-  }
+    .bb-new__description {
+        max-width: 100%;
+    }
+
+    .bb-new__service-info {
+        align-items: center;
+    }
+
+    .bb-new__btn {
+        align-self: center;
+        width: 100%;
+    }
+
+    .bb-new__media {
+        min-height: 350px; /* Altura controlada para celular */
+    }
 }
