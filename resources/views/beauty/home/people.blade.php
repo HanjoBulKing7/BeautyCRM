@@ -38,6 +38,16 @@
     </div>
 
     <div class="bb-people__bottom">
+      <a href="{{ url('/servicio') }}" class="bb-people__nav-card bb-item--servicios js-card"
+         data-aos="fade-up" data-aos-duration="800" data-aos-delay="100" data-aos-offset="150" data-aos-once="true">
+        <div class="bb-people__img-wrap">
+          <img src="{{ asset('images/servicios.webp') }}" alt="Nuestros Servicios" loading="lazy">
+        </div>
+        <div class="bb-people__card-info">
+          <span class="bb-people__card-title">Servicios</span>
+          <span class="bb-people__card-arrow">&rarr;</span>
+        </div>
+      </a>
       
       <a href="{{ url('/nosotros') }}" class="bb-people__nav-card bb-item--nosotros js-card"
          data-aos="fade-up" data-aos-duration="800" data-aos-offset="150" data-aos-once="true">
@@ -50,16 +60,6 @@
         </div>
       </a>
 
-      <a href="{{ url('/servicio') }}" class="bb-people__nav-card bb-item--servicios js-card"
-         data-aos="fade-up" data-aos-duration="800" data-aos-delay="100" data-aos-offset="150" data-aos-once="true">
-        <div class="bb-people__img-wrap">
-          <img src="{{ asset('images/servicios.webp') }}" alt="Nuestros Servicios" loading="lazy">
-        </div>
-        <div class="bb-people__card-info">
-          <span class="bb-people__card-title">Servicios</span>
-          <span class="bb-people__card-arrow">&rarr;</span>
-        </div>
-      </a>
 
       <a href="{{ url('/galeria') }}" class="bb-people__nav-card bb-item--galeria js-card"
          data-aos="fade-up" data-aos-duration="800" data-aos-delay="200" data-aos-offset="150" data-aos-once="true">
