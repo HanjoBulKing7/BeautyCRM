@@ -1,6 +1,5 @@
 <section class="bb-new-section" id="nuevo-servicio">
     @if($ultimoServicio)
-    
 
     <div class="bb-new__container">
 
@@ -41,12 +40,14 @@
 
         {{-- Lado derecho: Imagen del Servicio --}}
         <div class="bb-new__media">
-            @if($ultimoServicio->imagen_principal)
-                <img src="{{ asset('storage/' . $ultimoServicio->imagen_principal) }}" alt="Imagen de {{ $ultimoServicio->nombre_servicio }}" class="bb-new__img" loading="lazy">
-            @else
-                {{-- Si no tiene imagen, usa esta de respaldo para que no se rompa el diseño --}}
-                <img src="{{ asset('images/Beige Blogger Moderna Personal Sitio web.png') }}" alt="Imagen por defecto" class="bb-new__img" loading="lazy">
-            @endif
+            @php
+                // Verificamos 'imagen_url' y si no existe, ponemos tu imagen local por defecto.
+                $imgUrl = !empty($ultimoServicio->imagen_url) 
+                    ? $ultimoServicio->imagen_url 
+                    : asset('images/Beige Blogger Moderna Personal Sitio web.png');
+            @endphp
+            
+            <img src="{{ $imgUrl }}" alt="Imagen de {{ $ultimoServicio->nombre_servicio }}" class="bb-new__img" loading="lazy">
         </div>
 
     </div>

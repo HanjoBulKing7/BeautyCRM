@@ -22,7 +22,16 @@
                     @if($categoria->servicios->isNotEmpty())
                         <div class="accordion-item">
                             <button class="accordion-header" onclick="toggleAccordion(this)">
-                                {{ $categoria->nombre }}
+                                <div class="header-left">
+                                    @php
+                                        // Asumimos que la categoría tiene imagen, si no usamos la por defecto
+                                        $catImgUrl = $categoria->imagen_url 
+                                            ? $categoria->imagen_url 
+                                            : asset('images/Beige Blogger Moderna Personal Sitio web.png');
+                                    @endphp
+                                    <img src="{{ $catImgUrl }}" alt="{{ $categoria->nombre }}" class="category-thumbnail">
+                                    <span>{{ $categoria->nombre }}</span>
+                                </div>
                                 <span class="accordion-icon">+</span>
                             </button>
 
@@ -36,12 +45,16 @@
                                         @endphp
                                         
                                         <li class="service-item" data-image="{{ $imgUrl }}" onmouseenter="changeImage(this)" onclick="changeImage(this)">
-                                            <div class="service-info">
-                                                <h4 class="service-name">{{ $servicio->nombre_servicio }}</h4>
-                                                <div class="service-meta">
-                                                    <span>{{ (int) $servicio->duracion_minutos }} min</span>
-                                                    <span class="meta-divider">|</span>
-                                                    <span class="service-price">${{ number_format((float) $servicio->precio, 2) }}</span>
+                                            
+                                            <div class="service-left">
+                                                <img src="{{ $imgUrl }}" alt="{{ $servicio->nombre_servicio }}" class="service-thumbnail">
+                                                <div class="service-info">
+                                                    <h4 class="service-name">{{ $servicio->nombre_servicio }}</h4>
+                                                    <div class="service-meta">
+                                                        <span>{{ (int) $servicio->duracion_minutos }} min</span>
+                                                        <span class="meta-divider">|</span>
+                                                        <span class="service-price">${{ number_format((float) $servicio->precio, 2) }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             
@@ -66,8 +79,7 @@
 <style>
     .salon-menu {
         padding: 80px 20px;
-        background-color: #ffffff; /* Fondo blanco impecable */
-        /* Usa una fuente elegante como Montserrat si la tienes, si no, usa sans-serif limpia */
+        background-color: #ffffff;
         font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif; 
     }
     .salon-menu__container {
@@ -75,7 +87,6 @@
         margin: 0 auto;
     }
     
-    /* Estética de los Títulos idéntica a tu imagen */
     .salon-menu__header {
         text-align: center;
         margin-bottom: 60px;
@@ -84,28 +95,26 @@
         display: block;
         font-size: 0.75rem;
         letter-spacing: 4px;
-        color: #8e6708; /* Tu dorado */
+        color: #8e6708; 
         text-transform: uppercase;
         margin-bottom: 12px;
         font-weight: 600;
     }
     .salon-menu__mainTitle {
-        font-size: 3rem; /* Tamaño grande y llamativo */
-        color: #11141c; /* Un azul/negro muy oscuro como en tu foto */
+        font-size: 3rem; 
+        color: #11141c; 
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 5px; /* Separación de letras */
+        letter-spacing: 5px; 
         margin: 0;
     }
     
-    /* Layout a dos columnas */
     .salon-menu__layout {
         display: flex;
         gap: 60px;
         align-items: flex-start;
     }
 
-    /* Izquierda: Visor pegajoso */
     .salon-menu__visual {
         flex: 1;
         position: sticky;
@@ -114,9 +123,9 @@
     .salon-menu__image-wrapper {
         width: 100%;
         height: 550px; 
-        border-radius: 24px; /* Bordes redondeados idénticos a los de tu imagen */
+        border-radius: 24px; 
         overflow: hidden;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.05); /* Sombra muy sutil */
+        box-shadow: 0 15px 35px rgba(0,0,0,0.05); 
     }
     .salon-menu__image-wrapper img {
         width: 100%;
@@ -125,15 +134,15 @@
         transition: opacity 0.4s ease-in-out; 
     }
 
-    /* Derecha: Acordeón */
     .salon-menu__accordion-container {
         flex: 1;
         display: flex;
         flex-direction: column;
     }
     .accordion-item {
-        border-bottom: 1px solid #f0f0f0; /* Líneas muy tenues y elegantes */
+        border-bottom: 1px solid #f0f0f0; 
     }
+    
     .accordion-header {
         width: 100%;
         text-align: left;
@@ -154,6 +163,22 @@
     .accordion-header:hover {
         color: #8e6708; 
     }
+
+    /* NUEVO: Contenedor flex para alinear imagen y texto de la categoría */
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    /* NUEVO: Estilo para la miniatura de la categoría */
+    .category-thumbnail {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%; /* Circular para las categorías */
+        object-fit: cover;
+        border: 2px solid #f0f0f0;
+    }
+
     .accordion-icon {
         font-size: 1.8rem;
         font-weight: 300;
@@ -161,7 +186,6 @@
         transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Contenido oculto */
     .accordion-content {
         max-height: 0;
         overflow: hidden;
@@ -184,13 +208,29 @@
     }
     .service-item:hover {
         background-color: #faf9f6;
-        transform: translateX(5px); /* Pequeño efecto de desplazamiento al pasar el ratón */
+        transform: translateX(5px); 
     }
+
+    /* NUEVO: Contenedor flex para alinear imagen y texto del servicio */
+    .service-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    /* NUEVO: Estilo para la miniatura del servicio */
+    .service-thumbnail {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px; /* Bordes redondeados suaves para los servicios */
+        object-fit: cover;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
     .service-name {
         margin: 0 0 6px 0;
         font-size: 1rem;
         color: #11141c;
-        font-weight: 500;
+        font-weight: 600;
     }
     .service-meta {
         font-size: 0.85rem;
@@ -216,13 +256,14 @@
         text-transform: uppercase;
         letter-spacing: 1px;
         transition: all 0.3s ease;
+        white-space: nowrap; /* Evita que el botón se rompa en dos líneas */
     }
     .service-item:hover .service-btn {
         background-color: #8e6708; 
         color: #ffffff; 
     }
 
-    /* --- ADAPTACIÓN PARA CELULARES CON SCROLL INTERNO --- */
+    /* RESPONSIVE MÓVIL */
     @media (max-width: 900px) {
         .salon-menu {
             padding: 50px 15px;
@@ -240,23 +281,21 @@
             width: 100%;
         }
         .salon-menu__image-wrapper {
-            height: 320px; /* Imagen un poco más pequeña en móvil */
+            height: 320px; 
             border-radius: 20px;
         }
         
-        /* Magia del Scroll Interno para móvil */
         .salon-menu__accordion-container {
             width: 100%;
-            max-height: 55vh; /* Ocupa máximo el 55% de la pantalla */
-            overflow-y: auto; /* Activa el scroll vertical */
-            overscroll-behavior: contain; /* Evita que la página principal haga scroll cuando llegas al final del menú */
-            padding-right: 10px; /* Espacio para la barra */
+            max-height: 55vh; 
+            overflow-y: auto; 
+            overscroll-behavior: contain; 
+            padding-right: 10px; 
             scroll-behavior: smooth;
             border-top: 1px solid #f0f0f0;
             border-bottom: 1px solid #f0f0f0;
         }
 
-        /* Diseño de la barra de scroll (webkit) */
         .salon-menu__accordion-container::-webkit-scrollbar {
             width: 4px;
         }
@@ -265,11 +304,25 @@
             border-radius: 10px;
         }
         .salon-menu__accordion-container::-webkit-scrollbar-thumb {
-            background: rgba(142, 103, 8, 0.4); /* Dorado transparente */
+            background: rgba(142, 103, 8, 0.4); 
             border-radius: 10px;
         }
         .salon-menu__accordion-container::-webkit-scrollbar-thumb:hover {
-            background: #8e6708; /* Dorado sólido al tocarla */
+            background: #8e6708; 
+        }
+
+        /* Ajustes menores para que no se apriete en móviles */
+        .category-thumbnail {
+            width: 35px;
+            height: 35px;
+        }
+        .service-thumbnail {
+            width: 50px;
+            height: 50px;
+        }
+        .service-btn {
+            padding: 6px 15px;
+            font-size: 0.75rem;
         }
     }
 </style>
@@ -289,10 +342,13 @@
             document.querySelectorAll('.accordion-icon').forEach(el => el.style.transform = "rotate(0deg)");
             
             // Abrimos el actual
-            content.style.maxHeight = content.scrollHeight + "px";
+            // Agregamos un pequeño timeout para que el DOM calcule bien la altura de las imágenes
+            setTimeout(() => {
+                content.style.maxHeight = content.scrollHeight + "px";
+            }, 10);
+            
             icon.style.transform = "rotate(45deg)";
 
-            // (Opcional) En móviles, hace un pequeño scroll suave hacia la categoría que abriste
             if (window.innerWidth <= 900) {
                 setTimeout(() => {
                     item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -310,7 +366,7 @@
             setTimeout(() => {
                 mainImage.src = newImageUrl;
                 mainImage.style.opacity = 1; 
-            }, 200); // Transición suave acorde a la estética
+            }, 200); 
         }
     }
 </script>

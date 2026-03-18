@@ -10,12 +10,16 @@
         <div class="salon-popular__grid">
             @foreach($destacados['servicios'] as $servicio)
                 <article class="salon-popular__card">
+                    
                     <div class="salon-popular__img-wrapper">
-                        @if($servicio->imagen_principal)
-                            <img src="{{ asset('storage/' . $servicio->imagen_principal) }}" alt="{{ $servicio->nombre_servicio }}" loading="lazy">
-                        @else
-                            <img src="https://source.unsplash.com/random/400x300?beauty-salon" alt="Servicio de belleza" loading="lazy">
-                        @endif
+                        @php
+                            // Verificamos 'imagen_url' y si no existe, ponemos tu imagen local por defecto.
+                            $imgUrl = !empty($servicio->imagen_url) 
+                                ? $servicio->imagen_url 
+                                : asset('images/Beige Blogger Moderna Personal Sitio web.png');
+                        @endphp
+                        
+                        <img src="{{ $imgUrl }}" alt="{{ $servicio->nombre_servicio }}" loading="lazy">
                     </div>
 
                     <div class="salon-popular__body">
@@ -48,64 +52,58 @@
 <style>
     .salon-popular {
         padding: 80px 20px;
-        background-color: #ffffff; /* Fondo blanco actualizado */
+        background-color: #ffffff; 
         font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
     }
 
-    /* Contenedor adaptado a la primera sección (1200px en lugar de 1350px) */
     .salon-popular__container {
         max-width: 1200px; 
         margin: 0 auto;
     }
 
-    /* Estilos del Título (Igualados) */
     .salon-popular__header {
         text-align: center;
-        margin-bottom: 60px; /* Ajustado de 50px a 60px para coincidir */
+        margin-bottom: 60px; 
     }
     .salon-popular__eyebrow {
         display: block;
         font-size: 0.75rem;
         letter-spacing: 4px;
-        color: #8e6708; /* Tu dorado */
+        color: #8e6708; 
         text-transform: uppercase;
         margin-bottom: 12px;
         font-weight: 600;
     }
     .salon-popular__title {
-        font-size: 3rem; /* Tamaño grande y llamativo, igual que el menú */
-        color: #11141c; /* Azul/Negro oscuro */
+        font-size: 3rem; 
+        color: #11141c; 
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 5px; /* Separación de letras igualada a 5px */
+        letter-spacing: 5px; 
         margin: 0;
     }
 
-    /* Grid Responsivo */
     .salon-popular__grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 30px;
     }
 
-    /* Tarjeta Minimalista */
     .salon-popular__card {
         background-color: #ffffff;
         border-radius: 24px;
         overflow: hidden;
-        /* La sombra hace que la tarjeta blanca resalte sobre el fondo blanco */
         box-shadow: 0 10px 30px rgba(0,0,0,0.06); 
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         display: flex;
         flex-direction: column;
-        border: 1px solid #f8f8f8; /* Un borde casi invisible para dar más definición */
+        border: 1px solid #f8f8f8; 
     }
     .salon-popular__card:hover {
         transform: translateY(-8px); 
-        box-shadow: 0 15px 40px rgba(0,0,0,0.1); /* Sombra más notoria al pasar el ratón */
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1); 
     }
 
-    /* Imagen */
     .salon-popular__img-wrapper {
         width: 100%;
         height: 220px; 
@@ -121,7 +119,6 @@
         transform: scale(1.05); 
     }
 
-    /* Cuerpo de la Tarjeta */
     .salon-popular__body {
         padding: 24px;
         display: flex;
@@ -148,7 +145,6 @@
         overflow: hidden;
     }
 
-    /* Meta: Duración y Precio */
     .salon-popular__meta {
         display: flex;
         justify-content: space-between;
@@ -171,7 +167,6 @@
         color: #8e6708; 
     }
 
-    /* Botón */
     .salon-popular__btn {
         display: block;
         width: 100%;
@@ -193,7 +188,6 @@
         color: #ffffff;
     }
 
-    /* Estado Vacío */
     .salon-popular__empty {
         grid-column: 1 / -1; 
         text-align: center;
@@ -207,7 +201,7 @@
             padding: 50px 15px; 
         }
         .salon-popular__title { 
-            font-size: 2rem; /* Igualado al de la otra sección para móviles */
+            font-size: 2rem; 
         }
     }
 </style>
