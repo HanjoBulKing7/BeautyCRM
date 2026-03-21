@@ -27,7 +27,7 @@
            
         <a href="{{ url('/agendar-cita') }}" class="bb-people__nav-card bb-card--promoted js-card">
           <div class="bb-people__img-wrap">
-            <img src="{{ asset('images/agendar.webp') }}" alt="Agendar Cita" loading="lazy">
+            <img src="{{ asset('images/agendarcitass.webp') }}" alt="Agendar Cita" loading="lazy">
           </div>
           <div class="bb-people__card-info">
             <span class="bb-people__card-title">Agendar Cita</span>
