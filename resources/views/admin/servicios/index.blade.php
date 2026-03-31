@@ -38,13 +38,30 @@
             <p class="text-sm text-gray-500 mt-1 ml-15">Gestiona los servicios, precios y duraciones.</p>
         </div>
 
-        <a href="{{ route('admin.servicios.create') }}"
-           class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-gray-900 text-white font-bold hover:bg-black shadow-lg hover:shadow-xl transition-all md:w-auto w-full">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Nuevo Servicio
-        </a>
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4 w-full md:w-auto">
+            <div class="relative w-full md:w-80">
+                <input
+                    id="bbServicioSearch"
+                    type="text"
+                    placeholder="Buscar servicio por nombre..."
+                    value="{{ $search ?? request('q') }}"
+                    class="w-full rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[rgba(201,162,74,0.35)]"
+                />
+                <span class="absolute inset-y-0 right-3 flex items-center text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+                    </svg>
+                </span>
+            </div>
+
+            <a href="{{ route('admin.servicios.create') }}"
+               class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-gray-900 text-white font-bold hover:bg-black shadow-lg hover:shadow-xl transition-all md:w-auto w-full">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nuevo Servicio
+            </a>
+        </div>
     </div>
 
     <div class="hidden md:block bb-glass-card rounded-[2.5rem] overflow-hidden">
@@ -61,7 +78,7 @@
                 <tbody class="divide-y divide-gray-100/60">
                     @forelse($servicios as $servicio)
                         @php $sid = $servicio->id_servicio ?? $servicio->id; @endphp
-                        <tr class="hover:bg-white/40 transition-colors group">
+                        <tr class="hover:bg-white/40 transition-colors group" data-service-name="{{ strtolower($servicio->nombre_servicio ?? $servicio->nombre ?? 'servicio') }}">
                             <td class="py-4 px-4">
                                 <div class="flex items-center gap-4">
                                     @if(!empty($servicio->imagen_url))
@@ -113,12 +130,23 @@
                     @empty
                         <tr>
                             <td colspan="4" class="py-12 text-center">
-                                <div class="w-20 h-20 mx-auto rounded-full bg-gray-50 flex items-center justify-center text-3xl mb-4 shadow-inner">✨</div>
-                                <h3 class="text-lg font-bold text-gray-900">No hay servicios registrados</h3>
-                                <p class="text-gray-500 mt-1">Comienza creando tu primer servicio para tus clientes.</p>
+                                <div class="w-20 h-20 mx-auto rounded-full bg-gray-50 flex items-center justify-center text-3xl mb-4 shadow-inner">{{ ($search ?? request('q')) ? '🔎' : '✨' }}</div>
+                                <h3 class="text-lg font-bold text-gray-900">{{ ($search ?? request('q')) ? 'Sin resultados' : 'No hay servicios registrados' }}</h3>
+                                <p class="text-gray-500 mt-1">
+                                    {{ ($search ?? request('q')) ? 'No hay servicios que coincidan con la búsqueda.' : 'Comienza creando tu primer servicio para tus clientes.' }}
+                                </p>
                             </td>
                         </tr>
                     @endforelse
+                    @if($servicios->count())
+                        <tr id="bbServiciosEmpty" style="display:none;">
+                            <td colspan="4" class="py-12 text-center">
+                                <div class="w-20 h-20 mx-auto rounded-full bg-gray-50 flex items-center justify-center text-3xl mb-4 shadow-inner">🔎</div>
+                                <h3 class="text-lg font-bold text-gray-900">Sin resultados</h3>
+                                <p class="text-gray-500 mt-1">No hay servicios que coincidan con la búsqueda.</p>
+                            </td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -132,7 +160,7 @@
     <div class="md:hidden space-y-4">
         @forelse($servicios as $servicio)
             @php $sid = $servicio->id_servicio ?? $servicio->id; @endphp
-            <div class="bb-glass-card rounded-[2rem] p-5">
+            <div class="bb-glass-card rounded-[2rem] p-5" data-service-name="{{ strtolower($servicio->nombre_servicio ?? $servicio->nombre ?? 'servicio') }}">
                 <div class="flex items-start gap-4">
                     @if(!empty($servicio->imagen_url))
                         <img src="{{ $servicio->imagen_url }}" alt="Foto" class="w-16 h-16 rounded-2xl object-cover shadow-sm border border-white">
@@ -177,11 +205,21 @@
             </div>
         @empty
             <div class="bb-glass-card rounded-[2.5rem] p-10 text-center">
-                <div class="w-20 h-20 mx-auto rounded-full bg-white flex items-center justify-center text-3xl mb-4 shadow-sm border border-gray-50">✨</div>
-                <h3 class="text-lg font-bold text-gray-900">No hay servicios</h3>
-                <p class="text-gray-500 mt-1">Tus servicios aparecerán aquí.</p>
+                <div class="w-20 h-20 mx-auto rounded-full bg-white flex items-center justify-center text-3xl mb-4 shadow-sm border border-gray-50">{{ ($search ?? request('q')) ? '🔎' : '✨' }}</div>
+                <h3 class="text-lg font-bold text-gray-900">{{ ($search ?? request('q')) ? 'Sin resultados' : 'No hay servicios' }}</h3>
+                <p class="text-gray-500 mt-1">
+                    {{ ($search ?? request('q')) ? 'No hay servicios que coincidan con la búsqueda.' : 'Tus servicios aparecerán aquí.' }}
+                </p>
             </div>
         @endforelse
+
+        @if($servicios->count())
+            <div id="bbServiciosEmptyMobile" class="bb-glass-card rounded-[2.5rem] p-10 text-center" style="display:none;">
+                <div class="w-20 h-20 mx-auto rounded-full bg-white flex items-center justify-center text-3xl mb-4 shadow-sm border border-gray-50">🔎</div>
+                <h3 class="text-lg font-bold text-gray-900">Sin resultados</h3>
+                <p class="text-gray-500 mt-1">No hay servicios que coincidan con la búsqueda.</p>
+            </div>
+        @endif
 
         @if(method_exists($servicios, 'hasPages') && $servicios->hasPages())
             <div class="py-4">
@@ -190,4 +228,33 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('bbServicioSearch');
+      if (!input) return;
+      let timer;
+
+      const navigate = () => {
+          const query = input.value.trim();
+          const url = new URL(window.location.href);
+
+          if (query) {
+              url.searchParams.set('q', query);
+          } else {
+              url.searchParams.delete('q');
+          }
+          url.searchParams.delete('page');
+
+          window.location = url.toString();
+      };
+
+      input.addEventListener('input', () => {
+          window.clearTimeout(timer);
+          timer = window.setTimeout(navigate, 350);
+      });
+  });
+</script>
+@endpush
 @endsection

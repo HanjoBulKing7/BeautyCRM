@@ -8,6 +8,9 @@
         <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
         {{ $mxn(data_get($ventas,'monto_total',0)) }}
         </p>
+                <p class="text-xs text-gray-400 mt-1">
+                    Servicios: {{ $mxn(data_get($ventas,'monto_servicios',0)) }} · Productos: {{ $mxn(data_get($ventas,'monto_productos',0)) }}
+                </p>
     </div>
 
     <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">

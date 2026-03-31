@@ -50,7 +50,7 @@
         </div>
 
         {{-- Ajuste Responsive: w-full en móvil para que el input no se desborde --}}
-        <div class="flex items-center gap-2 w-full sm:w-auto relative">
+    <div class="flex items-center gap-2 w-full sm:w-auto relative">
             <i class="fas fa-calendar-alt text-gray-400 dark:text-gray-500 absolute left-3 z-10"></i>
             <input
                 type="text"
@@ -59,6 +59,15 @@
                 placeholder="Seleccionar fecha..."
                 readonly
             >
+      <button
+        type="button"
+        id="btn_fecha_actual"
+        class="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-lg border border-blue-100 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900/50 transition-colors"
+        title="Ir a hoy / periodo actual"
+      >
+        <i class="fas fa-bullseye"></i>
+        Actual
+      </button>
         </div>
     </h4>
 
@@ -106,7 +115,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const tipoFiltro = @json($tipo);
     const fechaActual = @json($fecha);
     const tabActual = @json($tab);
-    const inputSelector = document.getElementById('selector_fecha_global');
+  const inputSelector = document.getElementById('selector_fecha_global');
+  const btnFechaActual = document.getElementById('btn_fecha_actual');
+
+  const parseFechaLocal = (fechaStr) => new Date(`${fechaStr}T12:00:00`);
+  const formatYmd = (dateObj) => {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
 
     function actualizarRuta(nuevaFecha) {
         const url = new URL(window.location.href);
@@ -119,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configuración base de Flatpickr inicializada de manera segura
     let fpConfig = {
         locale: flatpickr.l10ns.es,
-        defaultDate: fechaActual,
+    defaultDate: parseFechaLocal(fechaActual),
         plugins: [], 
         onChange: function(selectedDates, dateStr, instance) {
             if (!selectedDates.length) return;
@@ -137,11 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dd = String(d.getDate()).padStart(2, '0');
                 finalDate = `${y}-${m}-${dd}`;
             } 
-            else if (tipoFiltro === 'mensual') {
-                const d = new Date(selectedDates[0]);
-                const y = d.getFullYear();
-                const m = String(d.getMonth() + 1).padStart(2, '0');
-                finalDate = `${y}-${m}-01`;
+      else if (tipoFiltro === 'mensual') {
+        const d = new Date(selectedDates[0]);
+        d.setHours(12, 0, 0, 0);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        finalDate = `${y}-${m}-01`;
             }
 
             actualizarRuta(finalDate);
@@ -161,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fpConfig.onReady = function(selectedDates, dateStr, instance) {
             // T12:00:00 soluciona el problema de que el navegador quite un día por la zona horaria
-            const dStart = selectedDates.length ? new Date(selectedDates[0]) : new Date(fechaActual + 'T12:00:00');
+            const dStart = selectedDates.length ? new Date(selectedDates[0]) : parseFechaLocal(fechaActual);
             const START_DAY = 4;
             const diff = (dStart.getDay() - START_DAY + 7) % 7;
             dStart.setDate(dStart.getDate() - diff);
@@ -185,8 +204,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (typeof flatpickr !== 'undefined' && inputSelector) {
-        flatpickr(inputSelector, fpConfig);
+  let fpInstance = null;
+  if (typeof flatpickr !== 'undefined' && inputSelector) {
+    fpInstance = flatpickr(inputSelector, fpConfig);
+  }
+
+  if (btnFechaActual) {
+    btnFechaActual.addEventListener('click', () => {
+      const hoy = new Date();
+      hoy.setHours(12, 0, 0, 0);
+      let nuevaFecha = formatYmd(hoy);
+
+      if (tipoFiltro === 'semanal') {
+        const START_DAY = 4;
+        const diff = (hoy.getDay() - START_DAY + 7) % 7;
+        const inicioSemana = new Date(hoy);
+        inicioSemana.setDate(inicioSemana.getDate() - diff);
+        nuevaFecha = formatYmd(inicioSemana);
+      } else if (tipoFiltro === 'mensual') {
+        const y = hoy.getFullYear();
+        const m = String(hoy.getMonth() + 1).padStart(2, '0');
+        nuevaFecha = `${y}-${m}-01`;
+      }
+
+      if (fpInstance) {
+        fpInstance.setDate(parseFechaLocal(nuevaFecha), true);
+      } else {
+        actualizarRuta(nuevaFecha);
+      }
+    });
     }
 });
 </script>

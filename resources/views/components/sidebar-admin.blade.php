@@ -25,6 +25,14 @@
             <span>Citas</span>
         </a>
     </li>
+        <li>
+                <a href="{{ url('/admin/productoventa') }}"
+               class="flex items-center p-3 rounded-xl text-[15px] font-medium transition-all duration-300
+                      {{ request()->is('admin/productoventa*') ? 'bg-yellow-100 text-gray-900 shadow' : 'text-gray-700 hover:bg-gray-50 hover:shadow' }}">
+                <i class="fas fa-shopping-basket mr-3 text-lg"></i>
+                <span>Ventas Productos</span>
+            </a>
+        </li>
 
     {{-- SEPARADOR DE CATÁLOGO --}}
     <li class="pt-4 pb-1">

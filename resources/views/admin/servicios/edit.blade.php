@@ -58,7 +58,7 @@
                     onmouseover="this.style.boxShadow='0 16px 30px rgba(201,162,74,.22)'"
                     onmouseout="this.style.boxShadow='0 10px 22px rgba(201,162,74,.18)'"
             >
-                <i class="fas fa-sync-alt" style="color: rgba(17,24,39,.90)"></i>
+                <i class="fas fa-save" style="color: rgba(17,24,39,.90)"></i>
                 Actualizar Servicio
             </button>
 

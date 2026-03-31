@@ -1,4 +1,4 @@
-<section class="gallery-section">
+<section class="gallery-section" id="servicios-home">
     <div class="gallery__most-requested">
         <span class="gallery__kicker">DESCUBRE</span>
         <h2 class="gallery__big-title">Lo más solicitado</h2>

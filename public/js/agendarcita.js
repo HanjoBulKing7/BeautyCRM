@@ -1,12 +1,12 @@
 (() => {
   const ctx = window.__BOOKING_CTX__ || {};
 
-  const serviciosMap = ctx.servicios || {}; // { [id]: {id_servicio, id_categoria, nombre_servicio, precio, descuento, duracion_minutos, imagen...} }
+  const serviciosMap = ctx.servicios || {}; 
   const categorias = Array.isArray(ctx.categorias) ? ctx.categorias : [];
 
-  // ✅ empleados por servicio + carga para balanceo
-  const empleadosPorServicio = ctx.empleadosPorServicio || {}; // { [servicioId]: [{id,nombre,apellido}] }
-  const cargaEmpleados = ctx.cargaEmpleados || {}; // { [empleadoId]: total }
+  // empleados por servicio + carga para balanceo
+  const empleadosPorServicio = ctx.empleadosPorServicio || {}; 
+  const cargaEmpleados = ctx.cargaEmpleados || {}; 
 
   // DOM
   const elSelectedList = document.getElementById('bbSelectedList');
@@ -33,8 +33,8 @@
     items: [], // [{id_servicio, id_empleado, orden}]
     selectedDate: null,  // 'YYYY-MM-DD'
     selectedHour: null,  // 'HH:MM'
-    calendarMonth: new Date(), // month displayed
-    monthAvailability: null, // { 'YYYY-MM-DD': {disabled:boolean, slots:number} }
+    calendarMonth: new Date(), 
+    monthAvailability: null, 
   };
 
   // Utils
@@ -44,7 +44,7 @@
     return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   }
   function monthKey(d) {
-    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`; // YYYY-MM
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`; 
   }
   function escapeHtml(str) {
     return String(str)
@@ -62,17 +62,15 @@
   }
   function resolveServiceImg(svc) {
     const fallback = (ctx && ctx.fallbackImg) ? ctx.fallbackImg : '';
-    const img = svc?.imagen;
+    const img = svc?.imagen_url || svc?.imagen; // Soporte para imagen_url
 
     if (!img) return fallback;
     if (/^https?:\/\//i.test(img)) return img;
 
-    // images/ o /images/ => público
     if (String(img).startsWith('images/') || String(img).startsWith('/images/')) {
       return joinUrl(ctx.assetRoot, img);
     }
 
-    // lo demás => storage
     return joinUrl(ctx.assetStorage, img);
   }
 
@@ -98,7 +96,6 @@
   }
 
   function setItemsParams(url, items) {
-    // limpia items previos
     [...url.searchParams.keys()].forEach(k => {
       if (k === 'items' || k.startsWith('items[')) url.searchParams.delete(k);
     });
@@ -110,7 +107,6 @@
     });
   }
 
-  // ✅ Balanceo: escoger empleado con menor carga
   function pickDefaultEmpleado(servicioId) {
     const list = empleadosPorServicio[String(servicioId)] || empleadosPorServicio[servicioId] || [];
     if (!Array.isArray(list) || list.length === 0) return null;
@@ -162,24 +158,68 @@
     }
   }
 
-  // ---------- UI: categorías ----------
+  // ---------- ✅ NUEVO: Integración con el menú acordeón Blade ----------
+  function syncAccordionButtons() {
+    // Busca todos los botones de "Agregar" en el menú acordeón
+    document.querySelectorAll('.js-add-service-btn').forEach(btn => {
+      const id = Number(btn.getAttribute('data-service-id'));
+      const already = state.items.some(it => Number(it.id_servicio) === id);
+
+      if (already) {
+        btn.textContent = 'Agregado';
+        btn.disabled = true;
+        btn.style.backgroundColor = '#8e6708';
+        btn.style.color = '#ffffff';
+        btn.style.cursor = 'default';
+      } else {
+        btn.textContent = 'Agregar';
+        btn.disabled = false;
+        btn.style.backgroundColor = 'transparent';
+        btn.style.color = '#8e6708';
+        btn.style.cursor = 'pointer';
+      }
+    });
+  }
+
+  function bindAccordionEvents() {
+    document.querySelectorAll('.js-add-service-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Evita que se dispare algo más del acordeón
+        
+        const id = Number(btn.getAttribute('data-service-id'));
+        if (!id) return;
+
+        // Si ya está agregado, ignorar
+        if (state.items.some(it => Number(it.id_servicio) === id)) return;
+
+        const empDefault = pickDefaultEmpleado(id);
+
+        state.items.push({
+          id_servicio: id,
+          id_empleado: empDefault,
+          orden: state.items.length + 1,
+        });
+
+        // Refrescar vistas
+        onItemsChanged();
+      });
+    });
+  }
+
+  // ---------- UI: categorías antiguas (Mantenido por compatibilidad) ----------
   function renderCategories() {
     if (!elCategoryList) return;
-
     if (!categorias.length) {
       elCategoryList.innerHTML = `<div class="bb-empty">No hay categorías disponibles.</div>`;
       return;
     }
-
     if (!state.activeCategoryId) {
       state.activeCategoryId = String(categorias[0].id_categoria ?? categorias[0].id ?? '');
     }
-
     elCategoryList.innerHTML = categorias.map(cat => {
       const id = cat.id_categoria ?? cat.id ?? cat.value;
       const name = cat.nombre ?? cat.name ?? 'Categoría';
       const active = String(id) === String(state.activeCategoryId);
-
       return `
         <button type="button" class="bb-cat-btn ${active ? 'is-active' : ''}" data-cat="${escapeHtml(id)}">
           ${escapeHtml(name)}
@@ -196,10 +236,9 @@
     });
   }
 
-  // ---------- UI: cards de servicios ----------
+  // ---------- UI: cards de servicios antiguas (Mantenido por compatibilidad) ----------
   function renderServiceCards() {
     if (!elServiceCards) return;
-
     const catId = state.activeCategoryId;
     const list = Object.values(serviciosMap);
 
@@ -209,7 +248,6 @@
     }
 
     const filtered = list.filter(s => String(s.id_categoria ?? s.categoria_id ?? '') === String(catId));
-
     if (!filtered.length) {
       elServiceCards.innerHTML = `<div class="bb-empty">No hay servicios en esta categoría.</div>`;
       return;
@@ -229,7 +267,6 @@
           <div class="bb-svc-card__media">
             <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(name)}" loading="lazy">
           </div>
-
           <div class="bb-svc-card__body">
             <div class="bb-svc-card__name">${escapeHtml(name)}</div>
             <div class="bb-svc-card__meta">
@@ -248,11 +285,9 @@
       card.addEventListener('click', () => {
         const id = Number(card.getAttribute('data-svc'));
         if (!id) return;
-
         if (state.items.some(it => Number(it.id_servicio) === id)) return;
 
         const empDefault = pickDefaultEmpleado(id);
-
         state.items.push({
           id_servicio: id,
           id_empleado: empDefault,
@@ -320,9 +355,6 @@
             <div class="bb-selectedCard__emp" style="margin-top:.75rem;">
               <label class="bb-label" style="margin-bottom:.35rem;">Empleado</label>
               ${buildEmpleadoSelect(it.id_servicio, it.id_empleado)}
-              <p class="bb-hint" style="margin-top:.35rem;">
-                Te asignamos uno automáticamente, pero puedes elegir otro.
-              </p>
             </div>
           </div>
 
@@ -339,20 +371,20 @@
 
     elSelectedList.innerHTML = html;
 
-    // remove
+    // Quitar servicio
     elSelectedList.querySelectorAll('.bb-selectedCard__remove').forEach(btn => {
       btn.addEventListener('click', async () => {
         const card = btn.closest('.bb-selectedCard');
         const idx = Number(card?.getAttribute('data-index') || -1);
         if (idx < 0) return;
-        if (state.items.length === 1) return;
+        if (state.items.length === 1) return; // No permitir quitar el último
 
         state.items.splice(idx, 1);
         onItemsChanged();
       });
     });
 
-    // empleado change
+    // Cambiar empleado
     elSelectedList.querySelectorAll('.bb-emp-select').forEach((sel, idx) => {
       sel.addEventListener('change', async () => {
         state.items[idx].id_empleado = sel.value ? Number(sel.value) : null;
@@ -377,6 +409,12 @@
     normalizeOrder();
     renderSelected();
     renderHiddenItems();
+
+    // ✅ Actualiza los botones de agregar/agregado en el menú acordeón
+    syncAccordionButtons(); 
+
+    // ✅ Actualiza los botones de agregar/agregado del antiguo diseño si aún existiera
+    renderServiceCards(); 
 
     resetDateTimeUI();
     renderDatetimeLock();
@@ -416,7 +454,7 @@
     const m = d.getMonth();
 
     const first = new Date(y, m, 1);
-    const startDow = (first.getDay() + 6) % 7; // lunes=0
+    const startDow = (first.getDay() + 6) % 7; 
     const daysInMonth = new Date(y, m + 1, 0).getDate();
 
     const monthName = first.toLocaleString('es-MX', { month: 'long', year: 'numeric' });
@@ -454,7 +492,6 @@
           const locked = !isAllEmployeesSelected();
           const disabled = locked || isPast || isDisabledByAv;
 
-          // ✅ SOLO punto dorado cuando el día está habilitado (sin punto rojo para deshabilitados)
           const showGoldDot = !locked && hasAv && !isPast && !isDisabledByAv;
           const dotHtml = showGoldDot ? '<span class="bb-cal__dot is-gold" aria-hidden="true"></span>' : '';
 
@@ -573,7 +610,6 @@
 
   // ---------- Init ----------
   async function init() {
-    // Servicio inicial
     const initialId = Number(ctx.servicioInicialId || 0);
     if (initialId > 0 && serviceById(initialId)) {
       const empDefault = pickDefaultEmpleado(initialId);
@@ -585,8 +621,14 @@
     state.calendarMonth = new Date();
     state.monthAvailability = null;
 
+    // ✅ Activadores para el nuevo menú Acordeón
+    bindAccordionEvents();
+    syncAccordionButtons();
+
+    // Mantener esto para compatibilidad si alguna vez se reutiliza ese elemento
     renderCategories();
     renderServiceCards();
+
     renderSelected();
     renderHiddenItems();
 

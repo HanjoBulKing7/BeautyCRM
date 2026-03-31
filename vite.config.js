@@ -13,6 +13,7 @@ export default defineConfig({
         'resources/css/styles.css',
         'resources/css/responsive.css',
           'resources/css/ui.css',   // 👈 agrega esto
+        'resources/css/agendarcita.css',
 
 
         // ✅ JS (vanilla)

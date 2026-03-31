@@ -131,6 +131,30 @@ Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'
 // Rutas de Administración
 // =============================
 Route::prefix('admin')->name('admin.')->group(function () {
+    // Ventas de productos
+    Route::prefix('productoventa')->name('productoventa.')->group(function () {
+        Route::get('/', [App\Http\Controllers\VentasProductoController::class, 'index'])
+            ->name('index')
+            ->middleware('auth');
+        Route::get('/create', [App\Http\Controllers\VentasProductoController::class, 'create'])
+            ->name('create')
+            ->middleware('auth');
+        Route::post('/', [App\Http\Controllers\VentasProductoController::class, 'store'])
+            ->name('store')
+            ->middleware('auth');
+        Route::get('/{venta}', [App\Http\Controllers\VentasProductoController::class, 'show'])
+            ->name('show')
+            ->middleware('auth');
+        Route::get('/{venta}/edit', [App\Http\Controllers\VentasProductoController::class, 'edit'])
+            ->name('edit')
+            ->middleware('auth');
+        Route::put('/{venta}', [App\Http\Controllers\VentasProductoController::class, 'update'])
+            ->name('update')
+            ->middleware('auth');
+        Route::delete('/{venta}', [App\Http\Controllers\VentasProductoController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('auth');
+    });
     // AJAX para crear categoría desde el formulario de servicios
     Route::post('/categoriaservicios/ajax', [CategoriaServicioController::class, 'storeAjax'])
         ->middleware('auth')

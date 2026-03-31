@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -94,10 +95,9 @@ class MisReservasController extends Controller
     $clienteId = $this->resolveClienteId($user);
 
     // Busca la cita SOLO si pertenece al cliente
+    $primaryKey = (new Cita())->getKeyName();
     $citaModel = Cita::where('cliente_id', $clienteId)
-        ->where(function($q) use ($cita){
-            $q->where('id_cita', $cita)->orWhere('id', $cita);
-        })
+        ->where($primaryKey, $cita)
         ->firstOrFail();
 
     // Reglas básicas: solo cancelar pendiente/confirmada

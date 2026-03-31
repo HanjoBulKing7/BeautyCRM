@@ -64,6 +64,8 @@ class ReporteController extends Controller
     {
         $startDate = $inicio->toDateString();
         $endDate   = $fin->toDateString();
+        $startFull = $inicio->toDateTimeString();
+        $endFull   = $fin->toDateTimeString();
 
         // ✅ Validación mínima (tablas base)
         if (!Schema::hasTable('citas')) {
@@ -375,6 +377,43 @@ class ReporteController extends Controller
                 ]);
         }
 
+        // ==========================
+        // 8) Ventas de productos
+        // ==========================
+        $totalProductosMonto = 0;
+        $totalProductosCant  = 0;
+        $productosDetalle    = collect();
+
+        if (Schema::hasTable('ventas_productos')) {
+            $qProductos = DB::table('ventas_productos')
+                ->whereBetween('created_at', [$startFull, $endFull]);
+
+            $aggProductos = $qProductos->selectRaw("
+                COUNT(*) as cantidad,
+                COALESCE(SUM(total), 0) as monto
+            ")->first();
+
+            $totalProductosCant  = (int) ($aggProductos->cantidad ?? 0);
+            $totalProductosMonto = (float) ($aggProductos->monto ?? 0);
+
+            if (Schema::hasTable('producto_venta_producto')) {
+                $productosDetalle = DB::table('producto_venta_producto as pvp')
+                    ->join('ventas_productos as vp', 'vp.id', '=', 'pvp.venta_producto_id')
+                    ->join('productos as p', 'p.id', '=', 'pvp.producto_id')
+                    ->whereBetween('vp.created_at', [$startFull, $endFull])
+                    ->selectRaw("
+                        p.nombre,
+                        SUM(pvp.cantidad) as total_vendido,
+                        SUM(pvp.subtotal) as ingresos
+                    ")
+                    ->groupBy('p.id', 'p.nombre')
+                    ->orderByDesc('total_vendido')
+                    ->limit(5)
+                    ->get();
+            }
+        }
+
+        // ==========================
         // Clientes nuevos (tabla clientes)
         $clientesNuevos = 0;
         if (Schema::hasTable('clientes')) {
@@ -397,16 +436,26 @@ class ReporteController extends Controller
         }
 
 
+        $granTotalIngresos = $montoTotal + $totalProductosMonto;
+        $totalVentasGeneral = $totalVentas + $totalProductosCant;
+
         return [
             'ok' => true,
             'ventas' => [
-                'monto_total'     => $montoTotal,
-                'total_ventas'    => $totalVentas,
-                'ticket_promedio' => $ticketPromedio,
+                'monto_servicios' => $montoTotal,
+                'monto_productos' => $totalProductosMonto,
+                'monto_total'     => $granTotalIngresos,
+                'total_ventas'    => $totalVentasGeneral,
+                'ticket_promedio' => $totalVentasGeneral > 0 ? ($granTotalIngresos / $totalVentasGeneral) : 0,
                 'metodos_pago'    => $metodosPago,
                 'ultimas'         => $ultimasVentas,
                 'resumen_pagos'   => $resumenPagos,
                 'resumen_chart'   => $resumenChart,
+            ],
+            'productos_stats' => [
+                'total_monto' => $totalProductosMonto,
+                'total_cantidad' => $totalProductosCant,
+                'top' => $productosDetalle,
             ],
             'citas' => $citas,
             'empleados' => ['top' => $topEmpleados],
@@ -464,6 +513,8 @@ class ReporteController extends Controller
         return 'id';
     }
 
+    
+
     private function guessPivotCitaServicio(): ?string
     {
         $candidates = ['cita_servicio', 'cita_servicios', 'cita_servicio_detalle', 'cita_servicio_rel'];
@@ -472,4 +523,7 @@ class ReporteController extends Controller
         }
         return null;
     }
+
+
+    
 }

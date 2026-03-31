@@ -15,6 +15,8 @@
   $topServicios = collect(data_get($stats, 'servicios.top', []));
   $topEmpleados = collect(data_get($stats, 'empleados.top', []));
   $ultimasVentas = collect(data_get($ventas, 'ultimas', []));
+  $productosStats = data_get($stats, 'productos_stats', []);
+  $topProductos = collect(data_get($stats, 'productos_stats.top', []));
 
   $resumenChart = data_get($ventas, 'resumen_chart', null);
   $resumenPagos = data_get($ventas, 'resumen_pagos', null);
@@ -124,6 +126,44 @@
       @endif
     </div>
 
+  </div>
+
+  {{-- Productos vendidos --}}
+  <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700 mt-4">
+    <h5 class="text-sm font-semibold text-gray-800 flex items-center mb-3 dark:text-gray-200">
+        <i class="fas fa-boxes-stacked text-purple-500 mr-2"></i>
+        Ventas de productos
+    </h5>
+
+    <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300 mb-3">
+      <div><strong>Total vendido:</strong> {{ $mxn(data_get($productosStats, 'total_monto', 0)) }}</div>
+      <div><strong>Ventas:</strong> {{ (int) data_get($productosStats, 'total_cantidad', 0) }}</div>
+    </div>
+
+    @if($topProductos->isEmpty())
+      <div class="text-center py-3 text-gray-400 dark:text-gray-500 text-xs">Sin productos vendidos en este rango.</div>
+    @else
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/50">
+              <th class="pb-2 font-medium">Producto</th>
+              <th class="pb-2 font-medium">Cantidad</th>
+              <th class="pb-2 font-medium">Ingresos</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-800/60">
+            @foreach($topProductos as $p)
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+                <td class="py-2 text-gray-600 dark:text-gray-300">{{ $p->nombre ?? '-' }}</td>
+                <td class="py-2 text-gray-600 dark:text-gray-300">{{ (int) ($p->total_vendido ?? 0) }}</td>
+                <td class="py-2 font-semibold text-purple-600 dark:text-purple-400">{{ $mxn($p->ingresos ?? 0) }}</td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    @endif
   </div>
 
   {{-- Últimas ventas (Ancho Completo) --}}

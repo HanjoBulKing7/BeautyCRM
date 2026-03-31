@@ -1,4 +1,4 @@
-<section class="reviews-section">
+<section class="reviews-section" id="resenas">
     {{-- Encabezado --}}
     <div class="gallery__most-requested">
         <span class="gallery__kicker">Testimonios</span>

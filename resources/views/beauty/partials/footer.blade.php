@@ -8,7 +8,7 @@
                 <div class="Normal-footer-row">
                     <div class="Normal-footer-column Normal-footer-column-logo">
                         <div class="Normal-footer-logo">
-                            <a href="#">
+                            <a href="{{ url('/home') }}">
                             <img src="{{ asset('iconos/logo.png') }}" alt="Beauty Bonita Logo">
                             </a>
                         </div>
@@ -21,19 +21,19 @@
                         <h4 class="Normal-footer-heading">Nuestros Servicios</h4>
                         <ul class="Normal-footer-links-list">
                             <li class="Normal-footer-links-item">
-                                <a href="#">Maquillaje Profesional</a>
+                                <a href="{{ url('/servicio#servicios-categorias') }}">Maquillaje Profesional</a>
                             </li>
                             <li class="Normal-footer-links-item">
-                                <a href="#">Corte y Peinado</a>
+                                <a href="{{ url('/servicio#servicios-categorias') }}">Corte y Peinado</a>
                             </li>
                             <li class="Normal-footer-links-item">
-                                <a href="#">Coloración</a>
+                                <a href="{{ url('/servicio#servicios-categorias') }}">Coloración</a>
                             </li>
                             <li class="Normal-footer-links-item">
-                                <a href="#">Tratamientos Capilares</a>
+                                <a href="{{ url('/servicio#servicios-categorias') }}">Tratamientos Capilares</a>
                             </li>
                             <li class="Normal-footer-links-item">
-                                <a href="#">Manicure y Pedicure</a>
+                                <a href="{{ url('/servicio#servicios-categorias') }}">Manicure y Pedicure</a>
                             </li>
                         </ul>
                     </div>
@@ -41,16 +41,16 @@
                         <h4 class="Normal-footer-heading">Contacto</h4>
                         <ul class="Normal-footer-links-list">
                             <li class="Normal-footer-links-item">
-                                <a href="#">Reservar Cita</a>
+                                <a href="{{ url('/agendar-cita') }}">Reservar Cita</a>
                             </li>
                             <li class="Normal-footer-links-item">
-                                <a href="#">Horarios</a>
+                                <a href="{{ url('/agendar-cita#bbCalendar') }}">Horarios</a>
                             </li>
                             <li class="Normal-footer-links-item">
-                                <a href="#">Ubicación</a>
+                                <a href="{{ url('/home#find-us') }}">Ubicación</a>
                             </li>
                             <li class="Normal-footer-links-item">
-                                <a href="#">Promociones</a>
+                                <a href="{{ url('/home#servicios-home') }}">Promociones</a>
                             </li>
                         </ul>
                     </div>

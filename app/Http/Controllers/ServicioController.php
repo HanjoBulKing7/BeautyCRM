@@ -10,10 +10,19 @@ use Illuminate\Support\Facades\Storage;
 
 class ServicioController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $servicios = Servicio::latest()->paginate(15);
-        return view('admin.servicios.index', compact('servicios'));
+        $search = trim((string) $request->query('q', ''));
+
+        $servicios = Servicio::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where('nombre_servicio', 'like', '%' . $search . '%');
+            })
+            ->latest()
+            ->paginate(15)
+            ->appends(['q' => $search]);
+
+        return view('admin.servicios.index', compact('servicios', 'search'));
     }
 
     public function create()
