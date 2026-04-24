@@ -1,0 +1,429 @@
+/* ============================================================
+   NOSOTROS — Complete Redesign
+   Beauty Bonita Studio · 2026
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bentham&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --ns-gold:     #b8860b;
+  --ns-gold-lt:  #c9a24a;
+  --ns-dark:     #1a1a1a;
+  --ns-gray:     #374151;
+  --ns-mid:      #6b7280;
+  --ns-cream:    #faf8f5;
+  --ns-white:    #ffffff;
+  --ns-ease:     cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Reset scope ─────────────────────────────── */
+.ns-wrapper *,
+.ns-wrapper *::before,
+.ns-wrapper *::after {
+  box-sizing: border-box;
+}
+
+.ns-wrapper {
+  background: var(--ns-cream);
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.ns-hero {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+  background: #efe9e0;
+}
+
+/* Parallax layers */
+.ns-hero__parallax {
+  position: absolute;
+  inset: 0;
+}
+
+.ns-hero__sky {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 115%;
+  object-fit: cover;
+  object-position: top center;
+  will-change: transform;
+}
+
+.ns-hero__mountains {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%;
+  height: 68%;
+  object-fit: cover;
+  object-position: bottom center;
+  will-change: transform;
+}
+
+.ns-hero__person {
+  position: absolute;
+  bottom: 0;
+  right: 8%;
+  height: 88%;
+  width: auto;
+  object-fit: contain;
+  object-position: bottom;
+  will-change: transform;
+}
+
+/* Gradient veil at bottom */
+.ns-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(250,248,245,0.05) 0%,
+    rgba(250, 248, 245, 0.146)  60%,
+    rgba(250, 248, 245, 0.06)    100%
+  );
+  z-index: 2;
+}
+
+/* Centered content */
+.ns-hero__content {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.ns-hero__label {
+  font-size: 11px;
+  letter-spacing: 7px;
+  text-transform: uppercase;
+  color: var(--ns-gold);
+  font-weight: 600;
+  margin-bottom: 36px;
+  /* initial state for GSAP */
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.ns-hero__logo-img {
+  max-width: min(640px, 78vw);
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 10px 32px rgba(184,134,11,0.18));
+  /* initial state */
+  opacity: 0;
+  transform: translateY(34px) scale(0.94);
+}
+
+.ns-hero__scroll-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 52px;
+  color: var(--ns-mid);
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-decoration: none;
+  /* initial state */
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.ns-hero__scroll-line {
+  display: block;
+  width: 1px;
+  height: 48px;
+  background: linear-gradient(to bottom, var(--ns-gold), transparent);
+  animation: ns-line-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes ns-line-pulse {
+  0%,100% { opacity: 1; transform: scaleY(1); }
+  50%      { opacity: 0.3; transform: scaleY(0.55); }
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+.ns-sections {
+  position: relative;
+  z-index: 5;
+  background: var(--ns-cream);
+}
+
+.ns-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100svh;
+  overflow: hidden;
+}
+
+/* Even: flip columns so image is on the right */
+.ns-section:nth-child(even) {
+  direction: rtl;
+}
+.ns-section:nth-child(even) > * {
+  direction: ltr;
+}
+
+/* Subtle separator */
+.ns-section + .ns-section {
+  border-top: 1px solid rgba(184,134,11,0.1);
+}
+
+/* ── Image column ──────────────────────────── */
+.ns-section__img-wrap {
+  position: relative;
+  overflow: hidden;
+  /* initial state: clipped from the outside edge */
+  clip-path: inset(0 100% 0 0);
+  will-change: clip-path;
+}
+
+.ns-section:nth-child(even) .ns-section__img-wrap {
+  clip-path: inset(0 0 0 100%);
+}
+
+.ns-section__img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.1);
+  will-change: transform;
+  transition: none; /* controlled by GSAP */
+}
+
+/* ── Text column ───────────────────────────── */
+.ns-section__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 72px 80px 64px;
+  position: relative;
+  /* initial state */
+  opacity: 0;
+  transform: translateY(56px);
+  will-change: transform, opacity;
+}
+
+.ns-section:nth-child(even) .ns-section__content {
+  padding: 80px 64px 80px 72px;
+}
+
+/* Ghost number */
+.ns-section__number {
+  display: block;
+  font-family: 'Bentham', serif;
+  font-size: clamp(110px, 13vw, 190px);
+  font-weight: 400;
+  line-height: 1;
+  color: rgba(184,134,11,0.06);
+  margin-bottom: -30px;
+  letter-spacing: -0.02em;
+  user-select: none;
+  /* initial state */
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+/* Label row */
+.ns-section__label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--ns-gold);
+  margin-bottom: 18px;
+}
+
+.ns-section__label::before {
+  content: '';
+  flex-shrink: 0;
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--ns-gold);
+}
+
+/* Title */
+.ns-section__title {
+  font-family: 'Bentham', serif;
+  font-size: clamp(30px, 3.6vw, 52px);
+  font-weight: 400;
+  color: var(--ns-gray);
+  line-height: 1.2;
+  margin-bottom: 26px;
+  letter-spacing: -0.01em;
+}
+
+.ns-section__title span {
+  display: block;
+}
+
+/* Body copy */
+.ns-section__text {
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--ns-mid);
+  margin-bottom: 40px;
+  max-width: 460px;
+}
+
+/* CTA link */
+.ns-section__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ns-gold);
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 5px;
+  width: fit-content;
+}
+
+.ns-section__cta::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--ns-gold);
+  transition: width 0.4s var(--ns-ease);
+}
+
+.ns-section__cta:hover::after { width: 100%; }
+
+.ns-section__cta svg {
+  transition: transform 0.35s var(--ns-ease);
+  flex-shrink: 0;
+}
+
+.ns-section__cta:hover svg {
+  transform: translateX(7px);
+}
+
+/* ============================================================
+   SIDE NAVIGATION
+   ============================================================ */
+.ns-nav {
+  position: fixed;
+  right: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: none; /* nav itself transparent */
+}
+
+/* Re-enable pointer for children */
+.ns-nav__items,
+.ns-nav__bar-wrap {
+  pointer-events: auto;
+}
+
+.ns-nav__items {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: right;
+}
+
+.ns-nav__item a {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(107,114,128,0.35);
+  text-decoration: none;
+  letter-spacing: 1px;
+  display: block;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.ns-nav__item a:hover,
+.ns-nav__item.is-active a {
+  color: var(--ns-gold);
+  transform: translateX(-4px);
+}
+
+.ns-nav__bar-wrap {
+  width: 2px;
+  height: 150px;
+  background: rgba(184,134,11,0.14);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ns-nav__bar {
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to bottom, var(--ns-gold), var(--ns-gold-lt));
+  border-radius: 2px;
+  will-change: height;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 960px) {
+  .ns-section {
+    grid-template-columns: 1fr;
+    grid-template-rows: 55svh auto;
+    min-height: auto;
+  }
+
+  .ns-section:nth-child(even) { direction: ltr; }
+
+  .ns-section__img-wrap {
+    height: 55svh;
+    /* clip-path is set and animated entirely by GSAP on all viewports */
+  }
+
+  .ns-section__content {
+    padding: 60px 28px 64px;
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  .ns-section:nth-child(even) .ns-section__content {
+    padding: 60px 28px 64px;
+  }
+
+  .ns-section__number {
+    font-size: clamp(80px, 22vw, 140px);
+    margin-bottom: -20px;
+  }
+
+  .ns-hero__person {
+    height: 58%;
+    right: 0;
+  }
+
+  .ns-nav { display: none; }
+}
+
+@media (max-width: 500px) {
+  .ns-hero__logo-img { max-width: 270px; }
+  .ns-section__title { font-size: 26px; }
+  .ns-section__text  { font-size: 14px; }
+}
