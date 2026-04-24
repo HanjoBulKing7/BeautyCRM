@@ -49,8 +49,8 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium mb-2 text-gray-700 ml-1">Correo Electrónico <span class="text-red-500">*</span></label>
-                <input type="email" name="email" value="{{ old('email', $cliente->email ?? '') }}" class="bb-input" required placeholder="ejemplo@correo.com">
+                <label class="block text-sm font-medium mb-2 text-gray-700 ml-1">Correo Electrónico</label>
+                <input type="email" name="email" value="{{ old('email', $cliente->email ?? '') }}" class="bb-input" placeholder="ejemplo@correo.com">
                 @error('email') <p class="text-red-500 text-xs ml-1 mt-1">{{ $message }}</p> @enderror
             </div>
 

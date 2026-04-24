@@ -44,31 +44,49 @@ class AuthController extends Controller
     // ✅ REGISTRO MANUAL: Siempre como Cliente (ID 1)
     public function register(Request $request)
     {
+        // Si se proporciona email, la contraseña es requerida
+        $passwordRule = $request->filled('email') ? 'required|string|confirmed|min:6' : 'nullable';
+
         $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|confirmed|min:6',
-            'telefono' => 'nullable|string|max:25', // Lo dejamos nullable por si acaso
+            'email'    => 'nullable|email|unique:users,email',
+            'password' => $passwordRule,
+            'telefono' => 'nullable|string|max:25',
         ]);
 
-        $user = User::create([
-            'name'     => $request->name,       
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id'  => 1, // ✅ SIEMPRE CLIENTE (ID 1)
-        ]);
+        // Si se proporciona email, crear usuario con login
+        if ($request->filled('email')) {
+            $user = User::create([
+                'name'     => $request->name,       
+                'email'    => $request->email,
+                'password' => Hash::make($request->password),
+                'role_id'  => 1, // ✅ SIEMPRE CLIENTE (ID 1)
+            ]);
 
-        // Crear registro asociado en la tabla clientes
-        Cliente::create([
-            'user_id'   => $user->id,
-            'nombre'    => $request->name,
-            'email'     => $user->email,
-            'telefono'  => $request->telefono ?? null,
-            'direccion' => null,
-        ]);
+            // Crear registro asociado en la tabla clientes
+            Cliente::create([
+                'user_id'   => $user->id,
+                'nombre'    => $request->name,
+                'email'     => $user->email,
+                'telefono'  => $request->telefono ?? null,
+                'direccion' => null,
+            ]);
 
-        return redirect()->route('login.form')
-            ->with('success', 'Cuenta creada correctamente. Ingresa con tus datos.');
+            return redirect()->route('login.form')
+                ->with('success', 'Cuenta creada correctamente. Ingresa con tus datos.');
+        } else {
+            // Si no se proporciona email, solo crear el cliente sin usuario
+            Cliente::create([
+                'user_id'   => null,
+                'nombre'    => $request->name,
+                'email'     => null,
+                'telefono'  => $request->telefono ?? null,
+                'direccion' => null,
+            ]);
+
+            return redirect()->route('login.form')
+                ->with('success', 'Registro creado correctamente. Contacta al administrador para obtener acceso.');
+        }
     }
 
     // Logout

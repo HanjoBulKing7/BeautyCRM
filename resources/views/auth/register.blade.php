@@ -188,7 +188,8 @@
                     <i class="fas fa-envelope me-2"></i>Correo electrónico
                 </label>
                 <input type="email" id="email" name="email" class="form-control" 
-                       value="{{ old('email') }}" required placeholder="Ingrese su correo electrónico" autocomplete="email">
+                       value="{{ old('email') }}" placeholder="Ingrese su correo electrónico" autocomplete="email">
+                <small class="text-muted">Si proporciona un correo, podrá iniciar sesión en el sistema</small>
             </div>
 
             <div class="mb-3 text-start">
@@ -199,18 +200,17 @@
                     id="telefono"
                     name="telefono"
                     value="{{ old('telefono') }}"
-                    required
                     placeholder="Ej. 55 1234 5678"
                 >
             </div>
 
-            <div class="mb-3 text-start">
+            <div class="mb-3 text-start" id="password-section">
                 <label for="password" class="form-label">
-                    <i class="fas fa-lock me-2"></i>Contraseña
+                    <i class="fas fa-lock me-2"></i>Contraseña <small class="text-muted">(requerida si proporciona email)</small>
                 </label>
                 <div class="input-group">
                     <input type="password" id="input_password" name="password" class="form-control" 
-                           required placeholder="Ingrese su contraseña" autocomplete="new-password">
+                           placeholder="Ingrese su contraseña" autocomplete="new-password">
                     <button type="button" class="btn btn-outline-secondary" id="togglePassword" 
                             aria-label="Mostrar contraseña" title="Mostrar/ocultar contraseña">
                         <i class="bi bi-eye-slash" id="passwordIcon"></i>
@@ -218,13 +218,13 @@
                 </div>
             </div>
 
-            <div class="mb-3 text-start">
+            <div class="mb-3 text-start" id="password-confirmation-section">
                 <label for="password_confirmation" class="form-label">
                     <i class="fas fa-lock me-2"></i>Confirmar Contraseña
                 </label>
                 <div class="input-group">
                     <input type="password" id="input_password_confirmation" name="password_confirmation" class="form-control" 
-                           required placeholder="Confirme su contraseña" autocomplete="new-password">
+                           placeholder="Confirme su contraseña" autocomplete="new-password">
                     <button type="button" class="btn btn-outline-secondary" id="togglePasswordConfirmation" 
                             aria-label="Mostrar contraseña" title="Mostrar/ocultar contraseña">
                         <i class="bi bi-eye-slash" id="passwordConfirmationIcon"></i>

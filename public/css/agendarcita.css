@@ -1,364 +1,907 @@
-    /* =========================
-   PALETA DE COLORES Y ESTILOS GLOBALES MINIMALISTAS
-========================= */
-:root {
-    --color-primary: #8e6708;
-    --color-primary-hover: #705206;
-    --color-dark: #11141c;
-    --color-light: #ffffff;
-    --color-bg-soft: #faf9f6;
-    --color-border: #f0f0f0;
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600;700&display=swap");
+
+.bb-booking {
+  padding: clamp(46px, 6vw, 90px) 16px;
+  background: #ffffff;
 }
 
-/* Tipografía y fondos generales */
-.bb-booking {
-    font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
-    background-color: #ffffff;
-    color: var(--color-dark);
+.bb-booking__container {
+  max-width: 1120px;
+  margin: 0 auto;
 }
 
 .bb-booking__header {
-    text-align: center;
-    margin-bottom: 50px;
-    padding-top: 40px;
+  text-align: center;
+  margin-bottom: 22px;
 }
+
 .bb-booking__title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 4px;
-    color: var(--color-dark);
-    margin-bottom: 10px;
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  font-size: clamp(30px, 4.2vw, 58px);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
+  color: #1a1a1a;
 }
+
 .bb-booking__subtitle {
-    color: #666;
-    font-size: 1rem;
+  font-family: "Inter", sans-serif;
+  margin: 12px auto 0;
+  max-width: 720px;
+  color: rgba(26,26,26,0.72);
+  line-height: 1.7;
 }
 
-/* Contenedor ancho para el menú superior */
-.bb-booking__top-section {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px 40px 20px;
-}
-
-/* =========================
-   LAYOUT A DOS COLUMNAS (MAIN Y SIDEBAR STICKY)
-========================= */
-.bb-booking__layout {
-    display: flex;
-    gap: 60px; /* Espacio amplio entre calendario y tarjeta tipo Airbnb */
-    align-items: flex-start;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px 60px 20px;
-}
-
-/* COLUMNA IZQUIERDA: Toma todo el espacio sobrante */
-.bb-booking__main {
-    flex: 1;
-    min-width: 0; 
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-}
-
-/* COLUMNA DERECHA: Ancho fijo para alinearse bien a la derecha */
-.bb-booking__right-col {
-    width: 380px; /* Define un ancho estricto */
-    flex-shrink: 0; /* Evita que se encoja */
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* TARJETA STICKY DERECHA (ESTILO AIRBNB) */
-.bb-booking__sidebar {
-    position: sticky;
-    top: 100px; 
-    background: var(--color-light);
-    border-radius: 16px;
-    padding: 30px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-    border: 1px solid var(--color-border);
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-}
-
-.bb-booking__sidebar::-webkit-scrollbar { width: 4px; }
-.bb-booking__sidebar::-webkit-scrollbar-track { background: transparent; }
-.bb-booking__sidebar::-webkit-scrollbar-thumb { background: rgba(142, 103, 8, 0.3); border-radius: 10px; }
-.bb-booking__sidebar::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
-
-
-/* =========================
-   ESTILOS DEL MENÚ MINIMALISTA (DESCUBRE)
-========================= */
-.salon-menu {
-    background-color: var(--color-light);
-    border-radius: 12px;
-}
-
-.salon-menu__header { margin-bottom: 30px; }
-.salon-menu__eyebrow {
-    display: block; font-size: 0.75rem; letter-spacing: 4px; color: var(--color-primary); text-transform: uppercase; margin-bottom: 10px; font-weight: 600;
-}
-.salon-menu__mainTitle {
-    font-size: 2rem; color: var(--color-dark); font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin: 0;
-}
-
-.salon-menu__layout { display: flex; gap: 40px; align-items: flex-start; }
-
-.salon-menu__visual { flex: 1; position: sticky; top: 100px; }
-.salon-menu__image-wrapper {
-    width: 100%; height: 400px; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.05); 
-}
-.salon-menu__image-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.4s ease-in-out; }
-
-.salon-menu__accordion-container {
-    flex: 1; display: flex; flex-direction: column; max-height: 400px; overflow-y: auto; padding-right: 15px;
-}
-
-.salon-menu__accordion-container::-webkit-scrollbar { width: 4px; }
-.salon-menu__accordion-container::-webkit-scrollbar-track { background: var(--color-bg-soft); border-radius: 10px; }
-.salon-menu__accordion-container::-webkit-scrollbar-thumb { background: rgba(142, 103, 8, 0.3); border-radius: 10px; }
-.salon-menu__accordion-container::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
-
-.accordion-item { border-bottom: 1px solid var(--color-border); }
-
-.accordion-header {
-    width: 100%; text-align: left; padding: 20px 0; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--color-dark); background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: color 0.3s ease;
-}
-.accordion-header:hover { color: var(--color-primary); }
-
-.header-left { display: flex; align-items: center; gap: 15px; }
-.category-thumbnail { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border); }
-.accordion-icon { font-size: 1.5rem; font-weight: 300; color: var(--color-primary); transition: transform 0.4s ease; }
-.accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease; }
-
-.service-list { list-style: none; padding: 0 0 15px 0; margin: 0; }
-.service-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 10px; transition: all 0.2s ease; cursor: pointer; }
-.service-item:hover { background-color: var(--color-bg-soft); transform: translateX(5px); }
-
-.service-left { display: flex; align-items: center; gap: 12px; }
-.service-thumbnail { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
-.service-name { margin: 0 0 4px 0; font-size: 0.95rem; color: var(--color-dark); font-weight: 600; }
-.service-meta { font-size: 0.8rem; color: #888; }
-.meta-divider { margin: 0 6px; opacity: 0.3; }
-.service-price { font-weight: 700; color: var(--color-primary); }
-
-.service-btn { padding: 6px 16px; background-color: transparent; border: 1px solid var(--color-primary); color: var(--color-primary); border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; cursor: pointer; }
-.service-item:hover .service-btn { background-color: var(--color-primary); color: var(--color-light); }
-
-/* =========================
-   ESTILOS DE PANELES (CALENDARIO Y OBSERVACIONES)
-========================= */
+/* Paneles */
 .bb-panel {
-    background: var(--color-light); padding: 30px; border-radius: 16px; border: 1px solid var(--color-border); box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  border-radius: 22px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.06);
+  background: #fff;
+  padding: clamp(16px, 2.5vw, 24px);
+  margin-top: 18px;
 }
+
 .bb-panel__title {
-    font-size: 1.25rem; font-weight: 600; color: var(--color-dark); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 2px solid var(--color-bg-soft); padding-bottom: 10px;
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+  color: rgba(26,26,26,0.85);
 }
 
-.bb-calendar, .bb-timesPanel { background: var(--color-bg-soft); border-radius: 12px; border: none; padding: 20px; }
-.bb-calendar .selected, .bb-timesPanel .selected-time { background-color: var(--color-primary) !important; color: var(--color-light) !important; }
-
-.bb-input { width: 100%; padding: 15px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-bg-soft); font-family: inherit; resize: vertical; box-sizing: border-box;}
-.bb-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(142, 103, 8, 0.1); }
-
-
-/* =========================
-   CALENDARIO (.bb-calendar / .bb-cal__)
-========================= */
-.bb-calendar {
-    margin-top: 10px;
-}
-  
-.bb-cal__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 14px;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 16px;
-    background: linear-gradient(180deg, rgba(244,235,221,0.85), rgba(255,255,255,0.95));
-    box-shadow: 0 12px 26px rgba(0,0,0,0.05);
-}
-  
-.bb-cal__title {
-    font-family: "Inter", sans-serif;
-    font-weight: 800;
-    text-transform: capitalize;
-    letter-spacing: .02em;
-    color: rgba(26,26,26,0.86);
-}
-  
-.bb-cal__nav {
-    border: 1px solid rgba(184,134,11,0.35);
-    background: #fff;
-    color: #b8860b;
-    width: 38px;
-    height: 38px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-size: 20px;
-    line-height: 1;
-    display: grid;
-    place-items: center;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-}
-  
-.bb-cal__nav:active { 
-    transform: translateY(1px); 
-}
-  
-.bb-cal__dow {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    margin-top: 12px;
-    padding: 0 4px;
-    font-family: "Inter", sans-serif;
-    font-weight: 800;
-    font-size: 12px;
-    color: rgba(26,26,26,0.55);
-    text-align: center;
-}
-  
-.bb-cal__grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-    margin-top: 10px;
-}
-  
-.bb-cal__cell {
-    position: relative;
-    width: 100%;
-    aspect-ratio: auto;
-    height: 64px;
-    padding: 10px;
-    border-radius: 16px;
-    border: 1px solid rgba(0,0,0,0.08);
-    background: #fff;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.04);
-    cursor: pointer;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-}
-  
-.bb-cal__cell.is-empty {
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    cursor: default;
-}
-  
-.bb-cal__cell.is-disabled {
-    opacity: .45;
-    cursor: not-allowed;
-    filter: grayscale(0.2);
-}
-  
-.bb-cal__cell.is-selected {
-    border-color: rgba(184,134,11,0.55);
-    box-shadow: 0 12px 26px rgba(184,134,11,0.18);
-    background: linear-gradient(180deg, rgba(244,235,221,0.95), rgba(255,255,255,0.95));
-}
-  
-.bb-cal__day {
-    font-family: "Inter", sans-serif;
-    font-weight: 900;
-    color: rgba(26,26,26,0.86);
-    font-size: 13px;
-}
-  
-.bb-cal__badge {
-    display: none !important;
-}
-  
-/* Dots indicadores del calendario */
-.bb-cal__dot {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-}
-  
-.bb-cal__dot.is-gold {
-    background: rgba(184,134,11,0.95);
-    box-shadow: 0 0 0 4px rgba(184,134,11,0.16);
-}
-  
-.bb-cal__dot.is-red {
-    background: #ef4444;
-    box-shadow: 0 0 0 4px rgba(239,68,68,0.16);
-}
-  
-.bb-cal__dot.is-muted {
-    background: rgba(0,0,0,0.18);
-    box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
-}
-
-/* =========================
-   ESTILOS DE LA TARJETA TU RESERVA
-========================= */
 .bb-badge {
-    font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--color-dark); margin-bottom: 20px; text-align: left; border-bottom: 1px solid var(--color-border); padding-bottom: 15px;
+  display: inline-flex;
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b8860b;
+  margin: 0 0 8px;
 }
 
-.bb-selectedCard { background: var(--color-bg-soft); border-radius: 12px; padding: 15px; margin-bottom: 15px; display: flex; gap: 15px; position: relative; border: 1px solid var(--color-border); }
-.bb-selectedCard__media img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
-.bb-selected__name { font-size: 0.95rem; font-weight: 600; margin: 0 0 5px 0; color: var(--color-dark); }
-.bb-selected__meta { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; color: #666; }
-.bb-selected__meta strong { color: var(--color-primary); }
+/* Servicio seleccionado */
+.bb-selected{
+  display: flex;              /* ✅ ya no grid */
+  flex-direction: column;     /* ✅ título arriba, cards abajo */
+  gap: 12px;
+  align-items: stretch;       /* ✅ todo a lo ancho */
+}
 
-.bb-select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--color-border); font-size: 0.8rem; background: var(--color-light); box-sizing: border-box; }
+.bb-selected .bb-badge{
+  width: 100%;
+  text-align: left;
+  padding-left: 6px;
+  margin: 0;
+}
 
-.bb-selectedCard__remove { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #aaa; cursor: pointer; font-size: 1rem; transition: color 0.2s; }
-.bb-selectedCard__remove:hover { color: #d9534f; }
 
-/* Botón Final (Reservar) */
+.bb-selected__media {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f4ebdd;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.bb-selected__img {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.bb-selected__name {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  font-size: clamp(22px, 2.6vw, 34px);
+  margin: 0 0 10px;
+  color: #1a1a1a;
+}
+
+.bb-selected__meta {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  color: rgba(26,26,26,0.78);
+  line-height: 1.8;
+}
+
+.bb-selected__meta strong {
+  color: rgba(26,26,26,0.92);
+}
+
+/* Form */
+.bb-formRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.bb-label {
+  display: block;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: rgba(26,26,26,0.8);
+}
+
+.bb-select, .bb-input {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  font-family: "Inter", sans-serif;
+  outline: none;
+}
+
+.bb-select:focus, .bb-input:focus {
+  border-color: rgba(184,134,11,0.55);
+  box-shadow: 0 0 0 4px rgba(184,134,11,0.12);
+}
+
+/* Chips */
+.bb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.bb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: #F4EBDD;
+  border: 1px solid rgba(184,134,11,0.35);
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: rgba(26,26,26,0.90);
+}
+
+.bb-chip button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #b8860b;
+}
+
+/* Grid 2 */
+.bb-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bb-hint {
+  margin-top: 10px;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  color: rgba(26,26,26,0.62);
+}
+
+.bb-final {
+  margin-top: 22px;
+  text-align: center;
+}
+
+.bb-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+}
+
 .bb-btn--primary {
-    width: 100%; padding: 16px; background-color: #e51d53; color: var(--color-light); border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; letter-spacing: 1px; cursor: pointer; transition: background-color 0.3s ease, transform 0.2s ease; margin-top: 20px;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(184,134,11,0.95), rgba(184,134,11,0.78));
+  box-shadow: 0 16px 35px rgba(0,0,0,0.10), 0 14px 24px rgba(184,134,11,0.18);
 }
-.bb-btn--primary:hover:not(:disabled) { background-color: #d11749; transform: translateY(-2px); }
-.bb-btn--primary:disabled { background-color: #f0f0f0; color: #aaaaaa; cursor: not-allowed; }
 
+.bb-btn--primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+}
+
+.bb-btn--ghost {
+  background: #ffffff;
+  border: 1px solid rgba(184,134,11,0.40);
+  color: #b8860b;
+  padding: 12px 16px;
+}
+
+.bb-note {
+  margin-top: 14px;
+  font-family: "Inter", sans-serif;
+  color: rgba(26,26,26,0.72);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .bb-selected {
+    grid-template-columns: 1fr;
+  }
+
+  .bb-formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .bb-grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+/* Lista de servicios seleccionados */
+.bb-selectedList{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* ✅ espacio entre cards */
+}
+
+
+.bb-selectedCard{
+  width: 100%;
+  max-width: none;
+  margin: 0;
+
+  position: relative; /* ✅ para posicionar el botón */
+
+  display: grid;
+  grid-template-columns: 260px 1fr; /* ✅ más espacio al texto */
+  gap: 18px;
+  align-items: center;
+
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+
+.bb-selectedCard__media{
+  background: #f4ebdd;
+  height: 100%;
+}
+
+.bb-selectedCard__img{
+  width: 100%;
+  height: 100%;
+  min-height: 170px;
+  object-fit: cover;
+  display: block;
+}
+/* Info con padding cómodo */
+.bb-selectedCard__info{
+  padding: 16px 18px;
+}
+
+/* Botón (X / ✓) SIN quitar ancho */
+.bb-selectedCard__remove{
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(184,134,11,0.35);
+  background: rgba(244, 235, 221, 0.9);
+  color: #b8860b;
+
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+
+  box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+}
+
+.bb-selectedCard__remove:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.bb-selectedCard__remove:disabled{
+  opacity: 0.75;
+  cursor: default;
+}
+
+/* Para móvil */
+@media (max-width: 900px){
+  .bb-selectedCard{
+    grid-template-columns: 1fr;
+  }
+  .bb-selectedCard__img{
+    min-height: 220px;
+  }
+}
 /* =========================
-   ESTILOS DE INSIGNIA AIRBNB
+   CALENDARIO (bb-cal__)
 ========================= */
-.bb-reviews-badge {
-    display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--color-border); border-radius: 16px; padding: 24px; background: var(--color-light); box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-}
-.bb-reviews-badge__left { display: flex; align-items: center; gap: 15px; font-size: 1.1rem; font-weight: 600; color: var(--color-dark); }
-.bb-reviews-badge__left svg { width: 32px; height: 32px; fill: var(--color-primary); }
-.bb-reviews-badge__right { display: flex; align-items: center; gap: 30px; text-align: center; }
-.bb-reviews-badge__stat { display: flex; flex-direction: column; }
-.bb-reviews-badge__stat-num { font-size: 1.3rem; font-weight: 700; color: var(--color-dark); }
-.bb-reviews-badge__stat-text { font-size: 0.85rem; color: #666; text-decoration: underline; }
-.bb-reviews-badge__divider { width: 1px; height: 40px; background-color: var(--color-border); }
-
-/* =========================
-   RESPONSIVE MÓVIL
-========================= */
-@media (max-width: 1024px) {
-    .bb-booking__layout { flex-direction: column; }
-    .bb-booking__main { width: 100%; }
-    .bb-booking__right-col { width: 100%; flex-shrink: 1; }
-    .bb-booking__sidebar { width: 100%; position: relative; top: 0; max-height: none; overflow-y: visible; }
-    .salon-menu__layout { flex-direction: column; }
-    .salon-menu__visual { position: relative; top: 0; width: 100%; }
-    .salon-menu__image-wrapper { height: 300px; }
-    .salon-menu__accordion-container { max-height: 50vh; }
+.bb-calendar{
+  margin-top: 10px;
 }
 
-@media (max-width: 768px) {
-    .bb-reviews-badge { flex-direction: column; gap: 20px; }
-    .bb-reviews-badge__divider { width: 40px; height: 1px; }
-    .bb-reviews-badge__right { flex-direction: column; gap: 15px; }
+.bb-cal__header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(244,235,221,0.85), rgba(255,255,255,0.95));
+  box-shadow: 0 12px 26px rgba(0,0,0,0.05);
 }
+
+.bb-cal__title{
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  text-transform: capitalize;
+  letter-spacing: .02em;
+  color: rgba(26,26,26,0.86);
+}
+
+.bb-cal__nav{
+  border: 1px solid rgba(184,134,11,0.35);
+  background: #fff;
+  color: #b8860b;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  cursor:pointer;
+  font-size: 20px;
+  line-height: 1;
+  display:grid;
+  place-items:center;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+.bb-cal__nav:active{ transform: translateY(1px); }
+
+.bb-cal__dow{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0 4px;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(26,26,26,0.55);
+  text-align:center;
+}
+
+.bb-cal__grid{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.bb-cal__cell{
+  position:relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #fff;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+  cursor:pointer;
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  padding: 10px;
+}
+
+.bb-cal__cell.is-empty{
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+
+.bb-cal__cell.is-disabled{
+  opacity: .45;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
+.bb-cal__cell.is-selected{
+  border-color: rgba(184,134,11,0.55);
+  box-shadow: 0 12px 26px rgba(184,134,11,0.18);
+  background: linear-gradient(180deg, rgba(244,235,221,0.95), rgba(255,255,255,0.95));
+}
+
+.bb-cal__day{
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  color: rgba(26,26,26,0.86);
+  font-size: 13px;
+}
+
+.bb-cal__badge{
+  position:absolute;
+  right: 10px;
+  top: 10px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(184,134,11,0.35);
+  background: rgba(244,235,221,0.95);
+  color: #b8860b;
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  display:grid;
+  place-items:center;
+}
+/* =========================================================
+   OVERRIDES + NUEVO UI (categorías, servicios, calendario, horas)
+   Pegar AL FINAL del agendarcita.css
+========================================================= */
+
+/* Empty helper */
+.bb-empty{
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(0,0,0,0.12);
+  background: rgba(244,235,221,0.35);
+  font-family: "Inter", sans-serif;
+  color: rgba(26,26,26,0.70);
+}
+
+/* ===== Categorías (chips) ===== */
+.bb-cat__list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.bb-cat-btn{
+  border:1px solid rgba(184,134,11,0.28);
+  background: rgba(244,235,221,0.55);
+  color: rgba(26,26,26,0.88);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-family:"Inter", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing:.08em;
+  text-transform: uppercase;
+  cursor:pointer;
+  transition: transform 150ms ease, filter 150ms ease;
+}
+.bb-cat-btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+.bb-cat-btn.is-active{
+  background: rgba(184,134,11,0.12);
+  border-color: rgba(184,134,11,0.55);
+  box-shadow: 0 10px 22px rgba(184,134,11,0.10);
+}
+
+/* ===== Cards de servicios ===== */
+.bb-svc__cards{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 14px;
+}
+@media (max-width: 1024px){
+  .bb-svc__cards{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 640px){
+  .bb-svc__cards{ grid-template-columns: 1fr; }
+}
+
+.bb-svc-card{
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background:#fff;
+  overflow:hidden;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.06);
+  cursor:pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+  display:flex;
+  flex-direction:column;
+}
+.bb-svc-card:hover{ transform: translateY(-2px); filter: brightness(1.02); }
+.bb-svc-card.is-disabled{ opacity:.55; cursor:not-allowed; }
+.bb-svc-card.is-disabled:hover{ transform:none; filter:none; }
+
+.bb-svc-card__media img{
+  width:100%;
+  height:140px;
+  object-fit:cover;
+  display:block;
+  background:#f4ebdd;
+}
+.bb-svc-card__body{
+  padding: 12px 14px 14px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+.bb-svc-card__name{
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  color: rgba(26,26,26,0.90);
+}
+.bb-svc-card__meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-family:"Inter", sans-serif;
+  font-size: 13px;
+  color: rgba(26,26,26,0.72);
+}
+
+/* botón suave para card */
+.bb-btn--soft{
+  width: 100%;
+  border-radius: 999px;
+  padding: 10px 14px;
+  border: 1px solid rgba(184,134,11,0.35);
+  background: rgba(244,235,221,0.70);
+  color: #b8860b;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+.bb-btn--soft:disabled{
+  opacity:.7;
+  cursor:not-allowed;
+}
+
+/* ===== Calendario: más compacto + dot + sin numerito ===== */
+
+/* compactar tamaño */
+.bb-cal__grid{ gap: 10px; }
+.bb-cal__cell{
+  aspect-ratio: auto;      /* override */
+  height: 64px;            /* 👈 más pequeño */
+  padding: 10px;
+}
+
+/* elimina el numerito dorado */
+.bb-cal__badge{ display:none !important; }
+
+/* dot (disponible/no/neutral) */
+.bb-cal__dot{
+  position:absolute;
+  right: 10px;
+  top: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+.bb-cal__dot.is-gold{
+  background: rgba(184,134,11,0.95);
+  box-shadow: 0 0 0 4px rgba(184,134,11,0.16);
+}
+.bb-cal__dot.is-red{
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239,68,68,0.16);
+}
+.bb-cal__dot.is-muted{
+  background: rgba(0,0,0,0.18);
+  box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
+}
+
+/* ===== Panel de horas (grid) ===== */
+.bb-timesPanel{
+  margin-top: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: linear-gradient(180deg, rgba(244,235,221,0.60), rgba(255,255,255,0.95));
+  padding: 14px 14px 16px;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.05);
+}
+.bb-timesGrid{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: repeat(6, minmax(0,1fr));
+  gap: 10px;
+}
+@media (max-width: 1024px){
+  .bb-timesGrid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+@media (max-width: 640px){
+  .bb-timesGrid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+
+.bb-timeBtn{
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background:#fff;
+  padding: 12px 10px;
+  font-family:"Inter", sans-serif;
+  font-weight: 900;
+  letter-spacing: .02em;
+  cursor:pointer;
+  transition: transform 140ms ease, filter 140ms ease;
+  box-shadow: 0 12px 22px rgba(0,0,0,0.04);
+}
+.bb-timeBtn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+.bb-timeBtn.is-selected{
+  border-color: rgba(184,134,11,0.60);
+  background: rgba(184,134,11,0.12);
+  box-shadow: 0 16px 30px rgba(184,134,11,0.12);
+}
+/* =========================================================
+   LAYOUT: Calendario a la izquierda / Horas + Seleccionados a la derecha
+========================================================= */
+.bb-datetimeGrid{
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 10px;
+}
+@media (max-width: 1024px){
+  .bb-datetimeGrid{ grid-template-columns: 1fr; }
+}
+.bb-datetimeGrid__right{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Caja suave dentro del panel */
+.bb-datetimeBox{
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: linear-gradient(180deg, rgba(244,235,221,0.45), rgba(255,255,255,0.95));
+  padding: 14px;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.05);
+}
+
+/* =========================================================
+   Servicios seleccionados — versión compacta (para el panel derecho)
+========================================================= */
+.bb-selectedList--compact{
+  gap: 10px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+.bb-selectedCard--compact{
+  grid-template-columns: 86px 1fr;
+  gap: 12px;
+}
+.bb-selectedCard--compact .bb-selectedCard__media{
+  height: 86px;
+}
+.bb-selectedCard--compact .bb-selectedCard__img{
+  height: 86px;
+  min-height: 86px;
+}
+.bb-selectedCard--compact .bb-selectedCard__info{
+  padding: 10px 12px;
+}
+.bb-selectedCard--compact .bb-selected__name{
+  font-size: 14px;
+  margin: 0 0 6px;
+}
+.bb-selectedCard--compact .bb-selected__meta{
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.bb-selectedCard--compact .bb-selected__meta li{
+  margin: 0;
+}
+.bb-selectedCard--compact .bb-selectedCard__remove{
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+}
+.bb-selectedCard--compact .bb-selectedCard__emp .bb-hint{
+  display: none;
+}
+.bb-selectedCard--compact .bb-label{
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.bb-selectedCard--compact .bb-select{
+  padding: 10px 10px;
+  border-radius: 12px;
+}
+
+@media (max-width: 900px){
+  .bb-selectedList--compact{
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+  .bb-selectedCard--compact{
+    grid-template-columns: 1fr;
+  }
+  .bb-selectedCard--compact .bb-selectedCard__media{
+    height: auto;
+  }
+  .bb-selectedCard--compact .bb-selectedCard__img{
+    height: 180px;
+    min-height: 180px;
+  }
+}
+/* =========================================================
+   SELECTED (COMPACT GRID) — Servicios seleccionados arriba
+   Pegar al FINAL de public/css/agendarcita.css
+========================================================= */
+
+/* Grid para cards seleccionadas */
+.bb-selectedList--compact{
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 340px));
+  gap: 16px;
+  align-items: stretch;
+  justify-content: start;
+}
+
+/* Card vertical (imagen arriba, info abajo) */
+.bb-selectedList--compact .bb-selectedCard{
+  position: relative;
+  display: flex !important;
+  flex-direction: column !important;
+
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.06);
+}
+
+/* Imagen */
+.bb-selectedList--compact .bb-selectedCard__media{
+  background: #f4ebdd;
+}
+.bb-selectedList--compact .bb-selectedCard__img{
+  width: 100%;
+  height: 180px;
+  min-height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Info */
+.bb-selectedList--compact .bb-selectedCard__info{
+  padding: 12px 14px 14px;
+}
+.bb-selectedList--compact .bb-selected__name{
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  margin: 0 0 8px;
+  color: rgba(26,26,26,0.90);
+}
+.bb-selectedList--compact .bb-selected__meta{
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  color: rgba(26,26,26,0.72);
+  line-height: 1.6;
+}
+
+/* Remove (X) */
+.bb-selectedList--compact .bb-selectedCard__remove{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(184,134,11,0.35);
+  background: rgba(255,255,255,0.92);
+  color: #b8860b;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+}
+.bb-selectedList--compact .bb-selectedCard__remove:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+.bb-selectedList--compact .bb-selectedCard__remove:disabled{
+  opacity: .7;
+  cursor: default;
+}
+
+/* Responsive */
+@media (max-width: 640px){
+  .bb-selectedList--compact{
+    grid-template-columns: 1fr;
+  }
+  .bb-selectedList--compact .bb-selectedCard__img{
+    height: 220px;
+    min-height: 220px;
+  }
+}
+
+/* (Opcional) Layout 2 columnas para calendario + horas si no lo tenías */
+.bb-datetimeGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px){
+  .bb-datetimeGrid{
+    grid-template-columns: 1fr;
+  }
+}
+/* ===== FIX: selected cards en grid (vertical) ===== */
+#agendarcita .bb-selectedList--compact{
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selectedCard{
+  /* mata el layout viejo (2 columnas) */
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: 1fr !important; /* por si algún CSS insiste */
+  align-items: stretch !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selectedCard__media{
+  width: 100% !important;
+  height: auto !important;     /* mata el height:100% viejo */
+}
+
+#agendarcita .bb-selectedList--compact .bb-selectedCard__img{
+  width: 100% !important;
+  height: 180px !important;
+  min-height: 180px !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selectedCard__info{
+  padding: 12px 14px 14px !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selected__name{
+  font-family: "Inter", sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+  margin: 0 0 8px !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selected__meta{
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#agendarcita .bb-selectedList--compact .bb-selected__meta li{
+  margin: 0 !important;
+}
+

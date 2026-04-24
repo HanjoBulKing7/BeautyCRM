@@ -32,20 +32,25 @@ class ClienteController extends Controller
     {
         $request->validate([
             'nombre'    => 'required|string|max:255',
-            'email'     => 'required|email|unique:users,email',
+            'email'     => 'nullable|email|unique:users,email',
             'telefono'  => 'nullable|string|max:255',
         ]);
 
         DB::transaction(function () use ($request) {
-            $user = User::create([
-                'role_id'  => 1, // CLIENTE
-                'name'     => $request->nombre,
-                'email'    => $request->email,
-                'password' => Hash::make(Str::random(32)),
-            ]);
+            // Solo crear usuario si se proporciona un email
+            $userId = null;
+            if ($request->filled('email')) {
+                $user = User::create([
+                    'role_id'  => 1, // CLIENTE
+                    'name'     => $request->nombre,
+                    'email'    => $request->email,
+                    'password' => Hash::make(Str::random(32)),
+                ]);
+                $userId = $user->id;
+            }
 
             Cliente::create([
-                'user_id'   => $user->id,
+                'user_id'   => $userId,
                 'nombre'    => $request->nombre,
                 'email'     => $request->email,
                 'telefono'  => $request->telefono,
@@ -72,9 +77,14 @@ class ClienteController extends Controller
 
     public function update(Request $request, Cliente $cliente)
     {
+        $emailRule = 'nullable|email';
+        if ($request->filled('email')) {
+            $emailRule .= '|unique:users,email,' . $cliente->user_id;
+        }
+
         $request->validate([
             'nombre'    => 'required|string|max:255',
-            'email'     => 'required|email|unique:users,email,' . $cliente->user_id,
+            'email'     => $emailRule,
             'telefono'  => 'nullable|string|max:255',
             'direccion' => 'nullable|string',
             'fecha_nacimiento' => 'nullable|date',
@@ -83,7 +93,7 @@ class ClienteController extends Controller
         DB::transaction(function () use ($request, $cliente) {
             $cliente->update($request->only(['nombre', 'email', 'telefono', 'direccion', 'fecha_nacimiento']));
 
-            if ($cliente->user_id) {
+            if ($cliente->user_id && $request->filled('email')) {
                 User::where('id', $cliente->user_id)->update([
                     'name'  => $request->nombre,
                     'email' => $request->email,

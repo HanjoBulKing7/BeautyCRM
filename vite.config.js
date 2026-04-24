@@ -10,8 +10,6 @@ export default defineConfig({
         'resources/css/app.css',
         'resources/css/components.css',   // 👈 tu dark mode + overrides
         'resources/css/horizontal.css',
-        'resources/css/styles.css',
-        'resources/css/responsive.css',
           'resources/css/ui.css',   // 👈 agrega esto
         'resources/css/agendarcita.css',
 
