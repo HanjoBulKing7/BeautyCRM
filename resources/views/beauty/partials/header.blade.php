@@ -93,13 +93,6 @@
                             </div>
                         @else
                             <div class="Normal-guest-actions Normal-guest-actions--mobile">
-                                <a href="{{ route('login.form') }}" class="Normal-guest-link {{ request()->is('login') ? 'active' : '' }}">
-                                    <i class="bx bx-log-in"></i>
-                                    Login
-                                </a>
-
-                                <span aria-hidden="true" class="Normal-guest-divider"></span>
-
                                 <a href="{{ route('agendarcita.create') }}" class="Normal-guest-link {{ request()->is('agendar-cita') ? 'active' : '' }}">
                                     <i class="bx bx-calendar"></i>
                                     Agendar cita
@@ -148,13 +141,6 @@
                         </div>
                     @else
                         <div class="Normal-guest-actions Normal-guest-actions--desktop">
-                            <a href="{{ route('login.form') }}" class="Normal-guest-link {{ request()->is('login') ? 'active' : '' }}">
-                                <i class="bx bx-log-in"></i>
-                                Login
-                            </a>
-
-                            <span aria-hidden="true" class="Normal-guest-divider"></span>
-
                             <a href="{{ route('agendarcita.create') }}" class="Normal-guest-link {{ request()->is('agendar-cita') ? 'active' : '' }}" data-scroll>
                                 <i class="bx bx-calendar"></i>
                                 Agendar cita

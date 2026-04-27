@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="{{ asset('css/beauty/homehero.css') }}">
   <link rel="stylesheet" href="{{ asset('css/beauty/imagenes.css') }}">
   <link rel="stylesheet" href="{{ asset('css/beauty/resenas.css') }}">
-  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+  <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
 @endpush
 
 @section('content')
@@ -26,25 +26,18 @@
 @endsection
 
 @push('scripts')
-  {{-- GSAP + ScrollTrigger (si no lo tienes ya en tu layout) --}}
+  {{-- Lenis smooth scroll (antes que GSAP para que quede registrado) --}}
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+
+  {{-- GSAP + ScrollTrigger --}}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
-  <script src="{{ asset('js/beauty/people.js') }}"></script>
+  {{-- Scripts de secciones específicas --}}
   <script src="{{ asset('js/beauty/homehero.js') }}"></script>
+  <script src="{{ asset('js/beauty/people.js') }}"></script>
   <script src="{{ asset('js/beauty/imagenes.js') }}"></script>
 
-  {{-- AOS --}}
-  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!window.AOS) return;
-      AOS.init({
-        duration: 650,
-        easing: 'ease-out-cubic',
-        once: true,
-        offset: 80
-      });
-    });
-  </script>
+  {{-- Animaciones generales + Lenis (va al final para que todo el DOM esté listo) --}}
+  <script src="{{ asset('js/beauty/home-animations.js') }}" defer></script>
 @endpush
