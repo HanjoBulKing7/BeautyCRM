@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="{{ asset('css/beauty/homehero.css') }}">
   <link rel="stylesheet" href="{{ asset('css/beauty/imagenes.css') }}">
   <link rel="stylesheet" href="{{ asset('css/beauty/resenas.css') }}">
-  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+  <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
 @endpush
 
 @section('content')
@@ -26,25 +26,22 @@
 @endsection
 
 @push('scripts')
-  {{-- GSAP + ScrollTrigger (si no lo tienes ya en tu layout) --}}
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  {{-- Lenis (smooth scroll) --}}
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 
-  <script src="{{ asset('js/beauty/people.js') }}"></script>
+  {{-- GSAP + plugins --}}
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+  {{-- 1. Inicializa Lenis + anima todas las secciones del home --}}
+  <script src="{{ asset('js/home-animations.js') }}"></script>
+
+  {{-- 2. Hero pin/zoom --}}
   <script src="{{ asset('js/beauty/homehero.js') }}"></script>
-  <script src="{{ asset('js/beauty/imagenes.js') }}"></script>
 
-  {{-- AOS --}}
-  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!window.AOS) return;
-      AOS.init({
-        duration: 650,
-        easing: 'ease-out-cubic',
-        once: true,
-        offset: 80
-      });
-    });
-  </script>
+  {{-- 3. People section reveals --}}
+  <script src="{{ asset('js/beauty/people.js') }}"></script>
+
+  {{-- 4. Gallery carousel dots (mobile) --}}
+  <script src="{{ asset('js/beauty/imagenes.js') }}"></script>
 @endpush

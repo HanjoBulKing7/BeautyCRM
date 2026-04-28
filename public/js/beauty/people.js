@@ -1,70 +1,60 @@
-function refreshAOS() {
-  if (!window.AOS) return;
-  if (typeof window.AOS.refreshHard === "function") window.AOS.refreshHard();
-  else if (typeof window.AOS.refresh === "function") window.AOS.refresh();
-}
+/* ============================================================
+   PEOPLE SECTION — Animaciones
+   Sin dependencia de AOS: usa GSAP fromTo
+   ============================================================ */
 
 (() => {
-  // Si no existe la sección, no hacemos nada
-  const section = document.querySelector(".bb-people");
+  const section = document.querySelector('.bb-people');
   if (!section) return;
 
-  // Requiere GSAP + ScrollTrigger (CDN o bundle)
   if (!window.gsap || !window.ScrollTrigger) {
-    console.warn("[people] Falta GSAP/ScrollTrigger.");
+    console.warn('[people] Falta GSAP/ScrollTrigger.');
     return;
   }
 
   gsap.registerPlugin(ScrollTrigger);
 
-  // Reveal del bloque superior
-  gsap.to(section.querySelectorAll(".js-reveal"), {
-    opacity: 1,
-    y: 0,
-    duration: 0.9,
-    ease: "power3.out",
-    stagger: 0.12,
-    scrollTrigger: {
-      trigger: section,
-      start: "top 75%",
-      toggleActions: "play none none reverse",
-    },
-    onStart: () => {
-      // Por si AOS ya está inicializado, refrescamos cálculos
-      refreshAOS();
-    },
-  });
+  /* ── Bloque de texto + tarjeta promo (fila superior) ─── */
+  const reveals = section.querySelectorAll('.js-reveal');
+  if (reveals.length) {
+    gsap.set(reveals, { opacity: 0, y: 50 });
+    gsap.to(reveals, {
+      opacity: 1, y: 0,
+      stagger: 0.14, duration: 0.9, ease: 'power3.out',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top 75%',
+        toggleActions: 'play none none reverse',
+      },
+    });
+  }
 
-  // Cards: entrada + mini-parallax suave
-  section.querySelectorAll(".js-card").forEach((card) => {
+  /* ── Tarjetas de navegación (fila inferior) ──────────── */
+  const cards = section.querySelectorAll('.js-card');
+  gsap.set(cards, { opacity: 0, y: 50 });
+
+  cards.forEach(card => {
     gsap.to(card, {
-      opacity: 1,
-      y: 0,
-      duration: 0.9,
-      ease: "power3.out",
+      opacity: 1, y: 0,
+      duration: 0.9, ease: 'power3.out',
       scrollTrigger: {
         trigger: card,
-        start: "top 85%",
-        toggleActions: "play none none reverse",
-      },
-      onStart: () => {
-        refreshAOS();
+        start: 'top 86%',
+        toggleActions: 'play none none reverse',
       },
     });
 
-    // Parallax: mueve la imagen ligeramente mientras scrolleas
-    const img = card.querySelector("img");
+    /* Parallax sutil en cada imagen */
+    const img = card.querySelector('img');
     if (img) {
-      gsap.fromTo(
-        img,
-        { y: 10 },
+      gsap.fromTo(img,
+        { y: 12 },
         {
-          y: -10,
-          ease: "none",
+          y: -12, ease: 'none',
           scrollTrigger: {
             trigger: card,
-            start: "top bottom",
-            end: "bottom top",
+            start: 'top bottom',
+            end: 'bottom top',
             scrub: true,
           },
         }
@@ -72,6 +62,6 @@ function refreshAOS() {
     }
   });
 
-  // Refresh inicial por si el layout cambió
-  requestAnimationFrame(() => refreshAOS());
+  /* Asegurar que ScrollTrigger recalcule posiciones */
+  requestAnimationFrame(() => ScrollTrigger.refresh());
 })();

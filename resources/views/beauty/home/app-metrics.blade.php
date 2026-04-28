@@ -66,47 +66,4 @@
     </div>
 </section>
 
-{{-- Script para la animación del contador --}}
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const section = document.getElementById('stats-counter-section');
-        const counters = section.querySelectorAll('.js-stat-counter');
-        let animated = false;
-
-        // Configuramos el observador: avisa cuando el 30% de la sección es visible
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && !animated) {
-                    animated = true; // Para que no se repita si suben y bajan
-                    
-                    counters.forEach(counter => {
-                        const target = +counter.getAttribute('data-target');
-                        const duration = 2000; // Duración en milisegundos (2 segundos)
-                        const fps = 60;
-                        const step = target / (duration / (1000 / fps));
-                        let current = 0;
-
-                        const updateCounter = () => {
-                            current += step;
-                            if (current < target) {
-                                // Redondea y pone la coma (ej. 1,200)
-                                counter.innerText = Math.ceil(current).toLocaleString('en-US');
-                                requestAnimationFrame(updateCounter);
-                            } else {
-                                // Asegura que termine exactamente en el número final
-                                counter.innerText = target.toLocaleString('en-US');
-                            }
-                        };
-                        updateCounter();
-                    });
-                }
-            });
-        }, { threshold: 0.3 }); // 0.3 significa que espera a que asome un poco la sección
-
-        if (section) {
-            observer.observe(section);
-        }
-    });
-</script>
-@endpush
+{{-- Contador animado manejado por home-animations.js (GSAP) --}}
