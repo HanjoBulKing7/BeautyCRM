@@ -2,11 +2,7 @@
   <div class="bb-people__wrap bb-people__container">
 
     <div class="bb-people__top">
-      <div class="bb-people__text js-reveal"
-           data-aos="fade-right"
-           data-aos-duration="1000"
-           data-aos-offset="200"
-           data-aos-once="true">
+      <div class="bb-people__text js-reveal">
            
         <h2 class="bb-people__title">Beauty Bonita Studio</h2>
 
@@ -19,11 +15,7 @@
         </p>
       </div>
 
-      <div class="bb-people__top-promoted js-reveal"
-           data-aos="fade-left"
-           data-aos-duration="1000"
-           data-aos-offset="200"
-           data-aos-once="true">
+      <div class="bb-people__top-promoted js-reveal">
            
         <a href="{{ url('/agendar-cita') }}" class="bb-people__nav-card bb-card--promoted js-card">
           <div class="bb-people__img-wrap">
@@ -38,8 +30,7 @@
     </div>
 
     <div class="bb-people__bottom">
-      <a href="{{ url('/servicio') }}" class="bb-people__nav-card bb-item--servicios js-card"
-         data-aos="fade-up" data-aos-duration="800" data-aos-delay="100" data-aos-offset="150" data-aos-once="true">
+      <a href="{{ url('/servicio') }}" class="bb-people__nav-card bb-item--servicios js-card">
         <div class="bb-people__img-wrap">
           <img src="{{ asset('images/servicios.webp') }}" alt="Nuestros Servicios" loading="lazy">
         </div>
@@ -49,8 +40,7 @@
         </div>
       </a>
       
-      <a href="{{ url('/nosotros') }}" class="bb-people__nav-card bb-item--nosotros js-card"
-         data-aos="fade-up" data-aos-duration="800" data-aos-offset="150" data-aos-once="true">
+      <a href="{{ url('/nosotros') }}" class="bb-people__nav-card bb-item--nosotros js-card">
         <div class="bb-people__img-wrap">
           <img src="{{ asset('images/nosotros.webp') }}" alt="Conócenos" loading="lazy">
         </div>
@@ -61,8 +51,7 @@
       </a>
 
 
-      <a href="{{ url('/galeria') }}" class="bb-people__nav-card bb-item--galeria js-card"
-         data-aos="fade-up" data-aos-duration="800" data-aos-delay="200" data-aos-offset="150" data-aos-once="true">
+      <a href="{{ url('/galeria') }}" class="bb-people__nav-card bb-item--galeria js-card">
         <div class="bb-people__img-wrap">
           <img src="{{ asset('images/galeria.webp') }}" alt="Galería de trabajos" loading="lazy">
         </div>

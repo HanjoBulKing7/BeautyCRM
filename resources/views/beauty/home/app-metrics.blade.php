@@ -53,7 +53,7 @@
                     <div class="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900 flex justify-center">
                         <span>{{ $s['prefix'] }}</span>
                         {{-- data-target guarda el número final. Empezamos mostrando 0 --}}
-                        <span class="js-stat-counter" data-target="{{ $s['value'] }}">0</span>
+                        <span class="js-stat-counter" data-target="{{ $s['value'] }}">{{ number_format($s['value']) }}</span>
                     </div>
                     
                     <div class="mt-2 text-sm md:text-base text-gray-500">

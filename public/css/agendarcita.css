@@ -1,5 +1,317 @@
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600;700&display=swap");
 
+/* =========================================================
+   STEPPER
+========================================================= */
+.bb-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 0 auto 28px;
+  max-width: 480px;
+  padding: 20px 0 4px;
+}
+
+.bb-stepper__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.bb-stepper__dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 2px solid #e0e0e0;
+  background: #fff;
+  color: #aaa;
+  display: grid;
+  place-items: center;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  transition: border-color 0.3s, background 0.3s, color 0.3s;
+  position: relative;
+}
+
+.bb-stepper__check {
+  display: none;
+  width: 18px;
+  height: 18px;
+}
+
+.bb-stepper__num {
+  display: block;
+}
+
+.bb-stepper__label {
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #aaa;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+
+.bb-stepper__line {
+  flex: 1;
+  height: 2px;
+  background: #e8e8e8;
+  margin: 0 8px;
+  margin-bottom: 26px;
+  transition: background 0.4s;
+}
+
+/* Active */
+.bb-stepper__step.is-active .bb-stepper__dot {
+  border-color: #b8860b;
+  background: rgba(184,134,11,0.09);
+  color: #b8860b;
+}
+.bb-stepper__step.is-active .bb-stepper__label { color: #b8860b; }
+
+/* Completed */
+.bb-stepper__step.is-done .bb-stepper__dot {
+  border-color: #b8860b;
+  background: #b8860b;
+  color: #fff;
+}
+.bb-stepper__step.is-done .bb-stepper__check { display: block; }
+.bb-stepper__step.is-done .bb-stepper__num   { display: none;  }
+.bb-stepper__step.is-done .bb-stepper__label { color: #b8860b; }
+.bb-stepper__step.is-done ~ .bb-stepper__line { background: #b8860b; }
+
+/* =========================================================
+   PANEL TITLE ROW
+========================================================= */
+.bb-panel__titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.bb-step-badge {
+  display: inline-flex;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(184,134,11,0.10);
+  border: 1px solid rgba(184,134,11,0.28);
+  color: #b8860b;
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   LOCK MESSAGE
+========================================================= */
+.bb-lock-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(0,0,0,0.12);
+  background: rgba(244,235,221,0.30);
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  color: rgba(26,26,26,0.65);
+  margin-bottom: 14px;
+}
+
+.bb-lock-msg svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #b8860b;
+}
+
+/* =========================================================
+   AUTH GATE
+========================================================= */
+.bb-auth-gate {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding: 20px 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(184,134,11,0.22);
+  background: linear-gradient(135deg, rgba(244,235,221,0.55) 0%, rgba(255,255,255,0.95) 100%);
+  box-shadow: 0 8px 24px rgba(184,134,11,0.07);
+}
+
+.bb-auth-gate__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(184,134,11,0.12);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.bb-auth-gate__icon svg {
+  width: 22px;
+  height: 22px;
+  color: #b8860b;
+}
+
+.bb-auth-gate__text {
+  flex: 1;
+  min-width: 160px;
+}
+
+.bb-auth-gate__text h4 {
+  margin: 0 0 4px;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: rgba(26,26,26,0.90);
+}
+
+.bb-auth-gate__text p {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  color: rgba(26,26,26,0.60);
+}
+
+.bb-auth-gate__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   ALERT MESSAGES
+========================================================= */
+.bb-alert {
+  margin: 12px auto 0;
+  max-width: 640px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  text-align: center;
+}
+
+.bb-alert--success {
+  background: rgba(34,197,94,0.10);
+  border: 1px solid rgba(34,197,94,0.25);
+  color: #166534;
+}
+
+.bb-alert--error {
+  background: rgba(239,68,68,0.10);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #991b1b;
+}
+
+/* =========================================================
+   BUTTON SIZES
+========================================================= */
+.bb-btn--sm  { padding: 10px 20px; font-size: 12px; }
+.bb-btn--lg  { padding: 15px 42px; font-size: 14px; letter-spacing: 0.06em; }
+
+/* =========================================================
+   FLOATING SUMMARY BAR
+========================================================= */
+.bb-float-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: rgba(17, 20, 28, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 14px 24px;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.bb-float-bar.is-visible {
+  transform: translateY(0);
+}
+
+.bb-float-bar__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bb-float-bar__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bb-float-bar__label {
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.50);
+}
+
+.bb-float-bar__detail {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.90);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+.bb-float-bar__total {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.bb-float-bar__price {
+  font-family: "Playfair Display", serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #f4c55a;
+}
+
+.bb-float-bar__duration {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+@media (max-width: 640px) {
+  .bb-float-bar { padding: 12px 16px; }
+  .bb-float-bar__detail { max-width: 160px; font-size: 13px; }
+  .bb-float-bar__price { font-size: 17px; }
+}
+
 .bb-booking {
   padding: clamp(46px, 6vw, 90px) 16px;
   background: #ffffff;
@@ -905,3 +1217,94 @@
   margin: 0 !important;
 }
 
+
+/* =========================================================
+   SERVICE CARDS — COMPACT HORIZONTAL (override)
+   De tarjetas grandes verticales a filas compactas de 72px
+========================================================= */
+
+/* Grid: 2 columnas en desktop, 1 en mobile */
+.bb-svc__cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+@media (max-width: 640px) {
+  .bb-svc__cards { grid-template-columns: 1fr !important; }
+}
+
+/* Card: layout horizontal */
+.bb-svc-card {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+  transition: background 0.18s ease, border-color 0.18s ease !important;
+  transform: none !important;
+  filter: none !important;
+}
+.bb-svc-card:hover {
+  background: rgba(244, 235, 221, 0.5) !important;
+  border-color: rgba(184, 134, 11, 0.30) !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+/* Thumbnail izquierda */
+.bb-svc-card__media {
+  width: 72px !important;
+  height: 72px !important;
+  flex-shrink: 0 !important;
+  border-radius: 0 !important;
+}
+.bb-svc-card__media img {
+  width: 100% !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  display: block !important;
+  object-fit: cover !important;
+}
+
+/* Body: info + precio + botón en fila */
+.bb-svc-card__body {
+  flex: 1 !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  min-width: 0 !important;
+}
+
+.bb-svc-card__name {
+  flex: 1 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.3 !important;
+  min-width: 0 !important;
+}
+
+.bb-svc-card__meta {
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  gap: 1px !important;
+  flex-shrink: 0 !important;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  text-align: right !important;
+}
+
+/* Botón pequeño inline */
+.bb-svc-card .bb-btn--soft {
+  width: auto !important;
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+  flex-shrink: 0 !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+}

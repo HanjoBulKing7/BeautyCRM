@@ -13,8 +13,8 @@
     @include('beauty.home.homehero')
     @include('beauty.galeria.scrollHorizontal-module')
     @include('beauty.galeria.Galeria')
+    @include('beauty.galeria.galeria-grid')
 
-    
     @include('beauty.partials.footer')
     
 

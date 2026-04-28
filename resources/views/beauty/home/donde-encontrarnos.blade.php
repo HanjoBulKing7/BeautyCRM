@@ -6,6 +6,26 @@
         <h2 class="gallery__big-title">Visítanos</h2>
     </div>
 
+    {{-- Info rápida de contacto --}}
+    <div class="find-us__info-bar">
+        <div class="find-us__info-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            <span>Aguascalientes, Ags., México</span>
+        </div>
+        <div class="find-us__info-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <a href="https://wa.me/524494049194" target="_blank" rel="noopener">+52 449 404 9194</a>
+        </div>
+        <div class="find-us__info-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Lun–Sáb: 9:00 – 19:00 &nbsp;|&nbsp; Dom: Cita previa</span>
+        </div>
+        <div class="find-us__info-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <a href="https://maps.app.goo.gl/7eWofigTwTfLXbxX6" target="_blank" rel="noopener">Ver en Google Maps</a>
+        </div>
+    </div>
+
     <div class="find-us__container">
         {{-- Izquierda: imagen + texto centrado sin fondo --}}
         <div class="find-us__media">
@@ -43,10 +63,46 @@
     ========================================= */
 
     .find-us-section {
-        padding: 80px 0; /* Padding igualado a las otras secciones */
+        padding: 80px 0;
         background-color: #ffffff;
         font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
         width: 100%;
+    }
+
+    /* Info bar */
+    .find-us__info-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px 40px;
+        max-width: 1200px;
+        margin: 0 auto 48px;
+        padding: 0 20px;
+    }
+
+    .find-us__info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: #555;
+    }
+
+    .find-us__info-item svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        color: #8e6708;
+    }
+
+    .find-us__info-item a {
+        color: #555;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .find-us__info-item a:hover {
+        color: #8e6708;
     }
 
     /* --- TÍTULOS --- */

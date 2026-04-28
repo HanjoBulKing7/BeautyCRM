@@ -44,6 +44,9 @@ Route::view('/nosotros', 'nosotros')->name('nosotros');
 Route::get('/servicio', [ServiciosPublicController::class, 'index'])
     ->name('servicio.public');
 
+// Redirect SEO: /servicios → /servicio (301 permanente)
+Route::redirect('/servicios', '/servicio', 301);
+
 // Productos públicos
 Route::get('/productos', [ProductosPublicController::class, 'index'])
     ->name('productos.public');

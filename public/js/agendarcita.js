@@ -578,6 +578,12 @@
     if (initialId > 0 && serviceById(initialId)) {
       const empDefault = pickDefaultEmpleado(initialId);
       state.items = [{ id_servicio: initialId, id_empleado: empDefault, orden: 1 }];
+
+      // Auto-seleccionar la categoría del servicio para mostrársela al usuario
+      const svc = serviceById(initialId);
+      if (svc) {
+        state.activeCategoryId = String(svc.id_categoria ?? svc.categoria_id ?? '');
+      }
     } else {
       state.items = [];
     }
