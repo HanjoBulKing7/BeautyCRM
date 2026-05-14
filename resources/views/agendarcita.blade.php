@@ -88,6 +88,23 @@
             <h3 class="bb-panel__title" style="margin:0;">Elige tu servicio</h3>
           </div>
 
+          {{-- Banner primera cita --}}
+          @if($esPrimeraCita ?? false)
+          <div class="bb-primera-cita-banner">
+            <div class="bb-primera-cita-banner__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+            </div>
+            <div class="bb-primera-cita-banner__body">
+              <strong>¡15% de descuento en tu primera cita!</strong>
+              <span>Se aplica automáticamente al confirmar tu reserva en línea.</span>
+            </div>
+            <div class="bb-primera-cita-banner__badge">-15%</div>
+          </div>
+          @endif
+
           {{-- Categorías --}}
           <div class="bb-formRow" style="align-items:flex-start; margin-top:14px;">
             <div style="width:100%;">
@@ -180,6 +197,24 @@
             <p class="bb-label" style="margin-bottom:.5rem;">Observaciones (opcional)</p>
             <textarea class="bb-input" name="observaciones" rows="3"
               placeholder="Ej. Maquillaje natural, alergias, referencias...">{{ old('observaciones', '') }}</textarea>
+          </div>
+
+          {{-- Anticipo $100 MXN --}}
+          <div class="bb-anticipo-card">
+            <div class="bb-anticipo-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </div>
+            <div class="bb-anticipo-card__body">
+              <p class="bb-anticipo-card__title">Reserva tu cita con solo $100 MXN</p>
+              <p class="bb-anticipo-card__desc">El anticipo garantiza tu lugar en la agenda. El saldo restante lo pagas directamente en el salón.</p>
+            </div>
+            <div class="bb-anticipo-card__amount">
+              <span class="bb-anticipo-card__currency">$</span>100
+              <span class="bb-anticipo-card__mxn">MXN</span>
+            </div>
           </div>
 
           {{-- Auth gate para invitados --}}

@@ -25,6 +25,7 @@ class Cita extends Model
         'fecha_cita',
         'hora_cita',
         'descuento',
+        'primer_cita',
         'estado_cita',
         'metodo_pago',
         'observaciones',

@@ -81,6 +81,17 @@ class AgendarCitaPublicController extends Controller
             ->select('cs.id_empleado', DB::raw('COUNT(*) as total'))
             ->pluck('total', 'id_empleado'); // [empleadoId => total]
 
+        $esPrimeraCita = false;
+        if (Auth::check()) {
+            $cid = DB::table('clientes')->where('user_id', Auth::id())->value('id');
+            if ($cid) {
+                $esPrimeraCita = DB::table('citas')
+                    ->where('cliente_id', $cid)
+                    ->whereIn('estado_cita', ['pendiente', 'confirmada', 'completada'])
+                    ->doesntExist();
+            }
+        }
+
         return view('agendarcita', [
             'servicios'            => $servicios,
             'servicioSeleccionado' => $servicioSeleccionado,
@@ -90,6 +101,7 @@ class AgendarCitaPublicController extends Controller
             // ✅ nuevos para el front
             'empleadosPorServicio' => $empleadosPorServicio,
             'cargaEmpleados'       => $cargaEmpleados,
+            'esPrimeraCita'        => $esPrimeraCita,
         ]);
     }
 
@@ -242,15 +254,25 @@ class AgendarCitaPublicController extends Controller
 
         $responsableId = $this->calcularEmpleadoResponsable($itemsConHoras);
 
-        return DB::transaction(function () use ($request, $clienteId, $responsableId, $inicioGlobal, $duracionTotal, $itemsConHoras) {
+        $citasAnteriores = DB::table('citas')
+            ->where('cliente_id', $clienteId)
+            ->whereIn('estado_cita', ['pendiente', 'confirmada', 'completada'])
+            ->count();
+
+        $esPrimeraCita = $citasAnteriores === 0;
+        $descuentoAplicado = $esPrimeraCita ? round($total * 0.15, 2) : 0.0;
+
+        return DB::transaction(function () use ($request, $clienteId, $responsableId, $inicioGlobal, $duracionTotal, $itemsConHoras, $esPrimeraCita, $descuentoAplicado) {
             $data = [
                 'cliente_id'             => $clienteId,
                 'empleado_id'            => $responsableId,
                 'fecha_cita'             => $request->input('fecha_cita'),
                 'hora_cita'              => $inicioGlobal->format('H:i:s'),
                 'duracion_total_minutos' => $duracionTotal,
-                'estado_cita' => 'pendiente',
-                'observaciones' => $request->input('observaciones'),
+                'estado_cita'            => 'pendiente',
+                'observaciones'          => $request->input('observaciones'),
+                'descuento'              => $descuentoAplicado,
+                'primer_cita'            => $esPrimeraCita,
             ];
 
             $cita = Cita::create($data);
