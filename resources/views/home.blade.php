@@ -18,6 +18,7 @@
   @include('beauty.home.homehero')
   @include('beauty.home.people')
   @include('beauty.home.app-metrics')
+  @include('beauty.home.primera-cita')
   @include('beauty.home.servicioshome')
   @include('beauty.home.resenas')
   @include('beauty.home.donde-encontrarnos')
