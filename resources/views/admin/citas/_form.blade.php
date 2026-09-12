@@ -293,6 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const URL_EMPLEADOS = @json(route('admin.citas.empleadosPorServicio'));
   const URL_HORAS     = @json(route('admin.citas.horasDisponibles'));
+  const URL_AVAIL_MONTH = @json(route('admin.citas.availabilityMonth'));
 
   const dtState = {
     calendarMonth: new Date(),
@@ -336,46 +337,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
     availState.loadingKey = key;
 
-    const [yy, mm] = mk.split('-').map(n => parseInt(n, 10));
-    const daysInMonth = new Date(yy, mm, 0).getDate(); // mm ya viene 1-12
-    const todayYMD = toYMD(new Date());
-    const disablePast = (MODE === 'create');
-
-    const available = new Set();
-
-    // ✅ Guarda selección actual para no afectarla mientras se precarga el mes
+    // Una sola request al endpoint de disponibilidad mensual
+    const qs = new URLSearchParams();
+    qs.set('month', mk);
     const restoreDate = dtState.selectedDate;
+    dtState.selectedDate = null;
+    buildAvailabilityParams(qs, items);
+    dtState.selectedDate = restoreDate;
 
-    // ⚠️ 31 requests máx. (rápido de implementar sin endpoint nuevo)
-    // Si luego quieres optimizar, lo cambiamos por un endpoint "fechasDisponibles".
-    const tasks = [];
-    for (let day = 1; day <= daysInMonth; day++) {
-      const ymd = `${yy}-${pad2(mm)}-${pad2(day)}`;
-      const isPast = disablePast ? (ymd < todayYMD) : false;
-      if (isPast) continue;
+    const url = URL_AVAIL_MONTH + '?' + qs.toString();
 
-      const qs = new URLSearchParams();
-      dtState.selectedDate = ymd; // temporal para buildAvailabilityParams
-      buildAvailabilityParams(qs, items);
-      dtState.selectedDate = restoreDate; // restaura
-
-      const url = URL_HORAS + '?' + qs.toString();
-
-      tasks.push(
-        fetch(url, { headers: { 'Accept': 'application/json' }})
-          .then(r => r.json())
-          .then(data => {
-            let list = [];
-            if (Array.isArray(data)) list = data;
-            else if (Array.isArray(data?.horas)) list = data.horas;
-            else list = [];
-            if (list.length) available.add(ymd);
-          })
-          .catch(() => {})
-      );
-    }
-
-    await Promise.all(tasks);
+    let available = new Set();
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data?.ok && data?.days) {
+          for (const [ymd, info] of Object.entries(data.days)) {
+            if (!info.disabled && info.slots > 0) available.add(ymd);
+          }
+        }
+      }
+    } catch (_) {}
 
     // si mientras cargaba cambió la selección/mes, no guardes
     if (availState.loadingKey !== key) return;

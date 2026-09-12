@@ -189,6 +189,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/horas-disponibles', [CitaController::class, 'horasDisponibles'])
             ->name('horasDisponibles');
 
+        // AJAX disponibilidad por mes (1 sola request en lugar de 31)
+        Route::get('/availability-month', [CitaController::class, 'availabilityMonth'])
+            ->name('availabilityMonth');
+
         Route::get('/', [CitaController::class, 'index'])->name('index');
         Route::get('/create', [CitaController::class, 'create'])->name('create');
         Route::post('/', [CitaController::class, 'store'])->name('store');
