@@ -37,14 +37,11 @@
 
     // Intentar tomar imagen del modelo Servicio sin forzar estructura
     $serviciosUi = collect($servicios ?? [])->map(function ($s) {
-        $img =
-            $s->imagen
-            ?? $s->image
-            ?? $s->foto
-            ?? $s->imagen_url
-            ?? $s->ruta_imagen
-            ?? $s->url_imagen
-            ?? null;
+        try {
+            $img = $s->imagen_url ?: null;
+        } catch (\Throwable $e) {
+            $img = $s->imagen ?? null;
+        }
 
         $catName = null;
         try {

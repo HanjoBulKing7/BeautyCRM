@@ -12,17 +12,19 @@ class ServicioController extends Controller
 {
     public function index(Request $request)
     {
-        $search = trim((string) $request->query('q', ''));
+        $search     = trim((string) $request->query('q', ''));
+        $categoriaId = trim((string) $request->query('cat', ''));
 
         $servicios = Servicio::query()
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where('nombre_servicio', 'like', '%' . $search . '%');
-            })
+            ->when($search !== '', fn($q) => $q->where('nombre_servicio', 'like', '%' . $search . '%'))
+            ->when($categoriaId !== '', fn($q) => $q->where('id_categoria', $categoriaId))
             ->latest()
             ->paginate(15)
-            ->appends(['q' => $search]);
+            ->appends(['q' => $search, 'cat' => $categoriaId]);
 
-        return view('admin.servicios.index', compact('servicios', 'search'));
+        $categorias = CategoriaServicio::orderBy('nombre')->get();
+
+        return view('admin.servicios.index', compact('servicios', 'search', 'categorias', 'categoriaId'));
     }
 
     public function create()

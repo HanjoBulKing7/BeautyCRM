@@ -64,6 +64,24 @@
         </div>
     </div>
 
+    {{-- Filtro por categoría --}}
+    @if(!empty($categorias) && $categorias->count())
+    <div class="flex flex-wrap gap-2 mb-6">
+        <a href="{{ route('admin.servicios.index', ['q' => $search]) }}"
+           class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold border transition
+                  {{ empty($categoriaId) ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400' }}">
+            Todos
+        </a>
+        @foreach($categorias as $cat)
+        <a href="{{ route('admin.servicios.index', ['q' => $search, 'cat' => $cat->id_categoria]) }}"
+           class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold border transition
+                  {{ $categoriaId == $cat->id_categoria ? 'text-[#7a5c00] border-[rgba(201,162,74,.7)] bg-[rgba(201,162,74,0.1)]' : 'bg-white text-gray-600 border-gray-200 hover:border-[rgba(201,162,74,.5)]' }}">
+            {{ $cat->nombre }}
+        </a>
+        @endforeach
+    </div>
+    @endif
+
     <div class="hidden md:block bb-glass-card rounded-[2.5rem] overflow-hidden">
         <div class="overflow-x-auto p-6">
             <table class="w-full text-left border-collapse">

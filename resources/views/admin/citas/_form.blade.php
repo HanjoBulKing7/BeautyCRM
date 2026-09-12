@@ -49,6 +49,7 @@
 
   .bb-admin-datetime .bb-cal__cell.is-empty{ border: 0; background: transparent; cursor: default; }
   .bb-admin-datetime .bb-cal__cell.is-disabled{ opacity: .4; cursor: not-allowed; background: #f9f9f9; }
+  .bb-admin-datetime .bb-cal__cell.is-no-avail{ opacity: .55; border-style: dashed; }
   
   .bb-admin-datetime .bb-cal__cell.is-selected{
     border-color: rgba(201,162,74,0.8);
@@ -498,16 +499,19 @@ document.addEventListener('DOMContentLoaded', function () {
           const availabilityKnown = !!availSet;
           const isAvailable = availabilityKnown ? availSet.has(ymd) : false;
 
-          // ✅ Mientras se precarga la disponibilidad del mes, deshabilita para evitar selección incorrecta
-          const disabled = dtState.locked || isPast || (!availabilityKnown ? true : !isAvailable);
+          // Admin puede seleccionar cualquier fecha futura aunque no haya disponibilidad estándar.
+          // Solo se bloquea si el form está bloqueado (sin servicios/empleados) o es fecha pasada.
+          const disabled = dtState.locked || isPast;
+          const noAvail = availabilityKnown && !isAvailable;
 
-          // Punto dorado SOLO si está disponible (si no se conoce aún, queda muted)
-          const dotClass = (dtState.locked || !availabilityKnown || !isAvailable) ? 'is-muted' : 'is-gold';
+          // Punto: dorado=disponible, muted=sin horarios o cargando
+          const dotClass = (!availabilityKnown || dtState.locked || noAvail) ? 'is-muted' : 'is-gold';
 
           return `
             <button type="button"
-              class="bb-cal__cell ${isSelected ? 'is-selected' : ''} ${disabled ? 'is-disabled' : ''}"
+              class="bb-cal__cell ${isSelected ? 'is-selected' : ''} ${disabled ? 'is-disabled' : ''} ${noAvail && !disabled ? 'is-no-avail' : ''}"
               data-date="${ymd}"
+              data-no-avail="${noAvail ? '1' : '0'}"
               ${disabled ? 'disabled' : ''}>
               <span class="bb-cal__day">${cell.getDate()}</span>
               <span class="bb-cal__dot ${dotClass}" aria-hidden="true"></span>
@@ -680,7 +684,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (elTimesTitle) elTimesTitle.textContent = `Horas disponibles (${dtState.selectedDate})`;
       if (!list.length) {
-        if (elTimesHint) elTimesHint.textContent = 'No hay horas disponibles, prueba otro día o cambia empleado.';
+        // Detecta si la fecha no tenía disponibilidad estándar
+        const cellEl = elCalendar?.querySelector(`[data-date="${dtState.selectedDate}"]`);
+        const noAvailFlag = cellEl?.getAttribute('data-no-avail') === '1';
+        if (elTimesHint) elTimesHint.textContent = noAvailFlag
+          ? '⚠️ El/la empleada no tiene horarios configurados para este día (descanso, vacaciones o día no laborable según su disponibilidad). Puedes cambiar el empleado asignado o seleccionar otra fecha.'
+          : 'No hay horas disponibles para esta fecha — el día puede estar completo. Prueba otro día o cambia el empleado.';
         renderTimesButtons([]);
         return;
       }
