@@ -38,6 +38,7 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_LOGIN_URI'),
+        'review_url' => env('GOOGLE_REVIEW_URL', 'https://maps.app.goo.gl/7eWofigTwTfLXbxX6'),
     ],
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),

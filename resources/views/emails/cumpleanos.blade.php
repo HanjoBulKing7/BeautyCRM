@@ -87,9 +87,7 @@
           <td style="position:relative;height:0;">
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td width="40" style="background:#f5f0eb;border-radius:0 20px 20px 0;height:24px;"></td>
-                <td style="border-top:2px dashed #e2c87a;height:24px;vertical-align:middle;"></td>
-                <td width="40" style="background:#f5f0eb;border-radius:20px 0 0 20px;height:24px;"></td>
+                <td style="background:#fffbf2;height:24px;vertical-align:middle;"><div style="border-top:2px dashed #e2c87a;margin:0 24px;"></div></td>
               </tr>
             </table>
           </td>
