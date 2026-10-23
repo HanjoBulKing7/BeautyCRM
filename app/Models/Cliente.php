@@ -16,7 +16,13 @@ class Cliente extends Model
         'email',
         'telefono',
         'direccion',
-        'fecha_nacimiento'
+        'fecha_nacimiento',
+        'fecha_nacimiento_registrada_at',
+    ];
+
+    protected $casts = [
+        'fecha_nacimiento'               => 'date',
+        'fecha_nacimiento_registrada_at' => 'datetime',
     ];
 
     public function user()

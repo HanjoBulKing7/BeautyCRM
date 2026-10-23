@@ -22,6 +22,7 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use App\Http\Controllers\MisReservasController;
 use App\Http\Controllers\CuponController;
 use App\Http\Controllers\PublicMediaController;
+use App\Http\Controllers\CumpleanosClienteController;
 
 // ✅ ROOT: siempre manda a Home pública
 Route::get('/', function () {
@@ -295,6 +296,9 @@ Route::middleware(['auth'])->group(function () {
     // ✅ cancelar reserva
     Route::post('/mis-reservas/{cita}/cancelar', [MisReservasController::class, 'cancel'])
         ->name('misreservas.cancel');
+
+    Route::post('/mi-cumpleanos', [CumpleanosClienteController::class, 'store'])
+        ->name('cliente.cumpleanos.store');
 });
 
 // =============================

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class Cupon extends Model
@@ -95,6 +96,67 @@ class Cupon extends Model
 
         // No puede ser más del monto total
         return min((float) $descuento, $monto);
+    }
+
+    // Evita que alguien registre su cumpleaños el mismo mes solo para obtener el regalo.
+    public const DIAS_ANTIGUEDAD_CUMPLEANOS = 30;
+
+    /**
+     * Valida el cupón contra la cuenta del cliente.
+     * Devuelve null si aplica, o el motivo por el que no aplica.
+     */
+    public function motivoNoAplica(?Cliente $cliente, ?float $monto = null): ?string
+    {
+        if (!$this->esValido()) {
+            return 'Este cupón ya expiró o no está activo.';
+        }
+
+        if (!$cliente) {
+            return 'Inicia sesión para usar este cupón.';
+        }
+
+        $porCliente = max(1, (int) ($this->cantidad_por_cliente ?? 1));
+        $usados = DB::table('cupon_usos')
+            ->where('cupon_id', $this->id)
+            ->where('cliente_id', $cliente->id)
+            ->count();
+        if ($usados >= $porCliente) {
+            return 'Ya utilizaste este cupón en tu cuenta.';
+        }
+
+        if ($this->aplica_cumpleaños) {
+            if (!$cliente->fecha_nacimiento) {
+                return 'Registra tu fecha de nacimiento para usar tu regalo de cumpleaños.';
+            }
+
+            if (Carbon::parse($cliente->fecha_nacimiento)->month !== Carbon::now()->month) {
+                return 'Este regalo solo es válido durante tu mes de cumpleaños.';
+            }
+
+            $registrada = $cliente->fecha_nacimiento_registrada_at;
+            if ($registrada && Carbon::parse($registrada)->gt(Carbon::now()->subDays(self::DIAS_ANTIGUEDAD_CUMPLEANOS))) {
+                return 'Tu fecha de nacimiento se registró hace poco; el regalo estará disponible en tu próximo cumpleaños.';
+            }
+        }
+
+        if ($monto !== null && $this->monto_minimo && $monto < (float) $this->monto_minimo) {
+            return 'El monto mínimo para este cupón es $' . number_format((float) $this->monto_minimo, 2) . '.';
+        }
+
+        return null;
+    }
+
+    public function registrarUso(int $clienteId, ?int $citaId, float $descuento): void
+    {
+        DB::table('cupon_usos')->insert([
+            'cupon_id'   => $this->id,
+            'cliente_id' => $clienteId,
+            'id_cita'    => $citaId,
+            'descuento'  => $descuento,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->incrementarUso();
     }
 
     /**

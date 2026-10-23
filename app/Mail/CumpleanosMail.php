@@ -71,6 +71,7 @@ class CumpleanosMail extends Mailable
                 'fecha_inicio'      => Carbon::now()->startOfMonth(),
                 'fecha_fin'         => Carbon::now()->endOfMonth(),
                 'cantidad_usos'     => null,
+                'cantidad_por_cliente' => 1,
                 'usos_actuales'     => 0,
                 'aplica_cumpleaños' => true,
                 'estado'            => 'activo',

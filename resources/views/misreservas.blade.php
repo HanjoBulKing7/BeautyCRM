@@ -178,6 +178,8 @@
       </div>
     </div>
 
+    @include('beauty.partials.cumpleanos-card')
+
     {{-- Filtros (GET) --}}
     <div class="bb-card p-5">
       <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">

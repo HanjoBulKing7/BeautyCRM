@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cita;
+use App\Models\Cliente;
 use App\Models\Cupon;
 use App\Models\Servicio;
 use Illuminate\Http\Request;
@@ -94,12 +95,19 @@ class AgendarCitaPublicController extends Controller
         }
 
         // Cupón pre-aplicado desde URL (?cupon=CODIGO)
-        $codigoCuponUrl = $request->query('cupon', '');
+        $codigoCuponUrl = strtoupper(trim((string) $request->query('cupon', '')));
         $cuponPreview   = null;
+        $cuponMotivo    = null;
         if ($codigoCuponUrl) {
-            $cuponPreview = Cupon::where('codigo', strtoupper(trim($codigoCuponUrl)))
-                ->where('estado', 'activo')
-                ->first();
+            $cuponPreview = Cupon::where('codigo', $codigoCuponUrl)->first();
+            if (!$cuponPreview) {
+                $cuponMotivo = 'El código de cupón no existe.';
+            } elseif (Auth::check()) {
+                $cliente = Cliente::where('user_id', Auth::id())->first();
+                $cuponMotivo = $cuponPreview->motivoNoAplica($cliente);
+            } else {
+                $cuponMotivo = 'Inicia sesión para aplicar tu regalo.';
+            }
         }
 
         return view('agendarcita', [
@@ -114,8 +122,9 @@ class AgendarCitaPublicController extends Controller
             'esPrimeraCita'        => $esPrimeraCita,
 
             // ✅ cupón pre-aplicado desde email
-            'codigoCuponUrl'       => strtoupper(trim($codigoCuponUrl)),
+            'codigoCuponUrl'       => $codigoCuponUrl,
             'cuponPreview'         => $cuponPreview,
+            'cuponMotivo'          => $cuponMotivo,
         ]);
     }
 
@@ -279,19 +288,22 @@ class AgendarCitaPublicController extends Controller
         $descuentoAplicado = $esPrimeraCita ? round($total * 0.15, 2) : 0.0;
         $cuponAplicado     = null;
 
-        // Cupón desde formulario (puede venir del email de cumpleaños)
-        $codigoCupon = strtoupper(trim($request->input('cupon_codigo', '')));
-        if ($codigoCupon && !$esPrimeraCita) {
-            $cupon = Cupon::where('codigo', $codigoCupon)
-                ->where('estado', 'activo')
-                ->first();
+        // Cupón (ej. regalo de cumpleaños): se valida contra la cuenta; no se acumula con
+        // el descuento de primera cita, se queda el mayor.
+        $codigoCupon = strtoupper(trim((string) $request->input('cupon_codigo', '')));
+        if ($codigoCupon) {
+            $cupon = Cupon::where('codigo', $codigoCupon)->first();
+            $cliente = Cliente::find($clienteId);
+            $motivo = $cupon ? $cupon->motivoNoAplica($cliente, $total) : 'El código de cupón no existe.';
 
-            if ($cupon && $cupon->esValido()) {
-                $descuentoCupon = round($cupon->calcularDescuento($total), 2);
-                if ($descuentoCupon > 0) {
-                    $descuentoAplicado = $descuentoCupon;
-                    $cuponAplicado     = $cupon;
-                }
+            if ($motivo) {
+                return back()->with('error', $motivo)->withInput();
+            }
+
+            $descuentoCupon = round($cupon->calcularDescuento($total), 2);
+            if ($descuentoCupon > $descuentoAplicado) {
+                $descuentoAplicado = $descuentoCupon;
+                $cuponAplicado     = $cupon;
             }
         }
 
@@ -311,7 +323,7 @@ class AgendarCitaPublicController extends Controller
             $cita = Cita::create($data);
 
             if ($cuponAplicado) {
-                $cuponAplicado->incrementarUso();
+                $cuponAplicado->registrarUso($clienteId, (int) $cita->id_cita, $descuentoAplicado);
             }
 
             foreach ($itemsConHoras as $it) {

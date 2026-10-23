@@ -6,6 +6,9 @@
 <title>¡Feliz Cumpleaños de Beauty Bonita!</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f5f0eb;font-family:Georgia,serif;">
+@php
+  $logoSrc = isset($message) ? $message->embed(public_path('images/logo-email.png')) : asset('images/logo-email.png');
+@endphp
 
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0eb;padding:40px 16px;">
 <tr><td align="center">
@@ -14,9 +17,9 @@
   {{-- Logo header --}}
   <tr>
     <td align="center" style="background:#ffffff;border-radius:20px 20px 0 0;padding:36px 40px 28px;border-bottom:1px solid #f0e8d8;">
-      <img src="https://beautybonita.com.mx/images/favicon.png"
+      <img src="{{ $logoSrc }}"
            alt="Beauty Bonita" width="72" height="72"
-           style="display:block;margin:0 auto 14px;border-radius:50%;border:2px solid #C8A64A;">
+           style="display:block;margin:0 auto 14px;border-radius:50%;border:2px solid #C8A64A;background:#ffffff;">
       <p style="margin:0;font-size:11px;letter-spacing:4px;color:#8e6708;text-transform:uppercase;font-family:Arial,sans-serif;">Beauty Bonita</p>
     </td>
   </tr>
@@ -138,9 +141,9 @@
   {{-- Footer --}}
   <tr>
     <td align="center" style="background:#0f172a;border-radius:0 0 20px 20px;padding:28px 40px;">
-      <img src="https://beautybonita.com.mx/images/favicon.png"
+      <img src="{{ $logoSrc }}"
            alt="" width="32" height="32"
-           style="display:block;margin:0 auto 10px;border-radius:50%;opacity:.7;">
+           style="display:block;margin:0 auto 10px;border-radius:50%;background:#ffffff;">
       <p style="margin:0 0 6px;font-size:12px;color:#C8A64A;font-family:Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;">Beauty Bonita</p>
       <p style="margin:0 0 10px;font-size:11px;color:#475569;font-family:Arial,sans-serif;line-height:1.6;">
         ¿Necesitas ayuda? Escríbenos a

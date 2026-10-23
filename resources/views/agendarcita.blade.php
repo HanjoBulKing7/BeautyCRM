@@ -75,6 +75,10 @@
         </div>
       </div>
 
+      @if(!empty($codigoCuponUrl) && !empty($cuponMotivo))
+        @include('beauty.partials.cumpleanos-card')
+      @endif
+
       <form id="bookingForm" method="POST" action="{{ route('agendarcita.store') }}">
         @csrf
 
@@ -103,7 +107,15 @@
           @endif
 
           {{-- Banner cupón pre-aplicado (ej. regalo de cumpleaños) --}}
-          @if(!empty($codigoCuponUrl) && isset($cuponPreview) && $cuponPreview)
+          @if(!empty($codigoCuponUrl) && !empty($cuponMotivo))
+          <div class="bb-primera-cita-banner" style="border-color:#e2c87a;background:#fffbf2;">
+            <div class="bb-primera-cita-banner__icon" style="color:#C8A64A;">🎁</div>
+            <div class="bb-primera-cita-banner__body">
+              <strong>Tu regalo aún no se puede aplicar</strong>
+              <span>{{ $cuponMotivo }}</span>
+            </div>
+          </div>
+          @elseif(!empty($codigoCuponUrl) && isset($cuponPreview) && $cuponPreview)
           <div class="bb-primera-cita-banner" style="border-color:#C8A64A;background:linear-gradient(135deg,#fffbf2,#fff8ec);">
             <div class="bb-primera-cita-banner__icon" style="color:#C8A64A;">
               🎁
