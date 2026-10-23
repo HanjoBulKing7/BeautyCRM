@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cita;
+use App\Models\Cupon;
 use App\Models\Servicio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -92,6 +93,15 @@ class AgendarCitaPublicController extends Controller
             }
         }
 
+        // Cupón pre-aplicado desde URL (?cupon=CODIGO)
+        $codigoCuponUrl = $request->query('cupon', '');
+        $cuponPreview   = null;
+        if ($codigoCuponUrl) {
+            $cuponPreview = Cupon::where('codigo', strtoupper(trim($codigoCuponUrl)))
+                ->where('estado', 'activo')
+                ->first();
+        }
+
         return view('agendarcita', [
             'servicios'            => $servicios,
             'servicioSeleccionado' => $servicioSeleccionado,
@@ -102,6 +112,10 @@ class AgendarCitaPublicController extends Controller
             'empleadosPorServicio' => $empleadosPorServicio,
             'cargaEmpleados'       => $cargaEmpleados,
             'esPrimeraCita'        => $esPrimeraCita,
+
+            // ✅ cupón pre-aplicado desde email
+            'codigoCuponUrl'       => strtoupper(trim($codigoCuponUrl)),
+            'cuponPreview'         => $cuponPreview,
         ]);
     }
 
@@ -260,9 +274,28 @@ class AgendarCitaPublicController extends Controller
             ->count();
 
         $esPrimeraCita = $citasAnteriores === 0;
-        $descuentoAplicado = $esPrimeraCita ? round($total * 0.15, 2) : 0.0;
 
-        return DB::transaction(function () use ($request, $clienteId, $responsableId, $inicioGlobal, $duracionTotal, $itemsConHoras, $esPrimeraCita, $descuentoAplicado) {
+        // Descuento por primera cita (15%)
+        $descuentoAplicado = $esPrimeraCita ? round($total * 0.15, 2) : 0.0;
+        $cuponAplicado     = null;
+
+        // Cupón desde formulario (puede venir del email de cumpleaños)
+        $codigoCupon = strtoupper(trim($request->input('cupon_codigo', '')));
+        if ($codigoCupon && !$esPrimeraCita) {
+            $cupon = Cupon::where('codigo', $codigoCupon)
+                ->where('estado', 'activo')
+                ->first();
+
+            if ($cupon && $cupon->esValido()) {
+                $descuentoCupon = round($cupon->calcularDescuento($total), 2);
+                if ($descuentoCupon > 0) {
+                    $descuentoAplicado = $descuentoCupon;
+                    $cuponAplicado     = $cupon;
+                }
+            }
+        }
+
+        return DB::transaction(function () use ($request, $clienteId, $responsableId, $inicioGlobal, $duracionTotal, $itemsConHoras, $esPrimeraCita, $descuentoAplicado, $cuponAplicado) {
             $data = [
                 'cliente_id'             => $clienteId,
                 'empleado_id'            => $responsableId,
@@ -276,6 +309,10 @@ class AgendarCitaPublicController extends Controller
             ];
 
             $cita = Cita::create($data);
+
+            if ($cuponAplicado) {
+                $cuponAplicado->incrementarUso();
+            }
 
             foreach ($itemsConHoras as $it) {
                 DB::table('cita_servicio')->insert([

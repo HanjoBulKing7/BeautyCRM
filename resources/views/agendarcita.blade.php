@@ -22,9 +22,6 @@
     $fallbackImg = asset('images/Beige Blogger Moderna Personal Sitio web.png');
 
     $imgSrc = $fallbackImg;
-    if ($principal && $principal->imagen_url) {
-      $imgSrc = $principal->imagen_url;
-    }
 
     $features = [];
     if ($principal && $principal->caracteristicas) {
@@ -103,6 +100,31 @@
             </div>
             <div class="bb-primera-cita-banner__badge">-15%</div>
           </div>
+          @endif
+
+          {{-- Banner cupón pre-aplicado (ej. regalo de cumpleaños) --}}
+          @if(!empty($codigoCuponUrl) && isset($cuponPreview) && $cuponPreview)
+          <div class="bb-primera-cita-banner" style="border-color:#C8A64A;background:linear-gradient(135deg,#fffbf2,#fff8ec);">
+            <div class="bb-primera-cita-banner__icon" style="color:#C8A64A;">
+              🎁
+            </div>
+            <div class="bb-primera-cita-banner__body">
+              <strong>¡Cupón de regalo aplicado!</strong>
+              <span>
+                @if($cuponPreview->tipo_descuento === 'porcentaje')
+                  {{ number_format($cuponPreview->valor_descuento, 0) }}% de descuento — código: <code>{{ $codigoCuponUrl }}</code>
+                @else
+                  ${{ number_format($cuponPreview->valor_descuento, 2) }} de descuento — código: <code>{{ $codigoCuponUrl }}</code>
+                @endif
+              </span>
+            </div>
+            <div class="bb-primera-cita-banner__badge" style="background:#C8A64A;">
+              @if($cuponPreview->tipo_descuento === 'porcentaje')-{{ number_format($cuponPreview->valor_descuento, 0) }}%
+              @else-${{ number_format($cuponPreview->valor_descuento, 0) }}
+              @endif
+            </div>
+          </div>
+          <input type="hidden" name="cupon_codigo" value="{{ $codigoCuponUrl }}">
           @endif
 
           {{-- Categorías --}}
