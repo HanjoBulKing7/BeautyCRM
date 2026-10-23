@@ -16,7 +16,6 @@ use App\Http\Controllers\AgendarCitaPublicController;
 use App\Http\Controllers\CategoriaServicioController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProductosPublicController;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardCitasController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use App\Http\Controllers\MisReservasController;
@@ -299,36 +298,4 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/mi-cumpleanos', [CumpleanosClienteController::class, 'store'])
         ->name('cliente.cumpleanos.store');
-});
-
-// =============================
-// Prueba de correo (solo admin, temporal)
-// =============================
-Route::get('/test-mail', function () {
-    $correo = request('to', 'contacto@beautybonita.com.mx');
-
-    \Illuminate\Support\Facades\Mail::raw(
-        '✅ El correo de Beauty Bonita está funcionando correctamente. Este es un mensaje de prueba.',
-        function ($msg) use ($correo) {
-            $msg->to($correo)
-                ->subject('Prueba de correo — Beauty Bonita');
-        }
-    );
-
-    return response()->json([
-        'ok'      => true,
-        'mensaje' => "Correo enviado a {$correo}",
-    ]);
-})->middleware('auth');
-
-// =============================
-// Ruta de diagnóstico
-// =============================
-Route::get('/debug-auth', function () {
-    return response()->json([
-        'auth_check' => Auth::check(),
-        'auth_user' => Auth::user(),
-        'session_id' => session()->getId(),
-        'all_session' => session()->all()
-    ]);
 });
