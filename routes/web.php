@@ -22,6 +22,7 @@ use App\Http\Controllers\MisReservasController;
 use App\Http\Controllers\CuponController;
 use App\Http\Controllers\PublicMediaController;
 use App\Http\Controllers\CumpleanosClienteController;
+use App\Http\Controllers\BajaCorreosController;
 
 // ✅ ROOT: siempre manda a Home pública
 Route::get('/', function () {
@@ -278,6 +279,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/descuento-cumpleaños', [CuponController::class, 'descuentoCumpleaños'])->name('descuentoCumpleaños');
     });
 });
+
+// =============================
+// Baja de correos de promociones (enlaces firmados)
+// =============================
+Route::get('/correos/baja/{cliente}', [BajaCorreosController::class, 'show'])
+    ->middleware('signed')
+    ->name('correos.baja');
+
+Route::post('/correos/baja/{cliente}', [BajaCorreosController::class, 'store'])
+    ->middleware(['signed', 'throttle:20,1'])
+    ->withoutMiddleware([ValidateCsrfToken::class]);
+
+Route::post('/correos/alta/{cliente}', [BajaCorreosController::class, 'alta'])
+    ->middleware(['signed', 'throttle:20,1'])
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('correos.alta');
 
 // =============================
 // Checkout

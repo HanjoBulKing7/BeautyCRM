@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\ConBajaDeCorreos;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -10,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 
 class GraciasVisitaMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, ConBajaDeCorreos;
 
     public string $urlResena;
     public string $urlReserva;
@@ -18,7 +19,9 @@ class GraciasVisitaMail extends Mailable
     public function __construct(
         public string $nombreCliente,
         public string $serviciosNombres = '',
+        ?int $clienteId = null,
     ) {
+        $this->prepararBaja($clienteId);
         $this->urlResena  = config('services.google.review_url');
         $this->urlReserva = config('app.url') . '/agendar-cita';
     }

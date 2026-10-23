@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\ConBajaDeCorreos;
 use App\Models\Cupon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -12,7 +13,7 @@ use Carbon\Carbon;
 
 class CumpleanosMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, ConBajaDeCorreos;
 
     public string $nombreCliente;
     public string $codigoCupon;
@@ -20,6 +21,7 @@ class CumpleanosMail extends Mailable
 
     public function __construct(string $nombreCliente, ?int $clienteId = null)
     {
+        $this->prepararBaja($clienteId);
         $this->nombreCliente = $nombreCliente;
         $this->codigoCupon   = $this->obtenerOCrearCupon($clienteId);
         $this->urlReserva    = config('app.url') . '/agendar-cita?cupon=' . urlencode($this->codigoCupon);

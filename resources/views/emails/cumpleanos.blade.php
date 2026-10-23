@@ -150,6 +150,11 @@
       <p style="margin:0;font-size:10px;color:#334155;font-family:Arial,sans-serif;">
         Recibiste este correo porque eres cliente de Beauty Bonita.
       </p>
+      @if(!empty($urlBaja))
+      <p style="margin:8px 0 0;font-size:10px;font-family:Arial,sans-serif;">
+        <a href="{{ $urlBaja }}" style="color:#94a3b8;text-decoration:underline;">No quiero recibir más correos</a>
+      </p>
+      @endif
     </td>
   </tr>
 
