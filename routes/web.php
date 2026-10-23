@@ -298,6 +298,26 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // =============================
+// Prueba de correo (solo admin, temporal)
+// =============================
+Route::get('/test-mail', function () {
+    $correo = request('to', 'contacto@beautybonita.com.mx');
+
+    \Illuminate\Support\Facades\Mail::raw(
+        '✅ El correo de Beauty Bonita está funcionando correctamente. Este es un mensaje de prueba.',
+        function ($msg) use ($correo) {
+            $msg->to($correo)
+                ->subject('Prueba de correo — Beauty Bonita');
+        }
+    );
+
+    return response()->json([
+        'ok'      => true,
+        'mensaje' => "Correo enviado a {$correo}",
+    ]);
+})->middleware('auth');
+
+// =============================
 // Ruta de diagnóstico
 // =============================
 Route::get('/debug-auth', function () {
