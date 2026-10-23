@@ -4,7 +4,27 @@
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "WebFetch(domain:beautybonita.com.mx)",
       "WebSearch",
-      "Bash(grep -E \"\\\\.php$\")"
+      "Bash(grep -E \"\\\\.php$\")",
+      "Bash(pip3 list *)",
+      "Bash(chmod +x /Users/carlosgarcia/jarvis/setup.sh /Users/carlosgarcia/jarvis/install_autostart.sh /Users/carlosgarcia/jarvis/main.py)",
+      "Bash(say -v ?)",
+      "Bash(say -v \"?\")",
+      "Bash(osascript -e 'tell application \"Finder\" to get bounds of window of desktop')",
+      "Bash(osascript -e 'tell application \"Finder\" set desktopBounds to bounds of window of desktop end tell')",
+      "Bash(python3 -c \"import subprocess; r=subprocess.run\\(['system_profiler','SPDisplaysDataType'],capture_output=True,text=True\\); print\\(r.stdout\\)\")",
+      "Bash(open \"spotify:track:39shmbIHICJ2Wxnk1fPSdz\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(osascript)",
+      "Bash(echo \"Spotify nav: $?\")",
+      "Read(//Users/carlosgarcia/cloude/remotion/**)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(mdls /Users/carlosgarcia/cloude/remotion/public/CLAUDE.mov)",
+      "Bash(node scripts/jumpcuts.mjs public/CLAUDE.mov)",
+      "Bash(/opt/homebrew/bin/ffmpeg -i /Users/carlosgarcia/cloude/remotion/public/CLAUDE.mov -af silencedetect=noise=-35dB:d=0.2 -f null -)",
+      "Bash(node scripts/transcribe.mjs public/CLAUDE.mov)",
+      "Bash(echo \"Transcripción iniciada en background PID $!\")"
     ]
   }
 }
