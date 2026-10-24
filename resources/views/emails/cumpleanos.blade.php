@@ -121,13 +121,13 @@
                 <td align="center" style="font-size:22px;">💅</td>
                 <td align="center" style="font-size:22px;">💇</td>
                 <td align="center" style="font-size:22px;">💄</td>
-                <td align="center" style="font-size:22px;">💆</td>
+                <td align="center" style="font-size:22px;">🧖‍♀️</td>
               </tr>
               <tr>
                 <td align="center" style="font-size:11px;color:#64748b;font-family:Arial,sans-serif;padding-top:4px;">Uñas</td>
                 <td align="center" style="font-size:11px;color:#64748b;font-family:Arial,sans-serif;padding-top:4px;">Peinado</td>
                 <td align="center" style="font-size:11px;color:#64748b;font-family:Arial,sans-serif;padding-top:4px;">Maquillaje</td>
-                <td align="center" style="font-size:11px;color:#64748b;font-family:Arial,sans-serif;padding-top:4px;">Masaje</td>
+                <td align="center" style="font-size:11px;color:#64748b;font-family:Arial,sans-serif;padding-top:4px;">Faciales</td>
               </tr>
             </table>
           </td>
