@@ -7,7 +7,7 @@
 </head>
 <body style="margin:0;padding:0;background-color:#f5f0eb;font-family:Georgia,serif;">
 @php
-  $logoSrc = isset($message) ? $message->embed(public_path('images/logo-email.png')) : asset('images/logo-email.png');
+  $logoSrc = isset($message) ? $message->embed(resource_path('images/logo-email.png')) : asset('images/logo-email.png');
 @endphp
 
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0eb;padding:40px 16px;">
