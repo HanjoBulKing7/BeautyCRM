@@ -121,7 +121,7 @@ Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'
 // =============================
 // Rutas de Administración
 // =============================
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(function () {
     // Ventas de productos
     Route::prefix('productoventa')->name('productoventa.')->group(function () {
         Route::get('/', [App\Http\Controllers\VentasProductoController::class, 'index'])
