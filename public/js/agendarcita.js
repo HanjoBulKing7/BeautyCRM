@@ -60,20 +60,8 @@
     const p = String(path || '').replace(/^\/+/, '');
     return `${b}/${p}`;
   }
-  function resolveServiceImg(svc) {
-    const fallback = (ctx && ctx.fallbackImg) ? ctx.fallbackImg : '';
-    const img = svc?.imagen;
-
-    if (!img) return fallback;
-    if (/^https?:\/\//i.test(img)) return img;
-
-    // images/ o /images/ => público
-    if (String(img).startsWith('images/') || String(img).startsWith('/images/')) {
-      return joinUrl(ctx.assetRoot, img);
-    }
-
-    // lo demás => storage
-    return joinUrl(ctx.assetStorage, img);
+  function resolveServiceImg(_svc) {
+    return (ctx && ctx.fallbackImg) ? ctx.fallbackImg : '';
   }
 
   function serviceById(id) {
@@ -211,7 +199,12 @@
     const filtered = list.filter(s => String(s.id_categoria ?? s.categoria_id ?? '') === String(catId));
 
     if (!filtered.length) {
-      elServiceCards.innerHTML = `<div class="bb-empty">No hay servicios en esta categoría.</div>`;
+      elServiceCards.innerHTML = `
+        <div class="bb-empty bb-proximamente">
+          <span class="bb-proximamente__icon">✨</span>
+          <p class="bb-proximamente__text">Próximamente</p>
+          <p class="bb-proximamente__sub">Nuevos servicios en camino</p>
+        </div>`;
       return;
     }
 
