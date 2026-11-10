@@ -101,8 +101,14 @@ class AuthController extends Controller
     // =========================
     // Google (Login general)
     // =========================
-    public function redirectToGoogle()
+    public function redirectToGoogle(Request $request)
     {
+        // Regresa a la página desde la que se inició (p. ej. la reserva), solo si es de este mismo sitio.
+        $volver = (string) $request->query('volver', '');
+        if ($volver !== '' && str_starts_with($volver, url('/'))) {
+            $request->session()->put('url.intended', $volver);
+        }
+
         return Socialite::driver('google')
             ->scopes(['openid', 'profile', 'email'])
             ->redirect();
@@ -124,7 +130,6 @@ class AuthController extends Controller
             ->orWhere('email', $email)
             ->first();
 
-        $isNewUser = false;
         if (!$user) {
             $user = new User();
             $user->name = $googleUser->getName() ?? 'Usuario';
@@ -134,7 +139,6 @@ class AuthController extends Controller
             $user->google_id = $googleUser->getId();
             $user->email_verified_at = now();
             $user->save();
-            $isNewUser = true;
         } else {
             if (empty($user->google_id)) {
                 $user->google_id = $googleUser->getId();
@@ -145,15 +149,12 @@ class AuthController extends Controller
             $user->save();
         }
 
-        // Si es nuevo usuario y es cliente (1), crea también el registro en clientes
-        if ($isNewUser && $user->role_id == 1) {
-            Cliente::create([
-                'user_id'   => $user->id,
-                'nombre'    => $user->name,
-                'email'     => $user->email,
-                'telefono'  => null,
-                'direccion' => null,
-            ]);
+        // Toda clienta que entra con Google queda con su ficha, con nombre y correo de su cuenta.
+        if ($user->role_id == 1) {
+            $cliente = Cliente::firstOrNew(['user_id' => $user->id]);
+            if (empty($cliente->nombre)) $cliente->nombre = $googleUser->getName() ?: $user->name;
+            if (empty($cliente->email))  $cliente->email  = $email;
+            $cliente->save();
         }
 
         Auth::login($user, true);

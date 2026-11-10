@@ -107,7 +107,7 @@ class MisReservasController extends Controller
 
     // Si está en el futuro, ok. Si ya pasó, no.
     try {
-        $dt = Carbon::createFromFormat('Y-m-d H:i:s', $citaModel->fecha_cita.' '.$citaModel->hora_cita);
+        $dt = Carbon::parse($citaModel->fecha_cita)->setTimeFromTimeString((string) $citaModel->hora_cita);
         if ($dt->lt(now())) {
             return back()->with('error', 'No puedes cancelar una reserva pasada.');
         }
@@ -115,10 +115,19 @@ class MisReservasController extends Controller
         // si por alguna razón no parsea fecha/hora, aún permitimos cancelar
     }
 
-    $citaModel->estado_cita = 'cancelada';
+    // Al quedar como cancelada deja de bloquear la agenda: el horario vuelve a estar disponible.
+    $citaModel->estado_cita = Cita::ESTADO_CANCELADA;
     $citaModel->save();
 
-    return back()->with('success', 'Reserva cancelada.');
+    if ($citaModel->google_event_id) {
+        try {
+            app(\App\Services\GoogleCalendarService::class)->deleteEventFromCita($citaModel);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('No se pudo borrar el evento de Google al cancelar', ['id_cita' => $citaModel->id_cita, 'error' => $e->getMessage()]);
+        }
+    }
+
+    return back()->with('success', 'Reserva cancelada. Ese horario quedó libre para otra clienta.');
 }
 
 }

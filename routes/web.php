@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\ClienteController;
-use App\Http\Controllers\PagoController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ServiciosPublicController;
 use App\Http\Controllers\HomeController;
@@ -68,23 +67,12 @@ Route::get('/agendar-cita/horas-disponibles', [AgendarCitaPublicController::clas
 Route::get('/agendar-cita/availability-month', [AgendarCitaPublicController::class, 'availabilityMonth'])
     ->name('agendarcita.availabilityMonth');
 
-// ===========================================================
-// Webhook Stripe (producción & más seguro)
-// ===========================================================
-Route::post('/stripe/webhook', [PagoController::class, 'webhook'])
-    ->name('stripe.webhook')
-    ->withoutMiddleware([ValidateCsrfToken::class]);
-
 // =============================
 // Vistas cliente
 // =============================
-Route::get('/anticipo', function () {
-    return view('cliente.anticipo');
-})->name('cliente.anticipo');
-
-Route::get('/reserva', function () {
-    return view('cliente.reserva');
-})->name('cliente.reserva');
+// El pago de anticipo se retiró: estas direcciones viejas llevan a la reserva.
+Route::redirect('/anticipo', '/agendar-cita', 301)->name('cliente.anticipo');
+Route::redirect('/reserva', '/agendar-cita', 301)->name('cliente.reserva');
 
 Route::get('/sucursal', function () {
     return view('cliente.sucursal');
@@ -105,13 +93,12 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 
 // Google Login (clientes / general)
+// Sin 'guest': una cuenta con contraseña también puede vincular Google para agendar.
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])
-    ->name('google.redirect')
-    ->middleware('guest');
+    ->name('google.redirect');
 
 Route::get('/auth/google/login/callback', [AuthController::class, 'handleGoogleCallback'])
-    ->name('google.callback')
-    ->middleware('guest');
+    ->name('google.callback');
 
 // ✅ Invitación empleado (link firmado expirable)  (DEJAR SOLO UNA VEZ)
 Route::get('/invitation/employee/{user}', [AuthController::class, 'acceptEmployeeInvitation'])
@@ -295,13 +282,6 @@ Route::post('/correos/alta/{cliente}', [BajaCorreosController::class, 'alta'])
     ->middleware(['signed', 'throttle:20,1'])
     ->withoutMiddleware([ValidateCsrfToken::class])
     ->name('correos.alta');
-
-// =============================
-// Checkout
-// =============================
-Route::get('/checkout', [PagoController::class, 'checkout'])->name('checkout');
-Route::get('/success', [PagoController::class, 'success'])->name('success');
-Route::get('/cancel', [PagoController::class, 'cancel'])->name('cancel');
 
 // =============================
 // Mis reservas

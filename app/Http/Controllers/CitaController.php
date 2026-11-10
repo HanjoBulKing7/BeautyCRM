@@ -472,11 +472,19 @@ class CitaController extends Controller
             $start = \Carbon\Carbon::parse($cita->fecha_cita->format('Y-m-d') . ' ' . $cita->hora_cita);
             $firstServicio = $cita->servicios->first();
 
+            $estado = (string) $cita->estado_cita;
+            $titulo = $firstServicio->nombre_servicio ?? 'Cita';
+
             return [
-                'id'    => $cita->id_cita,
-                'title' => $firstServicio->nombre_servicio ?? 'Cita',
-                'start' => $start->format('Y-m-d\TH:i:s'),
-                'end'   => $start->copy()->addHour()->format('Y-m-d\TH:i:s'),
+                'id'         => $cita->id_cita,
+                'title'      => $estado === Cita::ESTADO_CANCELADA ? 'Cancelada · ' . $titulo : $titulo,
+                'start'      => $start->format('Y-m-d\TH:i:s'),
+                'end'        => $start->copy()->addMinutes(max(15, (int) ($cita->duracion_total_minutos ?: 60)))->format('Y-m-d\TH:i:s'),
+                'classNames' => ['bb-estado-' . ($estado ?: 'pendiente')],
+                'extendedProps' => [
+                    'estado'  => $estado,
+                    'cliente' => optional($cita->cliente)->nombre,
+                ],
             ];
         })->values();
 
@@ -852,6 +860,14 @@ class CitaController extends Controller
     ]);
 
     $cita->servicios()->sync($pivotData);
+
+        if ($cita->estado_cita === Cita::ESTADO_CANCELADA && $cita->google_event_id) {
+            try {
+                $this->googleCalendar->deleteEventFromCita($cita);
+            } catch (\Throwable $e) {
+                Log::error('Error borrando evento Google al cancelar: '.$e->getMessage());
+            }
+        }
 
         $token = GoogleToken::first();
         if ($token && $cita->google_event_id) {

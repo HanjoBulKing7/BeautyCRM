@@ -564,11 +564,48 @@
     });
   }
 
+  // ---------- Borrador: conserva la selección al ir a iniciar sesión con Google y volver ----------
+  const DRAFT_KEY = 'bb_reserva_borrador';
+
+  function saveDraft() {
+    const obs = form?.querySelector('[name="observaciones"]')?.value || '';
+    const draft = {
+      items: state.items,
+      selectedDate: state.selectedDate,
+      selectedHour: state.selectedHour,
+      activeCategoryId: state.activeCategoryId,
+      observaciones: obs,
+      savedAt: Date.now(),
+    };
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch (_) {}
+  }
+
+  function takeDraft() {
+    let draft = null;
+    try {
+      draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null');
+      sessionStorage.removeItem(DRAFT_KEY);
+    } catch (_) {}
+    if (!draft || Date.now() - (draft.savedAt || 0) > 30 * 60 * 1000) return null;
+    draft.items = (Array.isArray(draft.items) ? draft.items : []).filter(it => serviceById(it.id_servicio));
+    return draft.items.length ? draft : null;
+  }
+
+  document.querySelectorAll('[data-bb-google]').forEach(a => a.addEventListener('click', saveDraft));
+
   // ---------- Init ----------
   async function init() {
+    const draft = ctx.conGoogle ? takeDraft() : null;
+
     // Servicio inicial
     const initialId = Number(ctx.servicioInicialId || 0);
-    if (initialId > 0 && serviceById(initialId)) {
+    if (draft) {
+      state.items = draft.items;
+      state.activeCategoryId = draft.activeCategoryId;
+      normalizeOrder();
+      const obs = form?.querySelector('[name="observaciones"]');
+      if (obs && draft.observaciones && !obs.value) obs.value = draft.observaciones;
+    } else if (initialId > 0 && serviceById(initialId)) {
       const empDefault = pickDefaultEmpleado(initialId);
       state.items = [{ id_servicio: initialId, id_empleado: empDefault, orden: 1 }];
 
@@ -582,6 +619,10 @@
     }
 
     state.calendarMonth = new Date();
+    if (draft?.selectedDate) {
+      const [y, m] = draft.selectedDate.split('-').map(Number);
+      state.calendarMonth = new Date(y, m - 1, 1);
+    }
     state.monthAvailability = null;
 
     renderCategories();
@@ -592,6 +633,18 @@
     renderDatetimeLock();
 
     await fetchMonthAvailabilityIfReady();
+
+    if (draft?.selectedDate) {
+      state.selectedDate = draft.selectedDate;
+      if (elDateInput) elDateInput.value = draft.selectedDate;
+      state.selectedHour = draft.selectedHour || null;
+      await fetchHorasDisponibles();
+      // Si la hora ya la tomó otra persona, se pide elegir de nuevo.
+      const sigue = state.selectedHour && elTimesGrid?.querySelector(`.bb-timeBtn[data-hour="${CSS.escape(state.selectedHour)}"]`);
+      if (!sigue) state.selectedHour = null;
+      if (elHourInput) elHourInput.value = state.selectedHour || '';
+    }
+
     renderCalendar();
     updateSubmitState();
 

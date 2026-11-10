@@ -121,6 +121,29 @@
     /* Eliminar el punto predeterminado en la vista mensual */
     .fc-daygrid-event-dot { display: none !important; }
 
+    /* Estados de la cita */
+    .fc .bb-estado-cancelada,
+    .fc .fc-daygrid-event.bb-estado-cancelada {
+      background: rgba(239, 68, 68, 0.10) !important;
+      border-color: rgba(239, 68, 68, 0.40) !important;
+      color: #b91c1c !important;
+      text-decoration: line-through;
+      opacity: .85;
+    }
+    .fc .fc-daygrid-event.bb-estado-completada {
+      background: rgba(21, 128, 61, 0.10) !important;
+      border-color: rgba(21, 128, 61, 0.35) !important;
+      color: #15803d !important;
+    }
+    .fc .fc-daygrid-event.bb-estado-pendiente {
+      background: rgba(100, 116, 139, 0.10) !important;
+      border-color: rgba(100, 116, 139, 0.35) !important;
+      color: #475569 !important;
+    }
+    .bb-legend { display:flex; flex-wrap:wrap; gap:.5rem 1rem; align-items:center; font-size:.8rem; color:#4b5563; margin-bottom:1rem; }
+    .bb-legend i { display:inline-block; width:.7rem; height:.7rem; border-radius:3px; margin-right:.35rem; vertical-align:middle; border:1px solid; }
+    .dark .bb-legend { color:#d1d5db; }
+
     /* =========================================================
        DARK MODE ADAPTATIONS
        ========================================================= */
@@ -203,6 +226,16 @@
   </div>
 
   <div class="bg-white border border-gray-200 rounded-xl p-4 md:p-6 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+    <div class="bb-legend">
+      <span><i style="background:rgba(201,162,74,.14);border-color:rgba(201,162,74,.35)"></i>Confirmada</span>
+      <span><i style="background:rgba(100,116,139,.10);border-color:rgba(100,116,139,.35)"></i>Pendiente</span>
+      <span><i style="background:rgba(21,128,61,.10);border-color:rgba(21,128,61,.35)"></i>Completada</span>
+      <span><i style="background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.40)"></i>Cancelada (horario libre)</span>
+      <label class="ml-auto inline-flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" id="bbMostrarCanceladas" checked>
+        Mostrar canceladas
+      </label>
+    </div>
     <div id="citas-calendar" data-events='@json($calendarEvents ?? [])'></div>
   </div>
 
@@ -272,11 +305,19 @@
             minute: '2-digit'
           });
 
-          info.el.title = `Cita: ${title}\nFecha: ${fecha}\nHora: ${hora}`;
+          const estado = info.event.extendedProps.estado || '';
+          const cliente = info.event.extendedProps.cliente || '';
+          info.el.title = `Cita: ${title}\nClienta: ${cliente}\nEstado: ${estado}\nFecha: ${fecha}\nHora: ${hora}`;
         },
       });
 
       calendar.render();
+
+      const toggle = document.getElementById('bbMostrarCanceladas');
+      toggle?.addEventListener('change', () => {
+        calendar.removeAllEvents();
+        calendar.addEventSource(toggle.checked ? events : events.filter(e => e.extendedProps?.estado !== 'cancelada'));
+      });
     });
   </script>
 @endpush

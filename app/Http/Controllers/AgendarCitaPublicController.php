@@ -6,6 +6,7 @@ use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Cupon;
 use App\Models\Servicio;
+use App\Services\CitaConfirmacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -125,11 +126,19 @@ class AgendarCitaPublicController extends Controller
             'codigoCuponUrl'       => $codigoCuponUrl,
             'cuponPreview'         => $cuponPreview,
             'cuponMotivo'          => $cuponMotivo,
+
+            'conGoogle'            => Auth::check() && !empty(Auth::user()->google_id),
+            'urlGoogle'            => route('google.redirect', ['volver' => $request->fullUrl()]),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, CitaConfirmacion $confirmacion)
     {
+        // Cada cita queda ligada a una cuenta de Google.
+        if (empty(Auth::user()->google_id)) {
+            return back()->with('error', 'Para agendar, continúa con tu cuenta de Google.')->withInput();
+        }
+
         $clienteId = (int) DB::table('clientes')->where('user_id', Auth::id())->value('id');
         if (!$clienteId) {
             return back()->with('error', 'No se encontró el perfil de cliente asociado a tu cuenta.')->withInput();
@@ -307,14 +316,14 @@ class AgendarCitaPublicController extends Controller
             }
         }
 
-        return DB::transaction(function () use ($request, $clienteId, $responsableId, $inicioGlobal, $duracionTotal, $itemsConHoras, $esPrimeraCita, $descuentoAplicado, $cuponAplicado) {
+        $cita = DB::transaction(function () use ($request, $clienteId, $responsableId, $inicioGlobal, $duracionTotal, $itemsConHoras, $esPrimeraCita, $descuentoAplicado, $cuponAplicado) {
             $data = [
                 'cliente_id'             => $clienteId,
                 'empleado_id'            => $responsableId,
                 'fecha_cita'             => $request->input('fecha_cita'),
                 'hora_cita'              => $inicioGlobal->format('H:i:s'),
                 'duracion_total_minutos' => $duracionTotal,
-                'estado_cita'            => 'pendiente',
+                'estado_cita'            => Cita::ESTADO_CONFIRMADA,
                 'observaciones'          => $request->input('observaciones'),
                 'descuento'              => $descuentoAplicado,
                 'primer_cita'            => $esPrimeraCita,
@@ -341,10 +350,13 @@ class AgendarCitaPublicController extends Controller
                 ]);
             }
 
-            return redirect()->route('checkout', [
-                'id_cita' => $cita->id_cita
-            ]);
+            return $cita;
         });
+
+        $confirmacion->notificar($cita);
+
+        return redirect()->route('misreservas')
+            ->with('success', '¡Tu cita está confirmada! Te enviamos los detalles a tu correo.');
     }
 
     private function calcularEmpleadoResponsable(array $itemsConHoras): int

@@ -147,6 +147,17 @@
 <div id="bb-misreservas" class="bb-glow">
   <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
+    @if(session('success'))
+      <div class="bb-card p-4 font-semibold" style="border-color:rgba(21,128,61,.35);background:rgba(21,128,61,.07);color:#15803d;">
+        <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+      </div>
+    @endif
+    @if(session('error'))
+      <div class="bb-card p-4 font-semibold" style="border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.07);color:#b91c1c;">
+        <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+      </div>
+    @endif
+
     {{-- Header --}}
     <div class="bb-card p-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

@@ -311,8 +311,10 @@ class GoogleCalendarService
                 return true;
             }
 
-            $calendar = $this->getClient();
-            $calendar->events->delete('primary', $cita->google_event_id);
+            // Los eventos se crean en el calendario del dueño; se borran desde ahí aunque cancele la clienta.
+            $ownerId  = config('google.calendar_owner_user_id');
+            $calendar = $ownerId ? $this->getClientForUser((int) $ownerId) : $this->getClient();
+            $calendar->events->delete('primary', $cita->google_event_id, ['sendUpdates' => 'all']);
 
             $cita->update([
                 'google_event_id'    => null,
