@@ -6,6 +6,7 @@ use App\Models\Cita;
 use App\Models\Cliente;
 use App\Models\Cupon;
 use App\Models\Servicio;
+use App\Services\AgendaOcupacion;
 use App\Services\CitaConfirmacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -254,34 +255,11 @@ class AgendarCitaPublicController extends Controller
             $cursor = $fin;
         }
 
-        // choques por empleado (detalle)
-        $empleadoIds = collect($itemsConHoras)->pluck('id_empleado')->unique()->values();
-        $estadosBloqueantes = ['pendiente','confirmada'];
-
-        $ocupadasDetalle = DB::table('cita_servicio as cs')
-            ->join('citas as c', 'c.id_cita', '=', 'cs.id_cita')
-            ->whereDate('c.fecha_cita', $request->input('fecha_cita'))
-            ->whereIn('cs.id_empleado', $empleadoIds)
-            ->whereNotNull('cs.hora_inicio')
-            ->whereNotNull('cs.hora_fin')
-            ->get(['cs.id_empleado','cs.hora_inicio','cs.hora_fin','c.estado_cita']);
-
-        foreach ($ocupadasDetalle as $oc) {
-            if (!in_array($oc->estado_cita, $estadosBloqueantes, true)) continue;
-
-            $ocIni = Carbon::parse($request->input('fecha_cita') . ' ' . substr((string)$oc->hora_inicio, 0, 8));
-            $ocFin = Carbon::parse($request->input('fecha_cita') . ' ' . substr((string)$oc->hora_fin, 0, 8));
-
-            foreach ($itemsConHoras as $bn) {
-                if ((int)$bn['id_empleado'] !== (int)$oc->id_empleado) continue;
-
-                $bnIni = Carbon::parse($request->input('fecha_cita') . ' ' . $bn['hora_inicio']);
-                $bnFin = Carbon::parse($request->input('fecha_cita') . ' ' . $bn['hora_fin']);
-
-                if ($bnIni->lt($ocFin) && $bnFin->gt($ocIni)) {
-                    return back()->with('error', 'Ese horario ya no está disponible (choque de agenda).')->withInput();
-                }
-            }
+        // choques por empleado (incluye citas capturadas en el admin)
+        $agenda = app(AgendaOcupacion::class);
+        $fechaYmd = Carbon::parse($request->input('fecha_cita'))->toDateString();
+        if ($agenda->primerChoque($fechaYmd, $itemsConHoras)) {
+            return back()->with('error', 'Ese horario ya no está disponible: la empleada tiene otra cita a esa hora. Elige otro horario.')->withInput();
         }
 
         $responsableId = $this->calcularEmpleadoResponsable($itemsConHoras);
@@ -316,7 +294,13 @@ class AgendarCitaPublicController extends Controller
             }
         }
 
-        $cita = DB::transaction(function () use ($request, $clienteId, $responsableId, $inicioGlobal, $duracionTotal, $itemsConHoras, $esPrimeraCita, $descuentoAplicado, $cuponAplicado) {
+        $cita = DB::transaction(function () use ($request, $clienteId, $responsableId, $inicioGlobal, $duracionTotal, $itemsConHoras, $esPrimeraCita, $descuentoAplicado, $cuponAplicado, $agenda, $fechaYmd) {
+            // Se vuelve a revisar con las empleadas bloqueadas: dos reservas al mismo tiempo no pueden tomar el mismo horario.
+            $agenda->bloquearEmpleadas(array_column($itemsConHoras, 'id_empleado'));
+            if ($agenda->primerChoque($fechaYmd, $itemsConHoras)) {
+                return null;
+            }
+
             $data = [
                 'cliente_id'             => $clienteId,
                 'empleado_id'            => $responsableId,
@@ -352,6 +336,10 @@ class AgendarCitaPublicController extends Controller
 
             return $cita;
         });
+
+        if (!$cita) {
+            return back()->with('error', 'Ese horario se acaba de ocupar. Elige otro horario.')->withInput();
+        }
 
         $confirmacion->notificar($cita);
 
@@ -459,14 +447,7 @@ class AgendarCitaPublicController extends Controller
         $windowsByService = $this->buildWindowsForDate($fechaYmd, $horariosByService);
 
         $empleadoIds = $itemsConDur->pluck('id_empleado')->unique()->values();
-        $busyRows = DB::table('cita_servicio as cs')
-            ->join('citas as c', 'c.id_cita', '=', 'cs.id_cita')
-            ->whereDate('c.fecha_cita', $fechaYmd)
-            ->whereIn('cs.id_empleado', $empleadoIds)
-            ->whereIn('c.estado_cita', ['pendiente', 'confirmada'])
-            ->whereNotNull('cs.hora_inicio')
-            ->whereNotNull('cs.hora_fin')
-            ->get(['cs.id_empleado', 'cs.hora_inicio', 'cs.hora_fin']);
+        $busyRows = app(AgendaOcupacion::class)->filas($fechaYmd, $fechaYmd, $empleadoIds->all());
 
         $busyByEmpleado = $this->buildBusyForDate($fechaYmd, $busyRows);
 
@@ -534,18 +515,11 @@ class AgendarCitaPublicController extends Controller
 
         $empleadoIds = $itemsConDur->pluck('id_empleado')->unique()->values();
 
-        $busyRows = DB::table('cita_servicio as cs')
-            ->join('citas as c', 'c.id_cita', '=', 'cs.id_cita')
-            ->whereBetween('c.fecha_cita', [$start->toDateString(), $end->toDateString()])
-            ->whereIn('cs.id_empleado', $empleadoIds)
-            ->whereIn('c.estado_cita', ['pendiente', 'confirmada'])
-            ->whereNotNull('cs.hora_inicio')
-            ->whereNotNull('cs.hora_fin')
-            ->get(['c.fecha_cita', 'cs.id_empleado', 'cs.hora_inicio', 'cs.hora_fin']);
+        $busyRows = app(AgendaOcupacion::class)->filas($start->toDateString(), $end->toDateString(), $empleadoIds->all());
 
         $busyByDate = [];
         foreach ($busyRows as $r) {
-            $ymd = Carbon::parse($r->fecha_cita)->toDateString();
+            $ymd = $r->fecha;
             $eid = (int) $r->id_empleado;
             $busyByDate[$ymd][$eid][] = [
                 'ini' => substr((string) $r->hora_inicio, 0, 8),

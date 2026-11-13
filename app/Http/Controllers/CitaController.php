@@ -60,14 +60,14 @@ class CitaController extends Controller
         return [$date, $servicios, $empleados];
     }
 
-    private function computeSlotsForDate(string $date, array $servicios, array $empleados = []): array
+    private function computeSlotsForDate(string $date, array $servicios, array $empleados = [], ?int $excludeCitaId = null): array
     {
         if (!$date || !is_array($servicios) || count($servicios) === 0) {
             return [];
         }
 
         $fecha = Carbon::parse($date);
-        $dow   = $fecha->dayOfWeekIso; // 1..7 (Lun..Dom)
+        $dow   = $fecha->dayOfWeek; // 0..6 (Dom..Sáb), igual que servicio_horarios y la reserva en línea
 
         $ids = collect($servicios)
             ->map(fn($v) => (int)$v)
@@ -157,35 +157,23 @@ class CitaController extends Controller
             }
         }
 
-        // 4) (Opcional) filtrar por empleados ocupados
-        $empIds = collect($empleados)->map(fn($v) => (int)$v)->filter()->unique()->values();
+        // 4) Quitar horas que ya pasaron (hoy) y horas en que alguna empleada elegida está ocupada
+        if ($fecha->isToday()) {
+            $ahora = (int) now()->format('H') * 60 + (int) now()->format('i');
+            $slots = array_values(array_filter($slots, fn ($slot) => $toMinutes($slot['value']) >= $ahora));
+        }
 
-        if ($empIds->isNotEmpty()) {
-            $citas = Cita::whereDate('fecha_cita', $fecha->format('Y-m-d'))
-                ->whereIn('empleado_id', $empIds)
-                ->where('estado_cita', '!=', 'cancelada')
-                ->get(['empleado_id', 'hora_cita', 'duracion_total_minutos']);
+        $empIds = collect($empleados)->map(fn($v) => (int)$v)->filter()->unique()->values()->all();
 
-            $slots = array_values(array_filter($slots, function ($slot) use ($citas, $totalMin) {
-                $start = Carbon::createFromFormat('H:i', $slot['value']);
-                $end   = $start->copy()->addMinutes($totalMin);
+        if ($empIds) {
+            $ocupadas = app(\App\Services\AgendaOcupacion::class)
+                ->filas($fecha->toDateString(), $fecha->toDateString(), $empIds, $excludeCitaId);
 
-                foreach ($citas as $c) {
-                    // robusto: soporta H:i:s o H:i
-                    $raw = (string)($c->hora_cita ?? '');
-                    $raw8 = substr($raw, 0, 8);
-                    $raw5 = substr($raw, 0, 5);
-
-                    try {
-                        $cStart = Carbon::createFromFormat('H:i:s', $raw8);
-                    } catch (\Exception $e) {
-                        $cStart = Carbon::createFromFormat('H:i', $raw5);
-                    }
-
-                    $dur    = (int)($c->duracion_total_minutos ?? 60);
-                    $cEnd   = $cStart->copy()->addMinutes(max(1, $dur));
-
-                    if ($start < $cEnd && $end > $cStart) return false; // overlap
+            $slots = array_values(array_filter($slots, function ($slot) use ($ocupadas, $totalMin, $toMinutes) {
+                $ini = $toMinutes($slot['value']);
+                $fin = $ini + $totalMin;
+                foreach ($ocupadas as $oc) {
+                    if ($ini < $toMinutes($oc->hora_fin) && $fin > $toMinutes($oc->hora_inicio)) return false;
                 }
                 return true;
             }));
@@ -646,19 +634,32 @@ class CitaController extends Controller
         $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
         $metodoPago = $validated['metodo_pago'] ?? null;
 
-    $cita = Cita::create([
-        'cliente_id'            => $validated['cliente_id'],
-        'empleado_id'           => $responsableId,
-        'fecha_cita'            => $validated['fecha_cita'],
-        'hora_cita'             => $validated['hora_cita'],
-        'duracion_total_minutos'=> $totalDuracion,
-        'descuento'             => $validated['descuento'] ?? 0,
-        'estado_cita'           => $validated['estado_cita'],
-        'observaciones'         => $validated['observaciones'] ?? null,
-        'synced_with_google'    => false,
-    ]);
+    $pivotData = $this->agregarHorasAlPivot($pivotData, $validated, $responsableId);
 
-    $cita->servicios()->sync($pivotData);
+    $cita = DB::transaction(function () use ($validated, $responsableId, $totalDuracion, $pivotData) {
+        if ($error = $this->choqueDeAgenda($validated, $pivotData)) {
+            return $error;
+        }
+
+        $cita = Cita::create([
+            'cliente_id'            => $validated['cliente_id'],
+            'empleado_id'           => $responsableId,
+            'fecha_cita'            => $validated['fecha_cita'],
+            'hora_cita'             => $validated['hora_cita'],
+            'duracion_total_minutos'=> $totalDuracion,
+            'descuento'             => $validated['descuento'] ?? 0,
+            'estado_cita'           => $validated['estado_cita'],
+            'observaciones'         => $validated['observaciones'] ?? null,
+            'synced_with_google'    => false,
+        ]);
+
+        $cita->servicios()->sync($pivotData);
+        return $cita;
+    });
+
+    if (is_string($cita)) {
+        return back()->withErrors(['hora_cita' => $cita])->with('error', $cita)->withInput();
+    }
 
         if ($cita->estado_cita === 'confirmada') {
             try {
@@ -848,18 +849,31 @@ class CitaController extends Controller
 
         $responsableId = $this->resolverEmpleadoResponsable($validated['servicios'], $serviciosDb);
 
-    $cita->update([
-        'cliente_id'            => $validated['cliente_id'],
-        'empleado_id'           => $responsableId,
-        'fecha_cita'            => $validated['fecha_cita'],
-        'hora_cita'             => $validated['hora_cita'],
-        'duracion_total_minutos'=> $totalDuracion,
-        'descuento'             => $validated['descuento'] ?? 0,
-        'estado_cita'           => $validated['estado_cita'],
-        'observaciones'         => $validated['observaciones'] ?? null,
-    ]);
+    $pivotData = $this->agregarHorasAlPivot($pivotData, $validated, $responsableId);
 
-    $cita->servicios()->sync($pivotData);
+    $error = DB::transaction(function () use ($cita, $validated, $responsableId, $totalDuracion, $pivotData) {
+        if ($error = $this->choqueDeAgenda($validated, $pivotData, (int) $cita->id_cita)) {
+            return $error;
+        }
+
+        $cita->update([
+            'cliente_id'            => $validated['cliente_id'],
+            'empleado_id'           => $responsableId,
+            'fecha_cita'            => $validated['fecha_cita'],
+            'hora_cita'             => $validated['hora_cita'],
+            'duracion_total_minutos'=> $totalDuracion,
+            'descuento'             => $validated['descuento'] ?? 0,
+            'estado_cita'           => $validated['estado_cita'],
+            'observaciones'         => $validated['observaciones'] ?? null,
+        ]);
+
+        $cita->servicios()->sync($pivotData);
+        return null;
+    });
+
+    if ($error) {
+        return back()->withErrors(['hora_cita' => $error])->with('error', $error)->withInput();
+    }
 
         if ($cita->estado_cita === Cita::ESTADO_CANCELADA && $cita->google_event_id) {
             try {
@@ -896,6 +910,55 @@ class CitaController extends Controller
         }
 
         return redirect()->route('admin.citas.index')->with('success', 'Cita actualizada correctamente.');
+    }
+
+
+    /**
+     * Guarda en cada servicio de la cita su tramo de horas (uno tras otro),
+     * para que la reserva en línea vea exactamente cuándo está ocupada cada empleada.
+     */
+    private function agregarHorasAlPivot(array $pivotData, array $validated, ?int $responsableId): array
+    {
+        $items = [];
+        foreach ($pivotData as $idSrv => $p) {
+            $items[] = ['id_empleado' => (int) ($p['id_empleado'] ?: $responsableId), 'duracion' => (int) $p['duracion_snapshot']];
+        }
+
+        $tramos = app(\App\Services\AgendaOcupacion::class)
+            ->encadenar(Carbon::parse($validated['fecha_cita'])->toDateString(), (string) $validated['hora_cita'], $items);
+
+        $i = 0;
+        foreach ($pivotData as $idSrv => $p) {
+            $pivotData[$idSrv]['hora_inicio'] = $tramos[$i]['hora_inicio'];
+            $pivotData[$idSrv]['hora_fin']    = $tramos[$i]['hora_fin'];
+            $pivotData[$idSrv]['orden']       = $i + 1;
+            $i++;
+        }
+        return $pivotData;
+    }
+
+    /** Mensaje de error si alguna empleada ya tiene otra cita en ese horario; null si está libre. */
+    private function choqueDeAgenda(array $validated, array $pivotData, ?int $excluirCitaId = null): ?string
+    {
+        if (($validated['estado_cita'] ?? '') === Cita::ESTADO_CANCELADA) {
+            return null;
+        }
+
+        $agenda = app(\App\Services\AgendaOcupacion::class);
+        $fecha  = Carbon::parse($validated['fecha_cita'])->toDateString();
+        $tramos = [];
+        foreach ($pivotData as $p) {
+            $emp = (int) ($p['id_empleado'] ?? 0);
+            if ($emp) $tramos[] = ['id_empleado' => $emp, 'hora_inicio' => $p['hora_inicio'], 'hora_fin' => $p['hora_fin']];
+        }
+
+        $agenda->bloquearEmpleadas(array_column($tramos, 'id_empleado'));
+        $choque = $agenda->primerChoque($fecha, $tramos, $excluirCitaId);
+        if (!$choque) return null;
+
+        $empleada = Empleado::find($choque->id_empleado);
+        $nombre = trim(($empleada->nombre ?? 'La empleada') . ' ' . ($empleada->apellido ?? ''));
+        return "{$nombre} ya tiene la cita #{$choque->id_cita} de " . substr($choque->hora_inicio, 0, 5) . ' a ' . substr($choque->hora_fin, 0, 5) . '. Elige otro horario u otra empleada.';
     }
 
     //=======================================================================
